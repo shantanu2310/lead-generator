@@ -101,7 +101,7 @@ HTML_PAGE = """<!DOCTYPE html>
                 </div>
                 <div class="form-group small">
                     <label for="maxLeads">Max Leads</label>
-                    <input type="number" id="maxLeads" min="1" max="15" value="5">
+                    <input type="number" id="maxLeads" min="1" max="15" value="15">
                 </div>
             </div>
             <button id="searchBtn" onclick="searchLeads()">Generate Leads</button>
