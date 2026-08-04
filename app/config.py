@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     # Database
-    database_url: str = "postgresql+asyncpg://leadgen:leadgen_dev@localhost:5432/leadgen"
+    database_url: str = "sqlite+aiosqlite:///./leadgen.db"
 
     # Redis
     redis_url: str = "redis://localhost:6379/0"
@@ -43,6 +43,15 @@ class Settings(BaseSettings):
     max_website_pages: int = 5
     website_concurrency: int = 5
     provider_concurrency: int = 5
+
+    # Auth
+    auth_secret_key: str = "leadgen-dev-secret-change-me"
+    auth_token_expire_hours: int = 24
+
+    # CORS
+    cors_origins: str = (
+        "http://localhost:3000,http://127.0.0.1:3000,http://192.168.31.205:3000"
+    )
 
     # Deduplication thresholds
     name_similarity_threshold: float = 0.90

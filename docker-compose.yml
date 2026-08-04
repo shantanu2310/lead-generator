@@ -34,6 +34,38 @@ services:
       timeout: 5s
       retries: 5
 
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: leadgen_celery
+    restart: unless-stopped
+    command: celery -A app.celery_app worker -l info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+asyncpg://leadgen:leadgen_dev@postgres:5432/leadgen
+      REDIS_URL: redis://redis:6379/0
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: leadgen_beat
+    restart: unless-stopped
+    command: celery -A app.celery_app beat -l info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+asyncpg://leadgen:leadgen_dev@postgres:5432/leadgen
+      REDIS_URL: redis://redis:6379/0
+
 volumes:
   postgres_data:
   redis_data:

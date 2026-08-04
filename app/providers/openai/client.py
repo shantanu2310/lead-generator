@@ -12,15 +12,18 @@ logger = get_logger()
 
 
 class OpenAIClient(LLMClient):
+    @property
+    def api_key(self) -> str:
+        return settings.llm_api_key
+
+    @property
+    def model(self) -> str:
+        return settings.llm_model
+
     def __init__(self) -> None:
-        self.api_key = settings.llm_api_key
-        self.model = settings.llm_model
         self.client = httpx.AsyncClient(
             base_url="https://api.openai.com",
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-            },
+            headers={"Content-Type": "application/json"},
             timeout=60.0,
         )
 
@@ -44,7 +47,11 @@ class OpenAIClient(LLMClient):
         }
 
         try:
-            response = await self.client.post("/v1/chat/completions", json=payload)
+            response = await self.client.post(
+                "/v1/chat/completions",
+                json=payload,
+                headers={"Authorization": f"Bearer {self.api_key}"},
+            )
             response.raise_for_status()
             data = response.json()
             return data["choices"][0]["message"]["content"]

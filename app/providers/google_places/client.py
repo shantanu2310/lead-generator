@@ -10,8 +10,11 @@ GOOGLE_PLACES_BASE_URL = "https://places.googleapis.com/v1"
 
 
 class GooglePlacesClient:
+    @property
+    def api_key(self) -> str:
+        return settings.google_places_api_key
+
     def __init__(self) -> None:
-        self.api_key = settings.google_places_api_key
         self.client = httpx.AsyncClient(
             base_url=GOOGLE_PLACES_BASE_URL,
             timeout=30.0,

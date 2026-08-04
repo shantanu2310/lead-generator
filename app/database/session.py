@@ -15,12 +15,16 @@ def _get_engine():
     global _engine
     if _engine is None:
         try:
+            url = settings.database_url
+            is_sqlite = url.startswith("sqlite")
+            connect_args = {}
+            if is_sqlite:
+                connect_args["check_same_thread"] = False
             _engine = create_async_engine(
-                settings.database_url,
+                url,
                 echo=False,
-                pool_pre_ping=True,
-                pool_size=5,
-                max_overflow=10,
+                pool_pre_ping=not is_sqlite,
+                connect_args=connect_args if is_sqlite else {},
             )
         except Exception as e:
             logger.warning("database_engine_failed", error=str(e))

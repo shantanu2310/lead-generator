@@ -1,13 +1,47 @@
 from collections.abc import AsyncGenerator
 
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import verify_access_token
 from app.database.session import get_db_session
+from app.models.user import User
+
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async for session in get_db_session():
         yield session
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    user_id = verify_access_token(credentials.credentials)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    user = await db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    if not user.is_active:
+        raise HTTPException(
+            status_code=403,
+            detail="Your account is disabled. Contact an administrator.",
+        )
+    return user
+
+
+async def get_current_admin(
+    user: User = Depends(get_current_user),
+) -> User:
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
 
 
 def get_orchestrator():
@@ -62,3 +96,15 @@ def get_orchestrator():
         scoring_service=scoring_service,
         selection_service=selection_service,
     )
+
+
+def get_pipeline_manager():
+    from app.pipeline.pipeline_manager import PipelineManager
+
+    return PipelineManager(orchestrator=get_orchestrator())
+
+
+def get_automation_service():
+    from app.services.automation_service import AutomationService
+
+    return AutomationService(pipeline_manager=get_pipeline_manager())

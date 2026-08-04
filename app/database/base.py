@@ -17,8 +17,8 @@ class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=convention)
 
 
-def generate_uuid() -> uuid.UUID:
-    return uuid.uuid4()
+def generate_uuid() -> str:
+    return str(uuid.uuid4())
 
 
 def utcnow() -> datetime:

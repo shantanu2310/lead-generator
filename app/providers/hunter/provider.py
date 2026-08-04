@@ -11,8 +11,11 @@ HUNTER_API_BASE = "https://api.hunter.io/v2"
 
 
 class HunterClient:
+    @property
+    def api_key(self) -> str:
+        return settings.hunter_api_key
+
     def __init__(self) -> None:
-        self.api_key = settings.hunter_api_key
         self.client = httpx.AsyncClient(
             base_url=HUNTER_API_BASE,
             timeout=30.0,

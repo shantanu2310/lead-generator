@@ -10,14 +10,14 @@ BRAVE_SEARCH_BASE_URL = "https://api.search.brave.com/res/v1"
 
 
 class BraveSearchClient:
+    @property
+    def api_key(self) -> str:
+        return settings.brave_search_api_key
+
     def __init__(self) -> None:
-        self.api_key = settings.brave_search_api_key
         self.client = httpx.AsyncClient(
             base_url=BRAVE_SEARCH_BASE_URL,
-            headers={
-                "Accept": "application/json",
-                "X-Subscription-Token": self.api_key,
-            },
+            headers={"Accept": "application/json"},
             timeout=30.0,
         )
 
@@ -39,7 +39,11 @@ class BraveSearchClient:
             params["country"] = country
 
         try:
-            response = await self.client.get("/web/search", params=params)
+            response = await self.client.get(
+                "/web/search",
+                params=params,
+                headers={"X-Subscription-Token": self.api_key},
+            )
             response.raise_for_status()
             data = response.json()
             return data.get("web", {}).get("results", [])
@@ -69,7 +73,11 @@ class BraveSearchClient:
             params["long"] = str(longitude)
 
         try:
-            response = await self.client.get("/local/pois", params=params)
+            response = await self.client.get(
+                "/local/pois",
+                params=params,
+                headers={"X-Subscription-Token": self.api_key},
+            )
             response.raise_for_status()
             data = response.json()
             return data.get("results", [])

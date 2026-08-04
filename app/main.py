@@ -2,12 +2,18 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 import sentry_sdk
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from app.api.routes import api_router
 from app.config import settings
-from app.core.logging import setup_logging
+from app.core.logging import get_logger, setup_logging
+from app.database.base import Base
+from app.database.session import _get_engine
+from app.websocket.manager import manager
+
+logger = get_logger()
 
 
 @asynccontextmanager
@@ -15,6 +21,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     setup_logging(log_level=settings.log_level)
     if settings.sentry_dsn:
         sentry_sdk.init(dsn=settings.sentry_dsn, environment=settings.app_env)
+
+    engine = _get_engine()
+    if engine:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("database_tables_created")
+    else:
+        logger.warning("database_not_available")
+
     yield
 
 
@@ -28,6 +43,24 @@ app = FastAPI(
 )
 
 app.include_router(api_router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.websocket("/ws/pipeline")
+async def pipeline_websocket(websocket: WebSocket) -> None:
+    await manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
 
 @app.exception_handler(Exception)

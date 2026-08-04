@@ -15,6 +15,8 @@ class SelectedLead(BaseModel):
     email: str | None = None
     phone: str | None = None
     address: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     confidence_score: int = Field(ge=0, le=100)
     relevance_reason: str | None = None
     verification: dict = Field(default_factory=dict)
@@ -87,6 +89,8 @@ class SelectionService:
             email=email_evidence.value if email_evidence else candidate.email,
             phone=phone_evidence.value if phone_evidence else candidate.phone,
             address=address_evidence.value if address_evidence else candidate.address,
+            latitude=candidate.latitude,
+            longitude=candidate.longitude,
             confidence_score=score.total_score,
             relevance_reason=reason,
             verification={
