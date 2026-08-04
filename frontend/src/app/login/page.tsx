@@ -27,7 +27,7 @@ export default function LoginPage() {
     setError("")
     setLoading(true)
     try {
-      await api.registerUser({ name, email, password, company_name: companyName })
+      await api.registerUser({ name, email, password, company_name: companyName }, { public: true })
       const res = await api.login({ email, password })
       await finishAuth(res.access_token, res.user)
     } catch (err: any) {

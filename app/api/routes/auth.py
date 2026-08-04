@@ -55,6 +55,24 @@ async def register(
     if existing:
         raise HTTPException(status_code=409, detail="An account with this email already exists")
 
+    if body.company_name:
+        company = Company(name=body.company_name.strip())
+        db.add(company)
+        await db.flush()
+
+        user = User(
+            company_id=company.id,
+            email=body.email.lower(),
+            name=body.name.strip(),
+            password_hash=hash_password(body.password),
+            is_active=True,
+            is_admin=True,
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+        return await _user_response(db, user)
+
     if credentials:
         inviter = await get_current_user(credentials, db)
         if not inviter.is_admin:
@@ -72,25 +90,7 @@ async def register(
         await db.refresh(user)
         return await _user_response(db, user)
 
-    if not body.company_name:
-        raise HTTPException(status_code=400, detail="Company name is required for signup")
-
-    company = Company(name=body.company_name.strip())
-    db.add(company)
-    await db.flush()
-
-    user = User(
-        company_id=company.id,
-        email=body.email.lower(),
-        name=body.name.strip(),
-        password_hash=hash_password(body.password),
-        is_active=True,
-        is_admin=True,
-    )
-    db.add(user)
-    await db.commit()
-    await db.refresh(user)
-    return await _user_response(db, user)
+    raise HTTPException(status_code=400, detail="Company name is required for signup")
 
 
 @router.post("/login", response_model=TokenResponse)

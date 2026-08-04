@@ -15,11 +15,16 @@ const NETWORK_RETRY_DELAYS = [5000, 10000]
 
 const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+async function request<T>(
+  method: string,
+  path: string,
+  body?: unknown,
+  opts?: { skipAuth?: boolean }
+): Promise<T> {
   const url = `${API_BASE}/api/v1${path}`
   const headers: Record<string, string> = { "Content-Type": "application/json" }
   const token = getToken()
-  if (token) {
+  if (token && !opts?.skipAuth) {
     headers.Authorization = `Bearer ${token}`
   }
   const options: RequestInit = {
@@ -70,8 +75,8 @@ export const api = {
   login: (body: { email: string; password: string }) =>
     request<any>("POST", "/auth/login", body),
 
-  registerUser: (body: { email: string; password: string; name: string; company_name?: string }) =>
-    request<any>("POST", "/auth/register", body),
+  registerUser: (body: { email: string; password: string; name: string; company_name?: string }, opts?: { public?: boolean }) =>
+    request<any>("POST", "/auth/register", body, { skipAuth: opts?.public }),
 
   getMe: () => request<any>("GET", "/auth/me"),
 
