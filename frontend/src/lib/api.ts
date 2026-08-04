@@ -10,8 +10,8 @@ class ApiError extends Error {
   }
 }
 
-const NETWORK_RETRIES = 2
-const NETWORK_RETRY_DELAYS = [5000, 10000]
+const NETWORK_RETRIES = 5
+const NETWORK_RETRY_DELAYS = [5000, 10000, 20000, 30000, 30000]
 
 const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
