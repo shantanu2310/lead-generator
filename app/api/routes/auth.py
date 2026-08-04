@@ -22,6 +22,12 @@ from app.models.user import User
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+@router.get("/bootstrap-required")
+async def bootstrap_required(db: AsyncSession = Depends(get_db)) -> dict:
+    user_count = await db.scalar(select(func.count(User.id)))
+    return {"bootstrap_required": user_count == 0}
+
+
 @router.post("/register", response_model=UserResponse)
 async def register(
     body: RegisterRequest,
