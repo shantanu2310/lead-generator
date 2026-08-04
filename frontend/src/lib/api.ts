@@ -10,6 +10,11 @@ class ApiError extends Error {
   }
 }
 
+const NETWORK_RETRIES = 2
+const NETWORK_RETRY_DELAYS = [5000, 10000]
+
+const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms))
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const url = `${API_BASE}/api/v1${path}`
   const headers: Record<string, string> = { "Content-Type": "application/json" }
@@ -24,7 +29,29 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   if (body && method !== "GET") {
     options.body = JSON.stringify(body)
   }
-  const res = await fetch(url, options)
+
+  let res: Response | null = null
+  let networkError: any = null
+  for (let attempt = 0; attempt <= NETWORK_RETRIES; attempt++) {
+    try {
+      res = await fetch(url, options)
+      networkError = null
+      break
+    } catch (err: any) {
+      networkError = err
+      if (attempt < NETWORK_RETRIES) {
+        await sleep(NETWORK_RETRY_DELAYS[attempt] ?? 5000)
+      }
+    }
+  }
+
+  if (!res) {
+    throw new ApiError(
+      `Cannot reach the server (it may be waking up from idle) — please wait a moment and retry. (${method} ${url})`,
+      0
+    )
+  }
+
   if (res.status === 401 && typeof window !== "undefined") {
     clearAuth()
     if (!window.location.pathname.startsWith("/login")) {
