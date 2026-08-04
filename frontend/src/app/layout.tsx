@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "LeadGen — Sales Pipeline",
-  description: "AI-powered lead generation and sales pipeline management",
+  title: "LeadGen AI — AI-Powered Lead Generation",
+  description:
+    "Capture, qualify and enrich business leads using AI, Google Places, Brave Search, website crawling, email verification and pipeline automation.",
 }
 
 export default function RootLayout({
@@ -24,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="min-h-screen bg-[#0f172a] text-[#e2e8f0] antialiased">
+      <body className="min-h-screen bg-[#050816] text-[#e2e8f0] antialiased">
         {children}
       </body>
     </html>
