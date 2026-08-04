@@ -1,5 +1,6 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+import re
 
 import sentry_sdk
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -43,6 +44,16 @@ app = FastAPI(
 )
 
 app.include_router(api_router)
+
+
+@app.middleware("http")
+async def collapse_double_slashes(request, call_next):
+    if "//" in request.url.path:
+        path = re.sub("/{2,}", "/", request.url.path)
+        request.scope["path"] = path
+        request.scope["raw_path"] = path.encode()
+    return await call_next(request)
+
 
 app.add_middleware(
     CORSMiddleware,

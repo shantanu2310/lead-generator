@@ -41,8 +41,8 @@ export const STAGE_LABELS: Record<string, string> = {
   lost: "Lost",
 }
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001"
-export const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8001/ws/pipeline"
+export const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001").replace(/\/+$/, "")
+export const WS_URL = (process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8001/ws/pipeline").replace(/\/+$/, "")
 
 export const CONTACT_CHANNELS = [
   { value: "call", label: "Call" },
