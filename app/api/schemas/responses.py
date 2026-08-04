@@ -47,7 +47,7 @@ class TimelineEventResponse(BaseModel):
     event_type: str
     description: str | None = None
     metadata: dict | None = None
-    created_at: str
+    created_at: datetime
 
 
 class LeadDetailResponse(BaseModel):
@@ -91,8 +91,8 @@ class LeadDetailResponse(BaseModel):
     badges: list | None = None
     email_status: str = "pending"
     meeting_status: str = "none"
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime
     contacts: list[ContactResponse] = []
 
 
@@ -119,7 +119,7 @@ class LeadListItemResponse(BaseModel):
     assigned_user_id: str | None = None
     assigned_user_name: str | None = None
     badges: list | None = None
-    created_at: str
+    created_at: datetime
 
 
 class ContactActivityResponse(BaseModel):
@@ -132,7 +132,7 @@ class ContactActivityResponse(BaseModel):
     outcome: str
     summary: str | None = None
     next_followup_at: datetime | None = None
-    created_at: str
+    created_at: datetime
 
 
 class PaginatedResponse(BaseModel):
@@ -152,8 +152,8 @@ class SearchResponse(BaseModel):
     leads_qualified: int = 0
     leads_returned: int = 0
     lead_count: int = 0
-    created_at: str
-    completed_at: str | None = None
+    created_at: datetime
+    completed_at: datetime | None = None
 
 
 class PipelineStageResponse(BaseModel):
@@ -186,7 +186,7 @@ class NotificationResponse(BaseModel):
     message: str | None = None
     lead_id: str | None = None
     read: bool = False
-    created_at: str
+    created_at: datetime
 
 
 class StageMoveResponse(BaseModel):
