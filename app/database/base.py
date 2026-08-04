@@ -22,4 +22,4 @@ def generate_uuid() -> str:
 
 
 def utcnow() -> datetime:
-    return datetime.now(UTC)
+    return datetime.now(UTC).replace(tzinfo=None)

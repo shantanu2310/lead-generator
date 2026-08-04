@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import ForeignKey, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,8 +19,8 @@ class Search(Base):
     candidates_after_dedup: Mapped[int] = mapped_column(Integer, default=0)
     leads_qualified: Mapped[int] = mapped_column(Integer, default=0)
     leads_returned: Mapped[int] = mapped_column(Integer, default=0)
-    created_at: Mapped[str] = mapped_column(default=utcnow)
-    completed_at: Mapped[str | None] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
     intent = relationship("SearchIntent", back_populates="search", uselist=False)
 
@@ -38,6 +40,6 @@ class SearchIntent(Base):
     negative_keywords: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     required_contact_fields: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     target_count: Mapped[int] = mapped_column(Integer, default=15)
-    created_at: Mapped[str] = mapped_column(default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
 
     search = relationship("Search", back_populates="intent")

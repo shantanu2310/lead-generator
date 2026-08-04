@@ -17,6 +17,6 @@ class ContactActivity(Base):
     outcome: Mapped[str] = mapped_column(String(50), nullable=False, default="no_answer")
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     next_followup_at: Mapped[datetime | None] = mapped_column(nullable=True)
-    created_at: Mapped[str] = mapped_column(default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
 
     lead = relationship("Lead", back_populates="contact_activities")

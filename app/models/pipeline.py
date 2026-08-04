@@ -14,7 +14,7 @@ class TimelineEvent(Base):
     event_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     event_metadata: Mapped[dict | None] = mapped_column("metadata", JSON, nullable=True)
-    created_at: Mapped[str] = mapped_column(default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
 
     lead = relationship("Lead", back_populates="timeline")
 
@@ -28,7 +28,7 @@ class Notification(Base):
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
     lead_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     read: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[str] = mapped_column(default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
 
 
 class PipelineLog(Base):
@@ -40,6 +40,6 @@ class PipelineLog(Base):
     to_stage: Mapped[str] = mapped_column(String(50), nullable=False)
     moved_by: Mapped[str] = mapped_column(String(50), default="system")
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[str] = mapped_column(default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
 
     lead = relationship("Lead", back_populates="pipeline_logs")

@@ -35,8 +35,8 @@ class CandidateLead(Base):
     confidence_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     is_duplicate: Mapped[bool] = mapped_column(default=False)
     duplicate_of_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
-    created_at: Mapped[str] = mapped_column(default=utcnow)
-    updated_at: Mapped[str] = mapped_column(default=utcnow, onupdate=utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(default=utcnow, onupdate=utcnow)
 
     lead = relationship("Lead", back_populates="candidate", uselist=False)
 
@@ -103,8 +103,8 @@ class Lead(Base):
     email_status: Mapped[str] = mapped_column(String(50), default="pending")
     meeting_status: Mapped[str] = mapped_column(String(50), default="none")
 
-    created_at: Mapped[str] = mapped_column(default=utcnow)
-    updated_at: Mapped[str] = mapped_column(default=utcnow, onupdate=utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(default=utcnow, onupdate=utcnow)
 
     candidate = relationship("CandidateLead", back_populates="lead")
     contacts = relationship("Contact", back_populates="lead", cascade="all, delete-orphan")
@@ -127,7 +127,7 @@ class Contact(Base):
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     linkedin_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_primary: Mapped[bool] = mapped_column(default=False)
-    created_at: Mapped[str] = mapped_column(default=utcnow)
-    updated_at: Mapped[str] = mapped_column(default=utcnow, onupdate=utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(default=utcnow, onupdate=utcnow)
 
     lead = relationship("Lead", back_populates="contacts")
