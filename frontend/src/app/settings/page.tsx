@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
 import { BarChart3, Target, Settings as SettingsIcon, History, Menu, X, KeyRound, Save, CheckCircle2, XCircle, Loader2, Database, Server, ShieldCheck } from "lucide-react"
@@ -8,6 +8,7 @@ import { api } from "@/lib/api"
 import { getUser } from "@/lib/auth"
 import { NotificationsDropdown } from "@/components/shared/notifications-dropdown"
 import { UserMenu } from "@/components/shared/user-menu"
+import { CompanyBadge } from "@/components/shared/company-badge"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
 
 const NAV_ITEMS = [
@@ -186,6 +187,7 @@ export default function SettingsPage() {
               <Menu className="w-5 h-5" />
             </button>
             <h1 className="text-lg font-semibold text-white">Settings</h1>
+            <CompanyBadge />
           </div>
           <div className="flex items-center gap-4">
             <WebSocketIndicator />
@@ -210,7 +212,7 @@ export default function SettingsPage() {
                 <h2 className="font-semibold text-lg text-white">API Providers</h2>
               </div>
               <p className="text-sm text-gray-400 mb-5">
-                Keys are stored in <code className="text-gray-300">.env</code> and take effect immediately — no restart needed.
+                Keys are stored in <code className="text-gray-300">.env</code> and take effect immediately â€” no restart needed.
               </p>
 
               <div className="space-y-4">

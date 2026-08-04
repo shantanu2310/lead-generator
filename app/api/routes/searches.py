@@ -17,13 +17,15 @@ async def list_searches(
     page: int = 1,
     page_size: int = 20,
     db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> PaginatedResponse:
-    count_stmt = select(func.count(Search.id))
+    count_stmt = select(func.count(Search.id)).where(Search.company_id == user.company_id)
     total = await db.scalar(count_stmt) or 0
     total_pages = max(1, math.ceil(total / page_size))
 
     result = await db.execute(
         select(Search)
+        .where(Search.company_id == user.company_id)
         .order_by(Search.created_at.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
@@ -34,7 +36,10 @@ async def list_searches(
     if searches:
         counts = await db.execute(
             select(Lead.search_id, func.count(Lead.id))
-            .where(Lead.search_id.in_([s.id for s in searches]))
+            .where(
+                Lead.search_id.in_([s.id for s in searches]),
+                Lead.company_id == user.company_id,
+            )
             .group_by(Lead.search_id)
         )
         lead_counts = dict(counts.all())

@@ -1,3 +1,4 @@
+from app.models.company import Company
 from app.models.contact_activity import ContactActivity
 from app.models.evidence import Evidence
 from app.models.lead import CandidateLead, Contact, Lead
@@ -8,6 +9,7 @@ from app.models.user import User
 
 __all__ = [
     "CandidateLead",
+    "Company",
     "Contact",
     "ContactActivity",
     "Evidence",

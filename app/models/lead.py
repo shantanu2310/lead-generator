@@ -12,6 +12,7 @@ class CandidateLead(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     search_id: Mapped[str] = mapped_column(String(36), ForeignKey("searches.id"), nullable=False, index=True)
+    company_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(500), nullable=False)
     normalized_name: Mapped[str] = mapped_column(String(500), nullable=False)
     source: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -47,6 +48,7 @@ class Lead(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     candidate_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("candidate_leads.id"), nullable=True, index=True)
     search_id: Mapped[str] = mapped_column(String(36), ForeignKey("searches.id"), nullable=False, index=True)
+    company_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     business_name: Mapped[str] = mapped_column(String(500), nullable=False)
     normalized_name: Mapped[str] = mapped_column(String(500), nullable=False)
     website: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -121,6 +123,7 @@ class Contact(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     lead_id: Mapped[str] = mapped_column(String(36), ForeignKey("leads.id"), nullable=False, index=True)
+    company_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(500), nullable=False)
     job_title: Mapped[str | None] = mapped_column(String(200), nullable=True)
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)

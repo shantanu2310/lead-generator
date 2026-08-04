@@ -2,6 +2,8 @@
 
 export type AuthUser = {
   id: string
+  company_id: string
+  company_name?: string
   email: string
   name: string
   is_active: boolean

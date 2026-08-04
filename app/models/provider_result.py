@@ -11,6 +11,7 @@ class ProviderResult(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     search_id: Mapped[str] = mapped_column(String(36), ForeignKey("searches.id"), nullable=False, index=True)
+    company_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     candidate_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("candidate_leads.id"), nullable=True, index=True)
     provider: Mapped[str] = mapped_column(String(100), nullable=False)
     provider_method: Mapped[str] = mapped_column(String(100), nullable=False)

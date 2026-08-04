@@ -10,6 +10,7 @@ class Search(Base):
     __tablename__ = "searches"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    company_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     query: Mapped[str] = mapped_column(String(1000), nullable=False)
     latitude: Mapped[float | None] = mapped_column(nullable=True)
     longitude: Mapped[float | None] = mapped_column(nullable=True)

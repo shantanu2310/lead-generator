@@ -5,6 +5,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=6, max_length=128)
     name: str = Field(..., min_length=1, max_length=255)
+    company_name: str | None = Field(default=None, min_length=1, max_length=255)
 
 
 class UserUpdateRequest(BaseModel):
@@ -21,6 +22,8 @@ class LoginRequest(BaseModel):
 
 class UserResponse(BaseModel):
     id: str
+    company_id: str
+    company_name: str | None = None
     email: str
     name: str
     is_active: bool

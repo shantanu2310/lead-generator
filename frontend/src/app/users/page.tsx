@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
 import { BarChart3, Target, Settings as SettingsIcon, History, Menu, X, ShieldCheck, UserPlus, Loader2, Mail, Pencil, Trash2 } from "lucide-react"
@@ -8,6 +8,7 @@ import { api } from "@/lib/api"
 import { getToken, getUser, setAuth } from "@/lib/auth"
 import { NotificationsDropdown } from "@/components/shared/notifications-dropdown"
 import { UserMenu } from "@/components/shared/user-menu"
+import { CompanyBadge } from "@/components/shared/company-badge"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
 import { formatDate } from "@/lib/utils"
 
@@ -194,6 +195,7 @@ export default function UsersPage() {
               <Menu className="w-5 h-5" />
             </button>
             <h1 className="text-lg font-semibold text-white">Users</h1>
+            <CompanyBadge />
           </div>
           <div className="flex items-center gap-4">
             <WebSocketIndicator />
@@ -286,7 +288,7 @@ export default function UsersPage() {
                 className="rounded-xl border border-blue-500/30 bg-blue-500/5 backdrop-blur-xl p-6 space-y-4"
               >
                 <h3 className="font-semibold text-white">
-                  Edit Account — {editing.email}
+                  Edit Account â€” {editing.email}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
@@ -412,7 +414,7 @@ export default function UsersPage() {
                           )}
                         </td>
                         <td className="px-5 py-4 text-sm text-gray-400">
-                          {u.created_at ? formatDate(u.created_at) : "—"}
+                          {u.created_at ? formatDate(u.created_at) : "â€”"}
                         </td>
                         <td className="px-5 py-4">
                           <span

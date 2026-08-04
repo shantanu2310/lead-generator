@@ -11,6 +11,7 @@ class ContactActivity(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     lead_id: Mapped[str] = mapped_column(String(36), ForeignKey("leads.id"), nullable=False, index=True)
+    company_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     user_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     activity_type: Mapped[str] = mapped_column(String(50), nullable=False, default="other")
     contacted_at: Mapped[datetime] = mapped_column(nullable=False, default=utcnow)

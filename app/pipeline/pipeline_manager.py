@@ -18,6 +18,7 @@ class PipelineManager:
     async def run_search(
         self,
         db,
+        company_id: str,
         query: str,
         latitude: float | None = None,
         longitude: float | None = None,
@@ -33,6 +34,7 @@ class PipelineManager:
         )
 
         search = Search(
+            company_id=company_id,
             query=result.query,
             latitude=latitude,
             longitude=longitude,
@@ -50,6 +52,7 @@ class PipelineManager:
         for lead_data in result.leads:
             lead = Lead(
                 search_id=search.id,
+                company_id=company_id,
                 business_name=lead_data.business_name,
                 normalized_name=lead_data.business_name.lower().strip(),
                 website=lead_data.website,
@@ -76,13 +79,13 @@ class PipelineManager:
             await db.flush()
 
             await self._create_timeline_event(
-                db, lead.id, TimelineEventType.COMPANY_FOUND,
+                db, lead.id, company_id, TimelineEventType.COMPANY_FOUND,
                 f"Company discovered via search: {query}",
             )
 
             if lead_data.website:
                 await self._create_timeline_event(
-                    db, lead.id, TimelineEventType.WEBSITE_VERIFIED,
+                    db, lead.id, company_id, TimelineEventType.WEBSITE_VERIFIED,
                     f"Website verified: {lead_data.website}",
                 )
 
@@ -91,11 +94,12 @@ class PipelineManager:
                 lead.email_status = status
                 if lead.email_verified:
                     await self._create_timeline_event(
-                        db, lead.id, TimelineEventType.EMAIL_VERIFIED,
+                        db, lead.id, company_id, TimelineEventType.EMAIL_VERIFIED,
                         f"Email verified: {lead_data.email}",
                     )
                     await self.create_notification(
                         db,
+                        company_id=company_id,
                         notification_type="email_verified",
                         title=f"Email verified: {lead.business_name}",
                         message=f"Verified {lead_data.email} on {lead.business_name}",
@@ -105,6 +109,7 @@ class PipelineManager:
             if lead.lead_score >= 80:
                 await self.create_notification(
                     db,
+                    company_id=company_id,
                     notification_type="high_score_lead",
                     title=f"High-value lead: {lead.business_name}",
                     message=f"Scored {lead.lead_score}/100 - highly qualified candidate.",
@@ -117,6 +122,7 @@ class PipelineManager:
         if saved_leads:
             await self.create_notification(
                 db,
+                company_id=company_id,
                 notification_type="new_lead",
                 title=f"{len(saved_leads)} new leads found",
                 message=f"Search '{query}' found {len(saved_leads)} qualified leads.",
@@ -147,6 +153,7 @@ class PipelineManager:
 
         log = PipelineLog(
             lead_id=lead.id,
+            company_id=lead.company_id,
             from_stage=from_stage,
             to_stage=to_stage,
             moved_by=moved_by,
@@ -156,7 +163,7 @@ class PipelineManager:
 
         event_type = self._stage_to_event_type(to_stage)
         await self._create_timeline_event(
-            db, lead.id, event_type,
+            db, lead.id, lead.company_id, event_type,
             f"Stage changed from {from_stage} to {to_stage}",
             metadata={"from_stage": from_stage, "to_stage": to_stage, "moved_by": moved_by},
         )
@@ -164,6 +171,7 @@ class PipelineManager:
         if to_stage == PipelineStage.WON.value:
             await self.create_notification(
                 db,
+                company_id=lead.company_id,
                 notification_type="deal_won",
                 title=f"Deal won: {lead.business_name}",
                 message=f"Lead moved to Won by {moved_by}.",
@@ -172,6 +180,7 @@ class PipelineManager:
         elif to_stage == PipelineStage.LOST.value:
             await self.create_notification(
                 db,
+                company_id=lead.company_id,
                 notification_type="deal_lost",
                 title=f"Deal lost: {lead.business_name}",
                 message=f"Lead moved to Lost by {moved_by}.",
@@ -185,12 +194,14 @@ class PipelineManager:
         self,
         db,
         lead_id: str,
+        company_id: str,
         event_type: TimelineEventType,
         description: str | None = None,
         metadata: dict | None = None,
     ) -> TimelineEvent:
         event = TimelineEvent(
             lead_id=lead_id,
+            company_id=company_id,
             event_type=event_type.value,
             description=description,
             event_metadata=metadata,
@@ -201,12 +212,14 @@ class PipelineManager:
     async def create_notification(
         self,
         db,
+        company_id: str,
         notification_type: str,
         title: str,
         message: str | None = None,
         lead_id: str | None = None,
     ) -> Notification:
         notification = Notification(
+            company_id=company_id,
             notification_type=notification_type,
             title=title,
             message=message,

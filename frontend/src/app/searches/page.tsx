@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { Fragment, useEffect, useState } from "react"
 import { BarChart3, Target, Settings as SettingsIcon, History, Menu, X, Eye, RotateCcw, Loader2, Inbox, Calendar, ShieldCheck, ChevronRight, ChevronDown } from "lucide-react"
@@ -12,6 +12,7 @@ import { STAGE_LABELS } from "@/lib/constants"
 import type { LeadListItem } from "@/hooks/use-leads"
 import { NotificationsDropdown } from "@/components/shared/notifications-dropdown"
 import { UserMenu } from "@/components/shared/user-menu"
+import { CompanyBadge } from "@/components/shared/company-badge"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
 
 const NAV_ITEMS = [
@@ -76,7 +77,7 @@ export default function SearchesPage() {
     setMsg(null)
     try {
       const result = await api.searchLeads({ query: s.query, max_leads: 10 })
-      setMsg({ ok: true, text: `Re-ran "${s.query}" — ${result.leads?.length ?? 0} leads found` })
+      setMsg({ ok: true, text: `Re-ran "${s.query}" â€” ${result.leads?.length ?? 0} leads found` })
       load(page)
     } catch (err: any) {
       setMsg({ ok: false, text: err.message || "Re-run failed" })
@@ -161,6 +162,7 @@ export default function SearchesPage() {
               <Menu className="w-5 h-5" />
             </button>
             <h1 className="text-lg font-semibold text-white">Search History</h1>
+            <CompanyBadge />
           </div>
           <div className="flex items-center gap-4">
             <WebSocketIndicator />
@@ -274,7 +276,7 @@ export default function SearchesPage() {
                               {loadingLeads === s.id ? (
                                 <div className="flex items-center gap-2 text-sm text-gray-400 py-2">
                                   <Loader2 className="w-4 h-4 animate-spin" />
-                                  Loading leads…
+                                  Loading leadsâ€¦
                                 </div>
                               ) : (searchLeads[s.id] || []).length === 0 ? (
                                 <p className="text-sm text-gray-500 py-2">No leads stored for this search</p>
@@ -356,7 +358,7 @@ export default function SearchesPage() {
               {totalPages > 1 && (
                 <div className="flex items-center justify-between px-4 py-3 border-t border-white/10">
                   <p className="text-xs text-gray-400">
-                    Page {page} of {totalPages} · {total} searches
+                    Page {page} of {totalPages} Â· {total} searches
                   </p>
                   <div className="flex gap-2">
                     <button

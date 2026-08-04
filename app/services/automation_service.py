@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import PipelineStage, TimelineEventType
 from app.core.logging import get_logger
+from app.models.company import Company
 from app.models.lead import Lead
 from app.models.pipeline import Notification, TimelineEvent
 
@@ -46,39 +47,46 @@ class AutomationService:
 
     async def generate_insights(self, db: AsyncSession) -> list[Notification]:
         insights: list[Notification] = []
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-        stuck_outreach = await db.scalar(
-            select(func.count(Lead.id)).where(
-                Lead.pipeline_stage == PipelineStage.OUTREACH_READY.value,
-                Lead.updated_at <= (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
+        companies = (await db.execute(select(Company.id))).scalars().all()
+        for company_id in companies:
+            stuck_outreach = await db.scalar(
+                select(func.count(Lead.id)).where(
+                    Lead.company_id == company_id,
+                    Lead.pipeline_stage == PipelineStage.OUTREACH_READY.value,
+                    Lead.updated_at <= now - timedelta(days=7),
+                )
             )
-        )
-        if stuck_outreach and stuck_outreach > 0:
-            n = await self.pipeline_manager.create_notification(
-                db=db,
-                notification_type="ai_insight",
-                title=f"{stuck_outreach} leads stuck in Outreach",
-                message=f"{stuck_outreach} leads have been in Outreach Ready for more than 7 days.",
-            )
-            insights.append(n)
+            if stuck_outreach and stuck_outreach > 0:
+                n = await self.pipeline_manager.create_notification(
+                    db=db,
+                    company_id=company_id,
+                    notification_type="ai_insight",
+                    title=f"{stuck_outreach} leads stuck in Outreach",
+                    message=f"{stuck_outreach} leads have been in Outreach Ready for more than 7 days.",
+                )
+                insights.append(n)
 
-        inactive = await db.scalar(
-            select(func.count(Lead.id)).where(
-                Lead.pipeline_stage.notin_([
-                    PipelineStage.WON.value,
-                    PipelineStage.LOST.value,
-                ]),
-                Lead.last_activity_at <= (datetime.now(timezone.utc) - timedelta(days=14)).isoformat(),
+            inactive = await db.scalar(
+                select(func.count(Lead.id)).where(
+                    Lead.company_id == company_id,
+                    Lead.pipeline_stage.notin_([
+                        PipelineStage.WON.value,
+                        PipelineStage.LOST.value,
+                    ]),
+                    Lead.last_activity_at <= now - timedelta(days=14),
+                )
             )
-        )
-        if inactive and inactive > 0:
-            n = await self.pipeline_manager.create_notification(
-                db=db,
-                notification_type="ai_insight",
-                title=f"{inactive} inactive leads",
-                message=f"{inactive} leads have had no activity for 14+ days.",
-            )
-            insights.append(n)
+            if inactive and inactive > 0:
+                n = await self.pipeline_manager.create_notification(
+                    db=db,
+                    company_id=company_id,
+                    notification_type="ai_insight",
+                    title=f"{inactive} inactive leads",
+                    message=f"{inactive} leads have had no activity for 14+ days.",
+                )
+                insights.append(n)
 
         await db.flush()
         return insights

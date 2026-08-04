@@ -37,8 +37,12 @@ def _search_filter(search_id: str | None = None):
 async def get_pipeline_stages(
     search_id: str | None = None,
     db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> list[PipelineStageResponse]:
-    conditions = [cond for cond in [_search_filter(search_id)] if cond is not None]
+    conditions = [Lead.company_id == user.company_id]
+    search_cond = _search_filter(search_id)
+    if search_cond is not None:
+        conditions.append(search_cond)
 
     stmt = select(
         Lead.pipeline_stage,
@@ -68,8 +72,12 @@ async def get_pipeline_stages(
 async def get_pipeline_analytics(
     search_id: str | None = None,
     db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> PipelineAnalyticsResponse:
-    conditions = [cond for cond in [_search_filter(search_id)] if cond is not None]
+    conditions = [Lead.company_id == user.company_id]
+    search_cond = _search_filter(search_id)
+    if search_cond is not None:
+        conditions.append(search_cond)
 
     total = await db.scalar(
         select(func.count(Lead.id)).where(*conditions)

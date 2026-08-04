@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.schemas.responses import NotificationResponse
 from app.dependencies import get_current_user, get_db
 from app.models.pipeline import Notification
+from app.models.user import User
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
@@ -14,8 +15,11 @@ async def get_notifications(
     unread_only: bool = False,
     limit: int = 50,
     db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> list[NotificationResponse]:
-    stmt = select(Notification).order_by(Notification.created_at.desc()).limit(limit)
+    stmt = select(Notification).where(
+        Notification.company_id == user.company_id
+    ).order_by(Notification.created_at.desc()).limit(limit)
     if unread_only:
         stmt = stmt.where(Notification.read == False)
     result = await db.execute(stmt)
@@ -38,9 +42,13 @@ async def get_notifications(
 async def mark_notification_read(
     notification_id: str,
     db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     await db.execute(
-        update(Notification).where(Notification.id == notification_id).values(read=True)
+        update(Notification).where(
+            Notification.id == notification_id,
+            Notification.company_id == user.company_id,
+        ).values(read=True)
     )
     await db.flush()
     return {"status": "ok"}
@@ -49,9 +57,10 @@ async def mark_notification_read(
 @router.patch("/notifications/read-all")
 async def mark_all_notifications_read(
     db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     await db.execute(
-        update(Notification).values(read=True)
+        update(Notification).where(Notification.company_id == user.company_id).values(read=True)
     )
     await db.flush()
     return {"status": "ok"}
@@ -60,8 +69,12 @@ async def mark_all_notifications_read(
 @router.get("/notifications/unread-count")
 async def get_unread_count(
     db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     count = await db.scalar(
-        select(func.count(Notification.id)).where(Notification.read == False)
+        select(func.count(Notification.id)).where(
+            Notification.read == False,
+            Notification.company_id == user.company_id,
+        )
     )
     return {"count": count or 0}

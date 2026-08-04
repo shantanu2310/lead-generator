@@ -70,10 +70,7 @@ export const api = {
   login: (body: { email: string; password: string }) =>
     request<any>("POST", "/auth/login", body),
 
-  bootstrapRequired: () =>
-    request<{ bootstrap_required: boolean }>("GET", "/auth/bootstrap-required"),
-
-  registerUser: (body: { email: string; password: string; name: string }) =>
+  registerUser: (body: { email: string; password: string; name: string; company_name?: string }) =>
     request<any>("POST", "/auth/register", body),
 
   getMe: () => request<any>("GET", "/auth/me"),

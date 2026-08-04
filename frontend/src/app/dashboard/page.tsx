@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { BarChart3, Target, Settings as SettingsIcon, History, TrendingUp, Users, ShieldCheck, Menu, X } from "lucide-react"
 import Link from "next/link"
@@ -10,6 +10,7 @@ import { LeadSearchForm } from "@/components/pipeline/lead-search-form"
 import { StatCards } from "@/components/dashboard/stat-cards"
 import { NotificationsDropdown } from "@/components/shared/notifications-dropdown"
 import { UserMenu } from "@/components/shared/user-menu"
+import { CompanyBadge } from "@/components/shared/company-badge"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
 import { usePipelineAnalytics, type AnalyticsData } from "@/hooks/use-pipeline-analytics"
 import { getUser } from "@/lib/auth"
@@ -98,6 +99,7 @@ export default function DashboardPage() {
               <Menu className="w-5 h-5" />
             </button>
             <h1 className="text-lg font-semibold text-white">Dashboard</h1>
+            <CompanyBadge />
           </div>
           <div className="flex items-center gap-4">
             <WebSocketIndicator />
@@ -119,31 +121,31 @@ export default function DashboardPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-400">Win Rate</span>
                     <span className="text-sm font-medium text-green-400">
-                      {analytics ? formatPercent(analytics.win_rate) : "—"}
+                      {analytics ? formatPercent(analytics.win_rate) : "â€”"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-400">Avg. Deal Size</span>
                     <span className="text-sm font-medium text-white">
-                      {analytics ? formatCurrency(analytics.avg_deal_size) : "—"}
+                      {analytics ? formatCurrency(analytics.avg_deal_size) : "â€”"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-400">Sales Cycle</span>
                     <span className="text-sm font-medium text-white">
-                      {analytics ? `${analytics.avg_sales_cycle_days.toFixed(0)} days` : "—"}
+                      {analytics ? `${analytics.avg_sales_cycle_days.toFixed(0)} days` : "â€”"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-400">Response Time</span>
                     <span className="text-sm font-medium text-white">
-                      {analytics ? `${analytics.avg_response_time_hours.toFixed(1)} hrs` : "—"}
+                      {analytics ? `${analytics.avg_response_time_hours.toFixed(1)} hrs` : "â€”"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-400">Pipeline Value</span>
                     <span className="text-sm font-medium text-blue-400">
-                      {analytics ? formatCurrency(analytics.pipeline_value) : "—"}
+                      {analytics ? formatCurrency(analytics.pipeline_value) : "â€”"}
                     </span>
                   </div>
                 </div>

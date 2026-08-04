@@ -1,8 +1,8 @@
 "use client"
 
-import { Target, Loader2, RefreshCw } from "lucide-react"
+import { Target } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { FormEvent, useEffect, useState } from "react"
+import { FormEvent, useState } from "react"
 import { api } from "@/lib/api"
 import { setAuth } from "@/lib/auth"
 import { API_BASE } from "@/lib/constants"
@@ -10,37 +10,12 @@ import { API_BASE } from "@/lib/constants"
 export default function LoginPage() {
   const router = useRouter()
   const [tab, setTab] = useState<"signin" | "signup">("signin")
-  const [bootstrap, setBootstrap] = useState<boolean | null>(null)
-  const [checkFailed, setCheckFailed] = useState(false)
-  const [checking, setChecking] = useState(true)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
+  const [companyName, setCompanyName] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-
-  async function checkBootstrap() {
-    setCheckFailed(false)
-    setChecking(true)
-    let done = false
-    for (let i = 1; i <= 4 && !done; i++) {
-      try {
-        const r = await api.bootstrapRequired()
-        setBootstrap(r.bootstrap_required)
-        done = true
-      } catch {
-        if (i < 4) {
-          await new Promise((res) => setTimeout(res, i * 4000))
-        }
-      }
-    }
-    if (!done) setCheckFailed(true)
-    setChecking(false)
-  }
-
-  useEffect(() => {
-    checkBootstrap()
-  }, [])
 
   async function finishAuth(accessToken: string, user: any) {
     setAuth(accessToken, user)
@@ -52,7 +27,7 @@ export default function LoginPage() {
     setError("")
     setLoading(true)
     try {
-      await api.registerUser({ name, email, password })
+      await api.registerUser({ name, email, password, company_name: companyName })
       const res = await api.login({ email, password })
       await finishAuth(res.access_token, res.user)
     } catch (err: any) {
@@ -116,26 +91,6 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {checking && (
-            <p className="flex items-center justify-center gap-2 text-xs text-gray-500 mb-4">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              Connecting to server…
-            </p>
-          )}
-          {checkFailed && !checking && (
-            <p className="flex items-center justify-center gap-2 text-xs text-amber-400 mb-4">
-              Could not reach the server
-              <button
-                type="button"
-                onClick={checkBootstrap}
-                className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                <RefreshCw className="w-3 h-3" />
-                Retry
-              </button>
-            </p>
-          )}
-
           {tab === "signin" ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -183,18 +138,23 @@ export default function LoginPage() {
             </form>
           ) : (
             <form onSubmit={handleRegister} className="space-y-4">
-              {bootstrap === true && (
-                <div className="text-xs text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-2.5">
-                  This system has no accounts yet — the first account created becomes the
-                  administrator.
-                </div>
-              )}
-              {bootstrap === false && (
-                <div className="text-xs text-gray-400 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5">
-                  New accounts are created by an administrator. If you were invited, use the
-                  credentials they shared.
-                </div>
-              )}
+              <div className="text-xs text-gray-400 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5">
+                Signing up creates a new company workspace — you become its administrator
+                and can invite teammates.
+              </div>
+              <div>
+                <label htmlFor="companyName" className="block text-sm text-gray-400 mb-1.5">
+                  Company name
+                </label>
+                <input
+                  id="companyName"
+                  required
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="Acme Inc."
+                  className={inputCls}
+                />
+              </div>
               <div>
                 <label htmlFor="name" className="block text-sm text-gray-400 mb-1.5">
                   Your name

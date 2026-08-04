@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, Suspense } from "react"
 import { Target, Menu, X, BarChart3, Settings as SettingsIcon, History, SearchX, ShieldCheck } from "lucide-react"
@@ -14,6 +14,7 @@ import { LeadSearchForm } from "@/components/pipeline/lead-search-form"
 import { AIInsightsPanel } from "@/components/pipeline/ai-insights-panel"
 import { NotificationsDropdown } from "@/components/shared/notifications-dropdown"
 import { UserMenu } from "@/components/shared/user-menu"
+import { CompanyBadge } from "@/components/shared/company-badge"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
 import { useLeads } from "@/hooks/use-leads"
 import { getUser } from "@/lib/auth"
@@ -116,6 +117,7 @@ function PipelinePageContent() {
               <Menu className="w-5 h-5" />
             </button>
             <h1 className="text-lg font-semibold text-white">Sales Pipeline</h1>
+            <CompanyBadge />
           </div>
           <div className="flex items-center gap-4">
             <WebSocketIndicator />

@@ -11,6 +11,7 @@ class TimelineEvent(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     lead_id: Mapped[str] = mapped_column(String(36), ForeignKey("leads.id"), nullable=False, index=True)
+    company_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     event_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     event_metadata: Mapped[dict | None] = mapped_column("metadata", JSON, nullable=True)
@@ -24,6 +25,7 @@ class Notification(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     notification_type: Mapped[str] = mapped_column("type", String(50), nullable=False, index=True)
+    company_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
     lead_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
@@ -36,6 +38,7 @@ class PipelineLog(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     lead_id: Mapped[str] = mapped_column(String(36), ForeignKey("leads.id"), nullable=False, index=True)
+    company_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     from_stage: Mapped[str | None] = mapped_column(String(50), nullable=True)
     to_stage: Mapped[str] = mapped_column(String(50), nullable=False)
     moved_by: Mapped[str] = mapped_column(String(50), default="system")
