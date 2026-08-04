@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { FormEvent, useEffect, useState } from "react"
 import { api } from "@/lib/api"
 import { setAuth } from "@/lib/auth"
+import { API_BASE } from "@/lib/constants"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -21,18 +22,20 @@ export default function LoginPage() {
   async function checkBootstrap() {
     setCheckFailed(false)
     setChecking(true)
-    for (let i = 1; i <= 4; i++) {
+    let done = false
+    for (let i = 1; i <= 4 && !done; i++) {
       try {
         const r = await api.bootstrapRequired()
         setBootstrap(r.bootstrap_required)
-        return
+        done = true
       } catch {
         if (i < 4) {
           await new Promise((res) => setTimeout(res, i * 4000))
         }
       }
     }
-    setCheckFailed(true)
+    if (!done) setCheckFailed(true)
+    setChecking(false)
   }
 
   useEffect(() => {
@@ -250,6 +253,7 @@ export default function LoginPage() {
               </button>
             </form>
           )}
+          <p className="text-center text-[10px] text-gray-700 mt-2">API: {API_BASE}</p>
         </div>
       </div>
     </div>

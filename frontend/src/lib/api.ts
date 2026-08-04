@@ -33,7 +33,8 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   }
   if (!res.ok) {
     const errBody = await res.json().catch(() => ({}))
-    throw new ApiError(errBody.error?.message || errBody.detail || res.statusText, res.status)
+    const reason = errBody.error?.message || errBody.detail || res.statusText
+    throw new ApiError(`${reason} — ${method} ${url}`, res.status)
   }
   return res.json()
 }
