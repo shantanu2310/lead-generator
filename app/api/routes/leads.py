@@ -38,6 +38,14 @@ from app.pipeline.pipeline_manager import PipelineManager
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
+def _to_naive_utc(dt: datetime | None) -> datetime | None:
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        return dt.astimezone(UTC).replace(tzinfo=None)
+    return dt
+
+
 @router.post(
     "/leads/search",
     response_model=LeadSearchResponse,
@@ -443,7 +451,8 @@ async def create_contact_activity(
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
 
-    contacted_at = body.contacted_at or datetime.now(UTC).replace(tzinfo=None)
+    contacted_at = _to_naive_utc(body.contacted_at) or datetime.now(UTC).replace(tzinfo=None)
+    next_followup_at = _to_naive_utc(body.next_followup_at)
 
     activity = ContactActivity(
         lead_id=lead.id,
@@ -453,7 +462,7 @@ async def create_contact_activity(
         contacted_at=contacted_at,
         outcome=body.outcome,
         summary=body.summary,
-        next_followup_at=body.next_followup_at,
+        next_followup_at=next_followup_at,
     )
     db.add(activity)
 
@@ -468,8 +477,8 @@ async def create_contact_activity(
         )
 
     lead.last_activity_at = contacted_at
-    if body.next_followup_at:
-        lead.next_followup_date = body.next_followup_at
+    if next_followup_at:
+        lead.next_followup_date = next_followup_at
 
     db.add(TimelineEvent(
         lead_id=lead.id,
@@ -518,6 +527,8 @@ async def update_lead(
         raise HTTPException(status_code=404, detail="Lead not found")
 
     update_values = {k: v for k, v in update_data.model_dump(exclude_none=True).items()}
+    if "next_followup_date" in update_values:
+        update_values["next_followup_date"] = _to_naive_utc(update_values["next_followup_date"])
     if update_values:
         await db.execute(
             update(Lead).where(

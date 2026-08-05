@@ -12,6 +12,7 @@ class ApiError extends Error {
 
 const NETWORK_RETRIES = 5
 const NETWORK_RETRY_DELAYS = [5000, 10000, 20000, 30000, 30000]
+const RETRYABLE_STATUS = [408, 429, 502, 503, 504]
 
 const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
@@ -39,8 +40,13 @@ async function request<T>(
   let networkError: any = null
   for (let attempt = 0; attempt <= NETWORK_RETRIES; attempt++) {
     try {
-      res = await fetch(url, options)
-      networkError = null
+      const r = await fetch(url, options)
+      if (RETRYABLE_STATUS.includes(r.status) && attempt < NETWORK_RETRIES) {
+        r.body?.cancel()
+        await sleep(NETWORK_RETRY_DELAYS[attempt] ?? 5000)
+        continue
+      }
+      res = r
       break
     } catch (err: any) {
       networkError = err
