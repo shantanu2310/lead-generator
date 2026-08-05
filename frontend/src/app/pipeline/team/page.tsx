@@ -199,7 +199,7 @@ function TeamPageContent() {
           </button>
         </div>
         <nav className="p-4 space-y-1">
-          {[...NAV_ITEMS.filter((item) => item.href !== "/settings" || me?.is_admin), ...(me?.is_admin ? [{ href: "/users", label: "Users", icon: ShieldCheck }] : [])].map((item) => {
+          {[...NAV_ITEMS, ...(me?.is_admin ? [{ href: "/users", label: "Users", icon: ShieldCheck }] : [])].map((item) => {
             const Icon = item.icon
             const isActive = typeof window !== "undefined" && window.location.pathname === item.href
             return (

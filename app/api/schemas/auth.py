@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class RegisterRequest(BaseModel):
@@ -13,6 +13,14 @@ class UserUpdateRequest(BaseModel):
     email: EmailStr | None = None
     password: str | None = Field(default=None, min_length=6, max_length=128)
     is_admin: bool | None = None
+    avatar_url: str | None = Field(default=None, max_length=2_000_000)
+
+
+class SelfUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    password: str | None = Field(default=None, min_length=6, max_length=128)
     avatar_url: str | None = Field(default=None, max_length=2_000_000)
 
 

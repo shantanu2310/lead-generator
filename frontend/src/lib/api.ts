@@ -80,6 +80,9 @@ export const api = {
 
   getMe: () => request<any>("GET", "/auth/me"),
 
+  updateMe: (body: { name?: string; password?: string; avatar_url?: string | null }) =>
+    request<any>("PATCH", "/auth/me", body),
+
   listUsers: () => request<any[]>("GET", "/auth/users"),
 
   setUserActive: (id: string, isActive: boolean) =>

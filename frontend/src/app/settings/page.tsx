@@ -1,11 +1,12 @@
 ﻿"use client"
 
 import { useEffect, useState } from "react"
-import { BarChart3, Target, Settings as SettingsIcon, History, Menu, X, KeyRound, Save, CheckCircle2, XCircle, Loader2, Database, Server, ShieldCheck, Users } from "lucide-react"
+import { BarChart3, Target, Settings as SettingsIcon, History, Menu, X, KeyRound, Save, CheckCircle2, XCircle, Loader2, Database, Server, ShieldCheck, Users, UserRound } from "lucide-react"
 import Link from "next/link"
 import { AuthGuard } from "@/components/auth/auth-guard"
+import { AvatarPicker } from "@/components/shared/avatar"
 import { api } from "@/lib/api"
-import { getUser } from "@/lib/auth"
+import { getToken, getUser, setAuth } from "@/lib/auth"
 import { NotificationsDropdown } from "@/components/shared/notifications-dropdown"
 import { UserMenu } from "@/components/shared/user-menu"
 import { CompanyBadge } from "@/components/shared/company-badge"
@@ -56,6 +57,9 @@ export default function SettingsPage() {
   const [pipelineForm, setPipelineForm] = useState<Record<string, string>>({})
   const [savingPipeline, setSavingPipeline] = useState(false)
   const user = getUser()
+  const [avatar, setAvatar] = useState<string | null>(user?.avatar_url ?? null)
+  const [profileName, setProfileName] = useState(user?.name || "")
+  const [savingProfile, setSavingProfile] = useState(false)
 
   async function load() {
     try {
@@ -137,8 +141,26 @@ export default function SettingsPage() {
     }
   }
 
+  async function saveProfile() {
+    setSavingProfile(true)
+    setMsg(null)
+    try {
+      const updated = await api.updateMe({
+        name: profileName.trim(),
+        avatar_url: avatar ?? "",
+      })
+      setAuth(getToken() || "", updated)
+      setMsg({ ok: true, text: "Profile updated" })
+      window.location.reload()
+    } catch (err: any) {
+      setMsg({ ok: false, text: err.message || "Failed to save profile" })
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
   return (
-    <AuthGuard adminOnly>
+    <AuthGuard>
     <div className="flex h-screen">
       <aside className={`
         fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0f1e] border-r border-white/5 transform transition-transform duration-200
@@ -155,7 +177,7 @@ export default function SettingsPage() {
           </button>
         </div>
         <nav className="p-4 space-y-1">
-          {[...NAV_ITEMS.filter((item) => item.href !== "/settings" || user?.is_admin), ...(user?.is_admin ? [{ href: "/users", label: "Users", icon: ShieldCheck }] : [])].map((item) => {
+          {[...NAV_ITEMS, ...(user?.is_admin ? [{ href: "/users", label: "Users", icon: ShieldCheck }] : [])].map((item) => {
             const Icon = item.icon
             const isActive = typeof window !== "undefined" && window.location.pathname === item.href
             return (
@@ -207,6 +229,36 @@ export default function SettingsPage() {
               </div>
             )}
 
+            <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
+              <div className="flex items-center gap-2 mb-1">
+                <UserRound className="w-5 h-5 text-blue-400" />
+                <h2 className="font-semibold text-lg text-white">Profile</h2>
+              </div>
+              <p className="text-sm text-gray-400 mb-5">
+                Your photo shows in the sidebar menu, user list and team leads view.
+              </p>
+              <div className="space-y-5">
+                <AvatarPicker value={avatar} onChange={setAvatar} />
+                <div className="max-w-sm">
+                  <label className="block text-xs text-gray-400 mb-1.5">Display name</label>
+                  <input
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-blue-400/40"
+                  />
+                </div>
+                <button
+                  onClick={saveProfile}
+                  disabled={savingProfile}
+                  className="flex items-center gap-2 px-5 py-2 bg-blue-500 hover:bg-blue-400 disabled:bg-blue-500/40 text-sm font-medium text-white rounded-lg transition-colors"
+                >
+                  {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Save profile
+                </button>
+              </div>
+            </div>
+
+            {user?.is_admin && (
             <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
               <div className="flex items-center gap-2 mb-1">
                 <KeyRound className="w-5 h-5 text-blue-400" />
@@ -297,7 +349,9 @@ export default function SettingsPage() {
                 </button>
               </div>
             </div>
+            )}
 
+            {user?.is_admin && (
             <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
               <h2 className="font-semibold text-lg text-white mb-1">Pipeline Defaults</h2>
               <p className="text-sm text-gray-400 mb-5">Defaults used for new lead searches and scoring.</p>
@@ -323,8 +377,9 @@ export default function SettingsPage() {
                 Save pipeline settings
               </button>
             </div>
+            )}
 
-            {app && (
+            {app && user?.is_admin && (
               <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
                 <h2 className="font-semibold text-lg text-white mb-4">Application</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">

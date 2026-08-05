@@ -115,7 +115,7 @@ function openEdit(u: UserItem) {
     setSavingEdit(true)
     setMsg(null)
     try {
-const body: any = { name: editForm.name, email: editForm.email, is_admin: editForm.is_admin, avatar_url: editForm.avatar_url }
+const body: any = { name: editForm.name, email: editForm.email, is_admin: editForm.is_admin, avatar_url: editForm.avatar_url ?? "" }
       if (editForm.password) body.password = editForm.password
       const updated = await api.updateUser(editing.id, body)
       if (editing.id === me?.id) {
@@ -168,7 +168,7 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
           </button>
         </div>
         <nav className="p-4 space-y-1">
-          {[...NAV_ITEMS.filter((item) => item.href !== "/settings" || me?.is_admin), { href: "/users", label: "Users", icon: ShieldCheck }].map((item) => {
+          {[...NAV_ITEMS, { href: "/users", label: "Users", icon: ShieldCheck }].map((item) => {
             const Icon = item.icon
             const isActive = typeof window !== "undefined" && window.location.pathname === item.href
             return (

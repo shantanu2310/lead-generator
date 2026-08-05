@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.schemas.auth import (
     LoginRequest,
     RegisterRequest,
+    SelfUpdateRequest,
     TokenResponse,
     UserResponse,
     UserUpdateRequest,
@@ -120,6 +121,29 @@ async def me(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> UserResponse:
+    return await _user_response(db, user)
+
+
+@router.patch("/me", response_model=UserResponse)
+async def update_me(
+    body: SelfUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> UserResponse:
+    if body.name is not None:
+        user.name = body.name.strip()
+
+    if body.password is not None:
+        user.password_hash = hash_password(body.password)
+
+    if body.avatar_url is not None:
+        if body.avatar_url.strip() == "":
+            user.avatar_url = None
+        else:
+            user.avatar_url = body.avatar_url.strip()
+
+    await db.commit()
+    await db.refresh(user)
     return await _user_response(db, user)
 
 
