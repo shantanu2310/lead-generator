@@ -1,9 +1,10 @@
 ﻿"use client"
 
 import { useEffect, useState } from "react"
-import { BarChart3, Target, Settings as SettingsIcon, History, Menu, X, ShieldCheck, Users, UserPlus, Loader2, Mail, Pencil, Trash2 } from "lucide-react"
+import { BarChart3, Target, Settings as SettingsIcon, History, Menu, X, ShieldCheck, Users, UserPlus, Loader2, Pencil, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { AuthGuard } from "@/components/auth/auth-guard"
+import { Avatar, AvatarPicker } from "@/components/shared/avatar"
 import { api } from "@/lib/api"
 import { getToken, getUser, setAuth } from "@/lib/auth"
 import { NotificationsDropdown } from "@/components/shared/notifications-dropdown"
@@ -24,6 +25,7 @@ type UserItem = {
   id: string
   email: string
   name: string
+  avatar_url: string | null
   is_active: boolean
   is_admin: boolean
   created_at: string | null
@@ -34,14 +36,15 @@ export default function UsersPage() {
   const [users, setUsers] = useState<UserItem[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
-  const [name, setName] = useState("")
+const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [avatar, setAvatar] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [togglingId, setTogglingId] = useState<string | null>(null)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
-  const [editing, setEditing] = useState<UserItem | null>(null)
-  const [editForm, setEditForm] = useState({ name: "", email: "", password: "", is_admin: false })
+const [editing, setEditing] = useState<UserItem | null>(null)
+  const [editForm, setEditForm] = useState({ name: "", email: "", password: "", is_admin: false, avatar_url: null as string | null })
   const [savingEdit, setSavingEdit] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const me = getUser()
@@ -62,16 +65,18 @@ export default function UsersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function addUser(e: React.FormEvent) {
+async function addUser(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
     setMsg(null)
     try {
-      await api.registerUser({ name, email, password })
+      const created = await api.registerUser({ name, email, password })
+      if (avatar) await api.updateUser(created.id, { avatar_url: avatar })
       setMsg({ ok: true, text: `Account created for ${email}` })
       setName("")
       setEmail("")
       setPassword("")
+      setAvatar(null)
       setShowAdd(false)
       await load()
     } catch (err: any) {
@@ -98,9 +103,9 @@ export default function UsersPage() {
     }
   }
 
-  function openEdit(u: UserItem) {
+function openEdit(u: UserItem) {
     setEditing(u)
-    setEditForm({ name: u.name, email: u.email, password: "", is_admin: u.is_admin })
+    setEditForm({ name: u.name, email: u.email, password: "", is_admin: u.is_admin, avatar_url: u.avatar_url ?? null })
     setMsg(null)
   }
 
@@ -110,7 +115,7 @@ export default function UsersPage() {
     setSavingEdit(true)
     setMsg(null)
     try {
-      const body: any = { name: editForm.name, email: editForm.email, is_admin: editForm.is_admin }
+const body: any = { name: editForm.name, email: editForm.email, is_admin: editForm.is_admin, avatar_url: editForm.avatar_url }
       if (editForm.password) body.password = editForm.password
       const updated = await api.updateUser(editing.id, body)
       if (editing.id === me?.id) {
@@ -227,7 +232,8 @@ export default function UsersPage() {
                 onSubmit={addUser}
                 className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 space-y-4"
               >
-                <h3 className="font-semibold text-white">New Account</h3>
+<h3 className="font-semibold text-white">New Account</h3>
+                <AvatarPicker value={avatar} onChange={setAvatar} size={72} />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm text-gray-400 mb-1.5">Name</label>
@@ -288,9 +294,10 @@ export default function UsersPage() {
                 onSubmit={saveEdit}
                 className="rounded-xl border border-blue-500/30 bg-blue-500/5 backdrop-blur-xl p-6 space-y-4"
               >
-                <h3 className="font-semibold text-white">
-                  Edit Account â€” {editing.email}
+<h3 className="font-semibold text-white">
+                  Edit Account — {editing.email}
                 </h3>
+                <AvatarPicker value={editForm.avatar_url} onChange={(v) => setEditForm({ ...editForm, avatar_url: v })} size={72} />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm text-gray-400 mb-1.5">Name</label>
@@ -391,10 +398,8 @@ export default function UsersPage() {
                     {users.map((u) => (
                       <tr key={u.id} className="border-b border-white/5 last:border-0">
                         <td className="px-5 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
-                              <Mail className="w-4 h-4 text-blue-400" />
-                            </div>
+<div className="flex items-center gap-3">
+                            <Avatar name={u.name} src={u.avatar_url} className="w-9 h-9" />
                             <div className="min-w-0">
                               <p className="text-sm font-medium text-white">
                                 {u.name}

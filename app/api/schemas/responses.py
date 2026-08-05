@@ -199,6 +199,7 @@ class TeamUserLeadsResponse(BaseModel):
     id: str
     name: str
     email: str
+    avatar_url: str | None = None
     is_admin: bool
     is_active: bool
     total: int

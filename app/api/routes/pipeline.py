@@ -222,6 +222,7 @@ async def get_team_leads(
             id=u.id,
             name=u.name,
             email=u.email,
+            avatar_url=u.avatar_url,
             is_admin=u.is_admin,
             is_active=u.is_active,
             total=len(known_buckets[u.id]),

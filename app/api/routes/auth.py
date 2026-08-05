@@ -35,6 +35,7 @@ async def _user_response(db: AsyncSession, user: User) -> UserResponse:
         company_name=company_name,
         email=user.email,
         name=user.name,
+        avatar_url=user.avatar_url,
         is_active=user.is_active,
         is_admin=user.is_admin,
         created_at=str(user.created_at),
@@ -182,6 +183,12 @@ async def update_user(
         if user_id == admin.id and not body.is_admin:
             raise HTTPException(status_code=400, detail="You cannot remove your own admin role")
         user.is_admin = body.is_admin
+
+    if body.avatar_url is not None:
+        if body.avatar_url.strip() == "":
+            user.avatar_url = None
+        else:
+            user.avatar_url = body.avatar_url.strip()
 
     await db.commit()
     await db.refresh(user)

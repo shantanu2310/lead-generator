@@ -13,6 +13,7 @@ class UserUpdateRequest(BaseModel):
     email: EmailStr | None = None
     password: str | None = Field(default=None, min_length=6, max_length=128)
     is_admin: bool | None = None
+    avatar_url: str | None = Field(default=None, max_length=2_000_000)
 
 
 class LoginRequest(BaseModel):
@@ -26,6 +27,7 @@ class UserResponse(BaseModel):
     company_name: str | None = None
     email: str
     name: str
+    avatar_url: str | None = None
     is_active: bool
     is_admin: bool
     created_at: str | None = None

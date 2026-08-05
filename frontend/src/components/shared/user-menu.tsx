@@ -1,8 +1,9 @@
 "use client"
 
-import { LogOut, User as UserIcon } from "lucide-react"
+import { LogOut } from "lucide-react"
 import { useEffect, useState } from "react"
 import { getUser, logout, type AuthUser } from "@/lib/auth"
+import { Avatar } from "@/components/shared/avatar"
 
 export function UserMenu() {
   const [user, setUser] = useState<AuthUser | null>(null)
@@ -23,9 +24,7 @@ export function UserMenu() {
   return (
     <div className="p-4 border-t border-white/5">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
-          <UserIcon className="w-4 h-4 text-blue-400" />
-        </div>
+        <Avatar name={user.name} src={user.avatar_url} className="w-9 h-9" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-white truncate">{user.name}</p>
           <p className="text-xs text-gray-500 truncate">

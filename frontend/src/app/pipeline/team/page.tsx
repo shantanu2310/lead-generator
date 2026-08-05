@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { AuthGuard } from "@/components/auth/auth-guard"
+import { Avatar } from "@/components/shared/avatar"
 import { NotificationsDropdown } from "@/components/shared/notifications-dropdown"
 import { UserMenu } from "@/components/shared/user-menu"
 import { CompanyBadge } from "@/components/shared/company-badge"
@@ -55,6 +56,7 @@ type TeamUser = {
   id: string
   name: string
   email: string
+  avatar_url: string | null
   is_admin: boolean
   is_active: boolean
   total: number
@@ -122,11 +124,7 @@ function TeamPageContent() {
     return (
       <section key={u.id} className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden">
         <header className="flex flex-wrap items-center gap-4 px-5 py-4 border-b border-white/10">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/40 to-violet-500/40 border border-white/15 flex items-center justify-center shrink-0">
-            <span className="text-sm font-bold text-white">
-              {u.name.charAt(0).toUpperCase() || "?"}
-            </span>
-          </div>
+          <Avatar name={u.name} src={u.avatar_url} className="w-10 h-10" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold text-white truncate">{u.name}</p>

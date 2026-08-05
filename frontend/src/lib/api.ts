@@ -85,7 +85,7 @@ export const api = {
   setUserActive: (id: string, isActive: boolean) =>
     request<any>("PATCH", `/auth/users/${id}/active?is_active=${isActive}`),
 
-  updateUser: (id: string, body: { name?: string; email?: string; password?: string; is_admin?: boolean }) =>
+  updateUser: (id: string, body: { name?: string; email?: string; password?: string; is_admin?: boolean; avatar_url?: string | null }) =>
     request<any>("PATCH", `/auth/users/${id}`, body),
 
   deleteUser: (id: string) =>
