@@ -3,12 +3,17 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas.responses import (
+    LeadListItemResponse,
     PipelineAnalyticsResponse,
     PipelineStageResponse,
+    TeamLeadsResponse,
+    TeamUnassignedResponse,
+    TeamUserLeadsResponse,
 )
 from app.core.constants import PipelineStage
-from app.dependencies import get_current_user, get_db
+from app.dependencies import get_current_admin, get_current_user, get_db
 from app.models.lead import Lead
+from app.models.user import User
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
@@ -31,6 +36,43 @@ STAGE_LABELS = {
 
 def _search_filter(search_id: str | None = None):
     return Lead.search_id == search_id if search_id else None
+
+
+def _lead_item(lead: Lead, user_names: dict[str, str]) -> LeadListItemResponse:
+    return LeadListItemResponse(
+        id=lead.id,
+        search_id=lead.search_id,
+        business_name=lead.business_name,
+        website=lead.website,
+        email=lead.email,
+        phone=lead.phone,
+        pipeline_stage=lead.pipeline_stage,
+        lead_score=lead.lead_score,
+        ai_confidence=lead.ai_confidence,
+        priority=lead.priority,
+        industry=lead.industry,
+        country=lead.country,
+        city=lead.city,
+        employee_count=lead.employee_count,
+        deal_value=lead.deal_value,
+        email_status=lead.email_status,
+        meeting_status=lead.meeting_status,
+        next_followup_date=lead.next_followup_date,
+        last_activity_at=lead.last_activity_at,
+        assigned_user_id=lead.assigned_user_id,
+        assigned_user_name=(
+            user_names.get(lead.assigned_user_id) if lead.assigned_user_id else None
+        ),
+        badges=lead.badges,
+        created_at=lead.created_at,
+    )
+
+
+def _stage_summary(leads: list[Lead]) -> dict[str, int]:
+    summary: dict[str, int] = {}
+    for lead in leads:
+        summary[lead.pipeline_stage] = summary.get(lead.pipeline_stage, 0) + 1
+    return summary
 
 
 @router.get("/pipeline/stages", response_model=list[PipelineStageResponse])
@@ -140,4 +182,60 @@ async def get_pipeline_analytics(
         revenue_generated=float(won_deal_value),
         pipeline_value=float(total_deal_value),
         forecast_revenue=float(total_deal_value * 0.3),
+    )
+
+
+@router.get("/pipeline/team-leads", response_model=TeamLeadsResponse)
+async def get_team_leads(
+    per_user_limit: int = 100,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+) -> TeamLeadsResponse:
+    per = max(1, min(per_user_limit, 500))
+
+    leads = (await db.execute(
+        select(Lead)
+        .where(Lead.company_id == admin.company_id)
+        .order_by(Lead.updated_at.desc())
+    )).scalars().all()
+
+    users = (await db.execute(
+        select(User)
+        .where(User.company_id == admin.company_id)
+        .order_by(User.name)
+    )).scalars().all()
+
+    buckets: dict[str | None, list[Lead]] = {}
+    for lead in leads:
+        buckets.setdefault(lead.assigned_user_id, []).append(lead)
+
+    user_names = {u.id: u.name for u in users}
+    known_buckets = {u.id: buckets.get(u.id, []) for u in users}
+
+    unassigned_leads = list(buckets.get(None, []))
+    for key, bucket in buckets.items():
+        if key is not None and key not in user_names:
+            unassigned_leads.extend(bucket)
+
+    team_users = [
+        TeamUserLeadsResponse(
+            id=u.id,
+            name=u.name,
+            email=u.email,
+            is_admin=u.is_admin,
+            is_active=u.is_active,
+            total=len(known_buckets[u.id]),
+            by_stage=_stage_summary(known_buckets[u.id]),
+            leads=[_lead_item(lead, user_names) for lead in known_buckets[u.id][:per]],
+        )
+        for u in users
+    ]
+
+    return TeamLeadsResponse(
+        users=team_users,
+        unassigned=TeamUnassignedResponse(
+            total=len(unassigned_leads),
+            by_stage=_stage_summary(unassigned_leads),
+            leads=[_lead_item(lead, user_names) for lead in unassigned_leads[:per]],
+        ),
     )

@@ -18,7 +18,8 @@ import { formatCurrency, formatPercent } from "@/lib/utils"
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
-  { href: "/pipeline", label: "Pipeline", icon: Target },
+{ href: "/pipeline", label: "Pipeline", icon: Target },
+  { href: "/pipeline/team", label: "Team Leads", icon: Users },
   { href: "/searches", label: "Search History", icon: History },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ]

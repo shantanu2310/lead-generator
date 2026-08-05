@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useState, Suspense } from "react"
-import { Target, Menu, X, BarChart3, Settings as SettingsIcon, History, SearchX, ShieldCheck } from "lucide-react"
+import { Target, Menu, X, BarChart3, Settings as SettingsIcon, History, SearchX, ShieldCheck, Users } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { AuthGuard } from "@/components/auth/auth-guard"
@@ -23,7 +23,8 @@ type Tab = "kanban" | "table" | "charts"
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
-  { href: "/pipeline", label: "Pipeline", icon: Target },
+{ href: "/pipeline", label: "Pipeline", icon: Target },
+  { href: "/pipeline/team", label: "Team Leads", icon: Users },
   { href: "/searches", label: "Search History", icon: History },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ]

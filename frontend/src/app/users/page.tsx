@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useEffect, useState } from "react"
-import { BarChart3, Target, Settings as SettingsIcon, History, Menu, X, ShieldCheck, UserPlus, Loader2, Mail, Pencil, Trash2 } from "lucide-react"
+import { BarChart3, Target, Settings as SettingsIcon, History, Menu, X, ShieldCheck, Users, UserPlus, Loader2, Mail, Pencil, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { api } from "@/lib/api"
@@ -14,7 +14,8 @@ import { formatDate } from "@/lib/utils"
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
-  { href: "/pipeline", label: "Pipeline", icon: Target },
+{ href: "/pipeline", label: "Pipeline", icon: Target },
+  { href: "/pipeline/team", label: "Team Leads", icon: Users },
   { href: "/searches", label: "Search History", icon: History },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ]

@@ -128,6 +128,9 @@ export const api = {
   getPipelineAnalytics: (searchId?: string) =>
     request<any>("GET", `/pipeline/analytics${searchId ? `?search_id=${encodeURIComponent(searchId)}` : ""}`),
 
+  getTeamLeads: (perUserLimit?: number) =>
+    request<any>("GET", `/pipeline/team-leads${perUserLimit ? `?per_user_limit=${perUserLimit}` : ""}`),
+
   getNotifications: (unreadOnly?: boolean) =>
     request<any[]>("GET", `/notifications${unreadOnly ? "?unread_only=true" : ""}`),
 

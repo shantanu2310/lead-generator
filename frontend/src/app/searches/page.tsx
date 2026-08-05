@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { Fragment, useEffect, useState } from "react"
-import { BarChart3, Target, Settings as SettingsIcon, History, Menu, X, Eye, RotateCcw, Loader2, Inbox, Calendar, ShieldCheck, ChevronRight, ChevronDown } from "lucide-react"
+import { BarChart3, Target, Settings as SettingsIcon, History, Menu, X, Eye, RotateCcw, Loader2, Inbox, Calendar, ShieldCheck, Users, ChevronRight, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { AuthGuard } from "@/components/auth/auth-guard"
@@ -17,7 +17,8 @@ import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
-  { href: "/pipeline", label: "Pipeline", icon: Target },
+{ href: "/pipeline", label: "Pipeline", icon: Target },
+  { href: "/pipeline/team", label: "Team Leads", icon: Users },
   { href: "/searches", label: "Search History", icon: History },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ]

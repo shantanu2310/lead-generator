@@ -193,3 +193,25 @@ class StageMoveResponse(BaseModel):
     id: str
     pipeline_stage: str
     message: str
+
+
+class TeamUserLeadsResponse(BaseModel):
+    id: str
+    name: str
+    email: str
+    is_admin: bool
+    is_active: bool
+    total: int
+    by_stage: dict[str, int]
+    leads: list[LeadListItemResponse]
+
+
+class TeamUnassignedResponse(BaseModel):
+    total: int
+    by_stage: dict[str, int]
+    leads: list[LeadListItemResponse]
+
+
+class TeamLeadsResponse(BaseModel):
+    users: list[TeamUserLeadsResponse]
+    unassigned: TeamUnassignedResponse
