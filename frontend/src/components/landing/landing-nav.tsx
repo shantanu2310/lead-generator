@@ -24,6 +24,12 @@ export default function LandingNav() {
             >
               Features
             </a>
+            <Link
+              href="/architecture"
+              className="text-sm font-medium text-[#94a3b8] transition-colors hover:text-white"
+            >
+              Architecture
+            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
