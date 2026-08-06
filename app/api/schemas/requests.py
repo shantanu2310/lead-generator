@@ -107,6 +107,11 @@ class LeadAssignRequest(BaseModel):
     user_id: str | None = None
 
 
+class BulkAssignRequest(BaseModel):
+    lead_ids: list[str] = Field(min_length=1, max_length=500)
+    user_id: str | None = None
+
+
 class ContactActivityCreateRequest(BaseModel):
     activity_type: str = Field(default="other", min_length=1, max_length=50)
     contacted_at: datetime | None = None

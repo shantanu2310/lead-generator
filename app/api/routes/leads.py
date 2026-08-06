@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.schemas.requests import (
+    BulkAssignRequest,
     ContactActivityCreateRequest,
     ContactCreateRequest,
     ErrorResponse,
@@ -16,6 +17,7 @@ from app.api.schemas.requests import (
     StageMoveRequest,
 )
 from app.api.schemas.responses import (
+    BulkAssignResponse,
     ContactActivityResponse,
     ContactResponse,
     LeadDetailResponse,
@@ -28,7 +30,7 @@ from app.api.schemas.responses import (
     TimelineEventResponse,
 )
 from app.core.constants import NotificationType, OUTCOME_TO_STAGE, TimelineEventType
-from app.dependencies import get_current_user, get_db, get_pipeline_manager
+from app.dependencies import get_current_admin, get_current_user, get_db, get_pipeline_manager
 from app.models.contact_activity import ContactActivity
 from app.models.lead import Contact, Lead
 from app.models.pipeline import Notification, TimelineEvent
@@ -399,6 +401,75 @@ async def assign_lead(
             for c in lead.contacts
         ],
     )
+
+
+@router.post("/leads/bulk-assign", response_model=BulkAssignResponse)
+async def bulk_assign_leads(
+    body: BulkAssignRequest,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_admin),
+) -> BulkAssignResponse:
+    if len(set(body.lead_ids)) < len(body.lead_ids):
+        body.lead_ids = list(dict.fromkeys(body.lead_ids))
+
+    target_user_id = body.user_id
+    assignee_name = None
+    if target_user_id:
+        assignee = await db.get(User, target_user_id)
+        if not assignee or assignee.company_id != user.company_id:
+            raise HTTPException(status_code=404, detail="User not found")
+        assignee_name = assignee.name
+
+    result = await db.execute(
+        select(Lead).options(selectinload(Lead.contacts)).where(
+            Lead.company_id == user.company_id, Lead.id.in_(body.lead_ids)
+        )
+    )
+    leads = result.scalars().all()
+    leads_by_id = {lead.id: lead for lead in leads}
+
+    assigned_ids: list[str] = []
+    for lead_id in body.lead_ids:
+        lead = leads_by_id.get(lead_id)
+        if not lead:
+            continue
+        previous_assignee = lead.assigned_user_id
+        if previous_assignee == target_user_id:
+            continue
+        lead.assigned_user_id = target_user_id
+        assigned_ids.append(lead.id)
+
+        db.add(TimelineEvent(
+            lead_id=lead.id,
+            company_id=lead.company_id,
+            event_type=TimelineEventType.LEAD_ASSIGNED.value,
+            description=(
+                f"Lead assigned to user {target_user_id}" if target_user_id
+                else f"Lead unassigned (previously {previous_assignee})"
+            ),
+            event_metadata={
+                "assigned_by": user.id,
+                "assigned_to": target_user_id,
+                "previous_assignee": previous_assignee,
+                "bulk": True,
+            },
+        ))
+
+    assigned = len(assigned_ids)
+
+    if assigned and target_user_id:
+        db.add(Notification(
+            notification_type=NotificationType.LEAD_ASSIGNED.value,
+            company_id=user.company_id,
+            title="Leads assigned",
+            message=f"{assigned} lead{'s' if assigned != 1 else ''} has been assigned to you."
+            + (f" Lead IDs: {', '.join(assigned_ids[:5])}" if assigned > 5 else ""),
+        ))
+
+    await db.commit()
+
+    skipped = len(body.lead_ids) - assigned
+    return BulkAssignResponse(total=len(body.lead_ids), assigned=assigned, skipped=skipped)
 
 
 @router.get("/leads/{lead_id}/contact-activities", response_model=list[ContactActivityResponse])

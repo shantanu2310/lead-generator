@@ -216,3 +216,9 @@ class TeamUnassignedResponse(BaseModel):
 class TeamLeadsResponse(BaseModel):
     users: list[TeamUserLeadsResponse]
     unassigned: TeamUnassignedResponse
+
+
+class BulkAssignResponse(BaseModel):
+    total: int
+    assigned: int
+    skipped: int

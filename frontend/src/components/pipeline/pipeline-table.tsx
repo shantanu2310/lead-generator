@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { ChevronDown, ChevronUp, Search } from "lucide-react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { CheckSquare, ChevronDown, ChevronUp, Loader2, Search, X } from "lucide-react"
 import { useLeads, type LeadListItem } from "@/hooks/use-leads"
 import { api } from "@/lib/api"
+import { getUser } from "@/lib/auth"
 import { STAGE_LABELS } from "@/lib/constants"
 import { formatNumber, formatRelativeTime, formatDate, getScoreBgColor } from "@/lib/utils"
 import Link from "next/link"
@@ -12,11 +13,24 @@ import { useRouter } from "next/navigation"
 type SearchInfo = { query: string; created_at: string | null }
 
 export function PipelineTable() {
-  const { data, loading, params, setParams } = useLeads()
+  const { data, loading, params, setParams, refetch } = useLeads()
   const router = useRouter()
   const [sortField, setSortField] = useState("created_at")
   const [sortDir, setSortDir] = useState("desc")
   const [searches, setSearches] = useState<Record<string, SearchInfo>>({})
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [users, setUsers] = useState<Array<{ id: string; name: string; avatar_url: string | null }>>([])
+  const [targetUserId, setTargetUserId] = useState<string>("")
+  const [assigning, setAssigning] = useState(false)
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const mainCheckboxRef = useRef<HTMLInputElement>(null)
+  const me = getUser()
+  const isAdmin = !!me?.is_admin
+
+  useEffect(() => {
+    const t = setTimeout(() => setMsg(null), 4000)
+    return () => clearTimeout(t)
+  }, [msg])
 
   useEffect(() => {
     api.listSearches({ page_size: "200" }).then((res) => {
@@ -28,10 +42,25 @@ export function PipelineTable() {
     }).catch(() => {})
   }, [])
 
+  useEffect(() => {
+    if (!isAdmin) return
+    api.listUsers().then((res) => setUsers(res)).catch(() => {})
+  }, [isAdmin])
+
+  const pageIds = useMemo(() => data?.items.map((l) => l.id) ?? [], [data])
+  const allSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id))
+
+  useEffect(() => {
+    if (mainCheckboxRef.current) {
+      mainCheckboxRef.current.indeterminate =
+        pageIds.length > 0 && !allSelected && pageIds.some((id) => selected.has(id))
+    }
+  }, [selected, pageIds, allSelected])
+
   const groups = useMemo(() => {
     if (!data) return []
     const order: string[] = []
-    const bySearch: Record<string, typeof data.items> = {}
+    const bySearch: Record<string, LeadListItem[]> = {}
     for (const lead of data.items) {
       const key = lead.search_id || "none"
       if (!bySearch[key]) {
@@ -46,6 +75,48 @@ export function PipelineTable() {
       leads: bySearch[key],
     }))
   }, [data, searches])
+
+  function toggleAll() {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (allSelected) {
+        pageIds.forEach((id) => next.delete(id))
+      } else {
+        pageIds.forEach((id) => next.add(id))
+      }
+      return next
+    })
+  }
+
+  function toggleOne(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  async function applyBulkAssign() {
+    if (selected.size === 0) return
+    setAssigning(true)
+    setMsg(null)
+    try {
+      const ids = Array.from(selected)
+      const res = await api.bulkAssignLeads(ids, targetUserId || null)
+      setMsg({
+        ok: true,
+        text: `${res.assigned} lead${res.assigned === 1 ? "" : "s"} updated${res.skipped ? `, ${res.skipped} skipped` : ""}.`,
+      })
+      setSelected(new Set())
+      setTargetUserId("")
+      await refetch()
+    } catch (err: any) {
+      setMsg({ ok: false, text: err.message || "Bulk assign failed" })
+    } finally {
+      setAssigning(false)
+    }
+  }
 
   function toggleSort(field: string) {
     if (sortField === field) {
@@ -64,10 +135,63 @@ export function PipelineTable() {
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden">
+      {isAdmin && selected.size > 0 && (
+        <div className="flex items-center gap-3 flex-wrap px-4 py-3 border-b border-blue-500/20 bg-blue-500/10">
+          <span className="flex items-center gap-2 text-xs font-semibold text-blue-300 whitespace-nowrap">
+            <CheckSquare className="w-4 h-4" />
+            {selected.size} selected
+          </span>
+          <select
+            value={targetUserId}
+            onChange={(e) => setTargetUserId(e.target.value)}
+            className="bg-[#0a0f1e] border border-white/15 rounded-lg text-xs text-gray-200 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[160px]"
+          >
+            <option value="">Unassigned</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={applyBulkAssign}
+            disabled={assigning}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500 text-white text-xs font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
+          >
+            {assigning && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            {targetUserId ? "Assign to user" : "Unassign"}
+          </button>
+          <button
+            onClick={() => {
+              setSelected(new Set())
+              setTargetUserId("")
+            }}
+            disabled={assigning}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-gray-300 text-xs font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"
+          >
+            <X className="w-3.5 h-3.5" />
+            Clear
+          </button>
+          {msg && (
+            <span className={`text-xs ${msg.ok ? "text-green-400" : "text-red-400"} ml-auto`}>{msg.text}</span>
+          )}
+        </div>
+      )}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/10">
+              {isAdmin && (
+                <th className="px-4 py-3 w-8">
+                  <input
+                    ref={mainCheckboxRef}
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleAll}
+                    className="accent-blue-500"
+                  />
+                </th>
+              )}
               <Th onClick={() => toggleSort("business_name")}>
                 Company <SortIcon field="business_name" />
               </Th>
@@ -92,7 +216,7 @@ export function PipelineTable() {
             {loading ? (
               [...Array(8)].map((_, i) => (
                 <tr key={i} className="border-b border-white/5 animate-pulse">
-                  {[...Array(8)].map((_, j) => (
+                  {[...Array(isAdmin ? 9 : 8)].map((_, j) => (
                     <td key={j} className="px-4 py-3">
                       <div className="h-4 bg-white/5 rounded w-3/4" />
                     </td>
@@ -101,7 +225,7 @@ export function PipelineTable() {
               ))
             ) : data?.items.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
+                <td colSpan={isAdmin ? 9 : 8} className="px-4 py-12 text-center text-gray-500">
                   No leads found
                 </td>
               </tr>
@@ -110,6 +234,9 @@ export function PipelineTable() {
                 <GroupRows
                   key={group.key}
                   group={group}
+                  isAdmin={isAdmin}
+                  selected={selected}
+                  onToggle={toggleOne}
                   onLeadClick={(id) => router.push(`/pipeline/leads/${id}`)}
                 />
               ))
@@ -146,11 +273,23 @@ export function PipelineTable() {
 
 type Group = { key: string; info: SearchInfo | null; leads: LeadListItem[] }
 
-function GroupRows({ group, onLeadClick }: { group: Group; onLeadClick: (id: string) => void }) {
+function GroupRows({
+  group,
+  isAdmin,
+  selected,
+  onToggle,
+  onLeadClick,
+}: {
+  group: Group
+  isAdmin: boolean
+  selected: Set<string>
+  onToggle: (id: string) => void
+  onLeadClick: (id: string) => void
+}) {
   return (
     <>
       <tr className="border-b border-white/10 bg-[#0a0f1e]/40">
-        <td colSpan={8} className="px-4 py-2.5">
+        <td colSpan={isAdmin ? 9 : 8} className="px-4 py-2.5">
           <div className="flex items-center gap-2">
             <Search className="w-3.5 h-3.5 text-blue-400" />
             {group.info ? (
@@ -174,9 +313,28 @@ function GroupRows({ group, onLeadClick }: { group: Group; onLeadClick: (id: str
       {group.leads.map((lead) => (
         <tr
           key={lead.id}
-          onClick={() => onLeadClick(lead.id)}
-          className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
+          onClick={() => {
+            if (isAdmin) {
+              onToggle(lead.id)
+            } else {
+              onLeadClick(lead.id)
+            }
+          }}
+          className={`border-b border-white/5 transition-colors cursor-pointer ${
+            selected.has(lead.id) ? "bg-blue-500/10" : "hover:bg-white/5"
+          }`}
         >
+          {isAdmin && (
+            <td className="px-4 py-3">
+              <input
+                type="checkbox"
+                checked={selected.has(lead.id)}
+                onChange={() => onToggle(lead.id)}
+                onClick={(e) => e.stopPropagation()}
+                className="accent-blue-500"
+              />
+            </td>
+          )}
           <td className="px-4 py-3 font-medium text-white">
             <Link
               href={`/pipeline/leads/${lead.id}`}

@@ -119,6 +119,9 @@ export const api = {
   assignLead: (id: string, userId: string | null) =>
     request<any>("PATCH", `/leads/${id}/assign`, { user_id: userId }),
 
+  bulkAssignLeads: (leadIds: string[], userId: string | null) =>
+    request<any>("POST", "/leads/bulk-assign", { lead_ids: leadIds, user_id: userId }),
+
   getContactActivities: (id: string) =>
     request<any[]>("GET", `/leads/${id}/contact-activities`),
 
