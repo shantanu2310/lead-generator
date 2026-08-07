@@ -468,6 +468,142 @@ export default function LeadDetailPage() {
         </div>
       </Card>
 
+      <Card>
+        <div className="flex items-center gap-2 mb-4">
+          <PhoneCall className="w-5 h-5 text-green-400" />
+          <h3 className="font-semibold text-white">Contact Log</h3>
+          <div className="ml-auto flex items-center gap-2">
+            {(() => {
+              const callAttempts = activities.filter(
+                (a) => a.activity_type === "call" && CALL_ATTEMPT_OUTCOMES.includes(a.outcome)
+              ).length
+              return callAttempts > 0 ? (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-medium">
+                  {callAttempts} call attempt{callAttempts > 1 ? "s" : ""}
+                </span>
+              ) : null
+            })()}
+            <span className="text-xs text-gray-500">{activities.length} activit{activities.length === 1 ? "y" : "ies"}</span>
+          </div>
+        </div>
+
+        {msg && (
+          <div
+            className={`mb-4 text-sm rounded-lg px-4 py-2.5 border ${
+              msg.ok
+                ? "text-green-400 bg-green-500/10 border-green-500/20"
+                : "text-red-400 bg-red-500/10 border-red-500/20"
+            }`}
+          >
+            {msg.text}
+          </div>
+        )}
+
+        <form onSubmit={handleLogContact} className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs text-gray-400 mb-1.5">Channel</label>
+              <select
+                value={logForm.activity_type}
+                onChange={(e) => setLogForm({ ...logForm, activity_type: e.target.value })}
+                className="w-full px-3 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+              >
+                {CONTACT_CHANNELS.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1.5">Contacted At</label>
+              <input
+                type="datetime-local"
+                value={logForm.contacted_at}
+                onChange={(e) => setLogForm({ ...logForm, contacted_at: e.target.value })}
+                required
+                className="w-full px-3 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1.5">Result</label>
+              <select
+                value={logForm.outcome}
+                onChange={(e) => setLogForm({ ...logForm, outcome: e.target.value })}
+                className="w-full px-3 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+              >
+                {outcomeOptions}
+              </select>
+              {outcomeTargetStage(logForm.outcome) && (
+                <label className="block text-xs text-blue-400 mt-1.5">
+                  Moves lead to: {outcomeTargetStage(logForm.outcome)}
+                </label>
+              )}
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1.5">Next Follow-up (optional)</label>
+              <input
+                type="datetime-local"
+                value={logForm.next_followup_at}
+                onChange={(e) => setLogForm({ ...logForm, next_followup_at: e.target.value })}
+                className="w-full px-3 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+              />
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <input
+              value={logForm.summary}
+              onChange={(e) => setLogForm({ ...logForm, summary: e.target.value })}
+              placeholder="Notes — what happened, what was said…"
+              className="flex-1 px-4 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors"
+            />
+            <button
+              type="submit"
+              disabled={savingLog}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+            >
+              {savingLog && <Loader2 className="w-4 h-4 animate-spin" />}
+              Log Contact
+            </button>
+          </div>
+        </form>
+
+        <div className="mt-4 space-y-3">
+          {activities.length === 0 && (
+            <p className="text-sm text-gray-500 text-center py-6">
+              No contact attempts logged yet
+            </p>
+          )}
+          {activities.map((a) => {
+            const o = outcomeStyle(a.outcome)
+            return (
+              <div key={a.id} className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="w-9 h-9 rounded-full bg-violet-500/20 flex items-center justify-center shrink-0">
+                  <PhoneCall className="w-4 h-4 text-violet-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium text-white">{a.user_name || "Unknown"}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-gray-300 capitalize">
+                      {a.activity_type}
+                    </span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${o.color}`}>{o.label}</span>
+                    <span className="text-xs text-gray-500 ml-auto">
+                      {formatDate(a.contacted_at)}
+                    </span>
+                  </div>
+                  {a.summary && <p className="text-sm text-gray-300 mt-1.5">{a.summary}</p>}
+                  {a.next_followup_at && (
+                    <p className="flex items-center gap-1.5 text-xs text-amber-400 mt-1.5">
+                      <CalendarClock className="w-3.5 h-3.5" />
+                      Next follow-up: {formatDate(a.next_followup_at)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
           <Card>
@@ -615,141 +751,6 @@ export default function LeadDetailPage() {
         </div>
       </div>
 
-      <Card>
-        <div className="flex items-center gap-2 mb-4">
-          <PhoneCall className="w-5 h-5 text-green-400" />
-          <h3 className="font-semibold text-white">Contact Log</h3>
-          <div className="ml-auto flex items-center gap-2">
-            {(() => {
-              const callAttempts = activities.filter(
-                (a) => a.activity_type === "call" && CALL_ATTEMPT_OUTCOMES.includes(a.outcome)
-              ).length
-              return callAttempts > 0 ? (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-medium">
-                  {callAttempts} call attempt{callAttempts > 1 ? "s" : ""}
-                </span>
-              ) : null
-            })()}
-            <span className="text-xs text-gray-500">{activities.length} activit{activities.length === 1 ? "y" : "ies"}</span>
-          </div>
-        </div>
-
-        {msg && (
-          <div
-            className={`mb-4 text-sm rounded-lg px-4 py-2.5 border ${
-              msg.ok
-                ? "text-green-400 bg-green-500/10 border-green-500/20"
-                : "text-red-400 bg-red-500/10 border-red-500/20"
-            }`}
-          >
-            {msg.text}
-          </div>
-        )}
-
-        <form onSubmit={handleLogContact} className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Channel</label>
-              <select
-                value={logForm.activity_type}
-                onChange={(e) => setLogForm({ ...logForm, activity_type: e.target.value })}
-                className="w-full px-3 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
-              >
-                {CONTACT_CHANNELS.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Contacted At</label>
-              <input
-                type="datetime-local"
-                value={logForm.contacted_at}
-                onChange={(e) => setLogForm({ ...logForm, contacted_at: e.target.value })}
-                required
-                className="w-full px-3 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Result</label>
-              <select
-                value={logForm.outcome}
-                onChange={(e) => setLogForm({ ...logForm, outcome: e.target.value })}
-                className="w-full px-3 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
-              >
-                {outcomeOptions}
-              </select>
-              {outcomeTargetStage(logForm.outcome) && (
-                <label className="block text-xs text-blue-400 mt-1.5">
-                  Moves lead to: {outcomeTargetStage(logForm.outcome)}
-                </label>
-              )}
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Next Follow-up (optional)</label>
-              <input
-                type="datetime-local"
-                value={logForm.next_followup_at}
-                onChange={(e) => setLogForm({ ...logForm, next_followup_at: e.target.value })}
-                className="w-full px-3 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
-              />
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <input
-              value={logForm.summary}
-              onChange={(e) => setLogForm({ ...logForm, summary: e.target.value })}
-              placeholder="Notes — what happened, what was said…"
-              className="flex-1 px-4 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors"
-            />
-            <button
-              type="submit"
-              disabled={savingLog}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
-            >
-              {savingLog && <Loader2 className="w-4 h-4 animate-spin" />}
-              Log Contact
-            </button>
-          </div>
-        </form>
-
-        <div className="mt-4 space-y-3">
-          {activities.length === 0 && (
-            <p className="text-sm text-gray-500 text-center py-6">
-              No contact attempts logged yet
-            </p>
-          )}
-          {activities.map((a) => {
-            const o = outcomeStyle(a.outcome)
-            return (
-              <div key={a.id} className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="w-9 h-9 rounded-full bg-violet-500/20 flex items-center justify-center shrink-0">
-                  <PhoneCall className="w-4 h-4 text-violet-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-medium text-white">{a.user_name || "Unknown"}</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-gray-300 capitalize">
-                      {a.activity_type}
-                    </span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${o.color}`}>{o.label}</span>
-                    <span className="text-xs text-gray-500 ml-auto">
-                      {formatDate(a.contacted_at)}
-                    </span>
-                  </div>
-                  {a.summary && <p className="text-sm text-gray-300 mt-1.5">{a.summary}</p>}
-                  {a.next_followup_at && (
-                    <p className="flex items-center gap-1.5 text-xs text-amber-400 mt-1.5">
-                      <CalendarClock className="w-3.5 h-3.5" />
-                      Next follow-up: {formatDate(a.next_followup_at)}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </Card>
 
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
