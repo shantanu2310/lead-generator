@@ -133,6 +133,8 @@ export const api = {
 
   deleteSearch: (id: string) => request<any>("DELETE", `/searches/${id}`),
 
+  restoreSearch: (id: string) => request<any>("PATCH", `/searches/${id}/restore`),
+
   getLead: (id: string) => request<any>("GET", `/leads/${id}`),
 
   updateLead: (id: string, body: any) =>

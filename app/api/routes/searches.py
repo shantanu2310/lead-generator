@@ -18,19 +18,23 @@ router = APIRouter(dependencies=[Depends(get_current_user)])
 async def list_searches(
     page: int = 1,
     page_size: int = 20,
+    archived: bool = False,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> PaginatedResponse:
+    scope = (
+        Search.archived_at.is_not(None) if archived else Search.archived_at.is_(None)
+    )
     count_stmt = (
         select(func.count(Search.id))
-        .where(Search.company_id == user.company_id, Search.archived_at.is_(None))
+        .where(Search.company_id == user.company_id, scope)
     )
     total = await db.scalar(count_stmt) or 0
     total_pages = max(1, math.ceil(total / page_size))
 
     result = await db.execute(
         select(Search)
-        .where(Search.company_id == user.company_id, Search.archived_at.is_(None))
+        .where(Search.company_id == user.company_id, scope)
         .order_by(Search.created_at.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
@@ -86,3 +90,28 @@ async def archive_search(
     search.archived_at = utcnow()
     await db.commit()
     return Response(status_code=204)
+
+
+@router.patch("/searches/{search_id}/restore", response_model=SearchResponse)
+async def restore_search(
+    search_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> SearchResponse:
+    search = await db.get(Search, search_id)
+    if not search or search.company_id != user.company_id:
+        raise HTTPException(status_code=404, detail="Search not found")
+    search.archived_at = None
+    await db.commit()
+    return SearchResponse(
+        id=search.id,
+        query=search.query,
+        status=search.status,
+        candidates_discovered=search.candidates_discovered,
+        candidates_after_dedup=search.candidates_after_dedup,
+        leads_qualified=search.leads_qualified,
+        leads_returned=search.leads_returned,
+        lead_count=0,
+        created_at=search.created_at,
+        completed_at=search.completed_at,
+    )

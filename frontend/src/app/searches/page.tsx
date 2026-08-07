@@ -44,6 +44,8 @@ export default function SearchesPage() {
   const [pageSize] = useState(20)
   const [rerunning, setRerunning] = useState<string | null>(null)
   const [archiving, setArchiving] = useState<string | null>(null)
+  const [restoring, setRestoring] = useState<string | null>(null)
+  const [showArchived, setShowArchived] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [searchLeads, setSearchLeads] = useState<Record<string, LeadListItem[]>>({})
@@ -54,7 +56,7 @@ export default function SearchesPage() {
   async function load(p = page) {
     try {
       setLoading(true)
-      const data = await api.listSearches({ page: String(p), page_size: String(pageSize) })
+      const data = await api.listSearches({ page: String(p), page_size: String(pageSize), archived: String(showArchived) })
       setItems(data.items)
       setTotal(data.total)
     } catch (err: any) {
@@ -68,6 +70,11 @@ export default function SearchesPage() {
     load(1)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    load(1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showArchived])
 
   function goToPage(p: number) {
     setPage(p)
@@ -101,6 +108,25 @@ async function rerun(s: SearchItem) {
     } finally {
       setArchiving(null)
     }
+  }
+
+  async function restore(s: SearchItem) {
+    setRestoring(s.id)
+    setMsg(null)
+    try {
+      await api.restoreSearch(s.id)
+      setMsg({ ok: true, text: "Search restored" })
+      load(page)
+    } catch (err: any) {
+      setMsg({ ok: false, text: err.message || "Restore failed" })
+    } finally {
+      setRestoring(null)
+    }
+  }
+
+  function toggleArchived() {
+    setShowArchived((v) => !v)
+    setPage(1)
   }
 
   async function toggleExpand(s: SearchItem) {
@@ -189,6 +215,28 @@ async function rerun(s: SearchItem) {
 
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-5xl mx-auto space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-white">
+                  {showArchived ? "Archived searches" : "Active searches"}
+                </h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {showArchived ? "Search history you have archived" : "Past lead searches"}
+                </p>
+              </div>
+              <button
+                onClick={toggleArchived}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  showArchived
+                    ? "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
+                    : "bg-white/5 text-gray-300 hover:bg-white/10"
+                }`}
+              >
+                <Archive className="w-4 h-4" />
+                {showArchived ? "Show active" : "Archived"}
+              </button>
+            </div>
+
             {msg && (
               <div className={`px-4 py-3 rounded-lg text-sm ${
                 msg.ok ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
@@ -207,8 +255,10 @@ async function rerun(s: SearchItem) {
               ) : items.length === 0 ? (
                 <div className="text-center py-16">
                   <Inbox className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-500">No searches yet</p>
-                  <p className="text-xs text-gray-600 mt-1">Run a lead search to see history here</p>
+                  <p className="text-gray-500">{showArchived ? "No archived searches" : "No searches yet"}</p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    {showArchived ? "Archived searches will appear here" : "Run a lead search to see history here"}
+                  </p>
                 </div>
               ) : (
                 <table className="w-full text-sm">
@@ -256,6 +306,11 @@ async function rerun(s: SearchItem) {
                             }`}>
                               {s.status}
                             </span>
+                            {showArchived && (
+                              <span className="ml-1.5 text-xs px-2 py-0.5 rounded bg-gray-500/10 text-gray-400">
+                                Archived
+                              </span>
+                            )}
                           </td>
                           <td className="px-4 py-3 text-right text-gray-300">{s.candidates_discovered}</td>
                           <td className="px-4 py-3 text-right text-gray-300">{s.leads_qualified}</td>
@@ -284,6 +339,18 @@ async function rerun(s: SearchItem) {
 {rerunning === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
                                 Re-run
                               </button>
+                              {showArchived && (
+                                <button
+                                  onClick={() => restore(s)}
+                                  disabled={restoring === s.id}
+                                  title="Restore this search"
+                                  className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-300 hover:text-blue-400 bg-white/5 hover:bg-blue-500/10 rounded-lg disabled:opacity-50 transition-colors"
+                                >
+                                  {restoring === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                                  Restore
+                                </button>
+                              )}
+                              {!showArchived && (
                               <button
                                 onClick={() => archive(s)}
                                 disabled={archiving === s.id}
@@ -293,6 +360,7 @@ async function rerun(s: SearchItem) {
                                 {archiving === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
                                 Archive
                               </button>
+                              )}
                             </div>
                           </td>
                         </tr>
