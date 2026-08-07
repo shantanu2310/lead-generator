@@ -22,6 +22,7 @@ class Search(Base):
     leads_returned: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(default=utcnow)
     completed_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    archived_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
     intent = relationship("SearchIntent", back_populates="search", uselist=False)
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { CheckSquare, ChevronDown, ChevronUp, Loader2, Search, X } from "lucide-react"
+import { CheckSquare, ChevronDown, ChevronUp, Download, Loader2, Search, X } from "lucide-react"
 import { useLeads, type LeadListItem } from "@/hooks/use-leads"
 import { api } from "@/lib/api"
 import { getUser } from "@/lib/auth"
@@ -22,6 +22,7 @@ export function PipelineTable() {
   const [users, setUsers] = useState<Array<{ id: string; name: string; avatar_url: string | null }>>([])
   const [targetUserId, setTargetUserId] = useState<string>("")
   const [assigning, setAssigning] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const mainCheckboxRef = useRef<HTMLInputElement>(null)
   const me = getUser()
@@ -118,14 +119,25 @@ export function PipelineTable() {
     }
   }
 
+  async function exportCsv() {
+    setExporting(true)
+    try {
+      await api.exportLeads({ ...params, page_size: "5000", page: "1" })
+    } catch (err: any) {
+      setMsg({ ok: false, text: err.message || "Export failed" })
+    } finally {
+      setExporting(false)
+    }
+  }
+
   function toggleSort(field: string) {
+    const nextDir = sortField === field ? (sortDir === "asc" ? "desc" : "asc") : "desc"
     if (sortField === field) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"))
     } else {
       setSortField(field)
-      setSortDir("desc")
     }
-    setParams({ ...params, sort_by: field, sort_order: sortDir === "asc" ? "desc" : "asc" })
+    setParams({ ...params, sort_by: field, sort_order: nextDir })
   }
 
   function SortIcon({ field }: { field: string }) {
@@ -135,6 +147,16 @@ export function PipelineTable() {
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden">
+      <div className="flex items-center justify-end px-4 py-2 border-b border-white/5">
+        <button
+          onClick={exportCsv}
+          disabled={exporting}
+          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+        >
+          {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+          Export CSV
+        </button>
+      </div>
       {isAdmin && selected.size > 0 && (
         <div className="flex items-center gap-3 flex-wrap px-4 py-3 border-b border-blue-500/20 bg-blue-500/10">
           <span className="flex items-center gap-2 text-xs font-semibold text-blue-300 whitespace-nowrap">

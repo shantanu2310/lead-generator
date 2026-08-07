@@ -1,13 +1,15 @@
 import math
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas.responses import PaginatedResponse, SearchResponse
+from app.database.base import utcnow
 from app.dependencies import get_current_user, get_db
 from app.models.lead import Lead
 from app.models.search import Search
+from app.models.user import User
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
@@ -19,13 +21,16 @@ async def list_searches(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> PaginatedResponse:
-    count_stmt = select(func.count(Search.id)).where(Search.company_id == user.company_id)
+    count_stmt = (
+        select(func.count(Search.id))
+        .where(Search.company_id == user.company_id, Search.archived_at.is_(None))
+    )
     total = await db.scalar(count_stmt) or 0
     total_pages = max(1, math.ceil(total / page_size))
 
     result = await db.execute(
         select(Search)
-        .where(Search.company_id == user.company_id)
+        .where(Search.company_id == user.company_id, Search.archived_at.is_(None))
         .order_by(Search.created_at.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
@@ -67,3 +72,17 @@ async def list_searches(
         page_size=page_size,
         total_pages=total_pages,
     )
+
+
+@router.delete("/searches/{search_id}", status_code=204)
+async def archive_search(
+    search_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Response:
+    search = await db.get(Search, search_id)
+    if not search or search.company_id != user.company_id:
+        raise HTTPException(status_code=404, detail="Search not found")
+    search.archived_at = utcnow()
+    await db.commit()
+    return Response(status_code=204)

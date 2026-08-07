@@ -108,6 +108,31 @@ export const api = {
     return request<any>("GET", `/leads${qs}`)
   },
 
+  exportLeads: async (params?: Record<string, string>): Promise<void> => {
+    const qs = params ? "?" + new URLSearchParams(params).toString() : ""
+    const url = `${API_BASE}/api/v1/leads/export.csv${qs}`
+    const token = getToken()
+    const res = await fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    if (!res.ok) throw new Error(`Export failed (${res.status})`)
+    const blob = await res.blob()
+    const link = document.createElement("a")
+    link.href = URL.createObjectURL(blob)
+    link.download = "leads.csv"
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(link.href)
+  },
+
+  deleteLead: (id: string) => request<any>("DELETE", `/leads/${id}`),
+
+  deleteContact: (leadId: string, contactId: string) =>
+    request<any>("DELETE", `/leads/${leadId}/contacts/${contactId}`),
+
+  deleteSearch: (id: string) => request<any>("DELETE", `/searches/${id}`),
+
   getLead: (id: string) => request<any>("GET", `/leads/${id}`),
 
   updateLead: (id: string, body: any) =>

@@ -7,6 +7,8 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from sqlalchemy import text
+
 from app.api.routes import api_router
 from app.config import settings
 from app.core.logging import get_logger, setup_logging
@@ -30,6 +32,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     if engine:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+            try:
+                await conn.execute(text("ALTER TABLE searches ADD COLUMN archived_at TIMESTAMP"))
+            except Exception:
+                pass
         logger.info("database_tables_created")
     else:
         logger.warning("database_not_available")

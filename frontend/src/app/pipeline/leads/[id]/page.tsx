@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Mail, Phone, Globe, MapPin, Map, Target, TrendingUp, Building2, Users, UserCheck, UserPlus, UserX, Loader2, PhoneCall, CalendarClock } from "lucide-react"
+import { ArrowLeft, Mail, Phone, Globe, MapPin, Map, Target, TrendingUp, Building2, Users, UserCheck, UserPlus, UserX, Loader2, PhoneCall, CalendarClock, Pencil, Trash2, Plus, X } from "lucide-react"
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { api } from "@/lib/api"
 import { getUser } from "@/lib/auth"
@@ -37,6 +37,32 @@ const EMPTY_LOG_FORM = {
   summary: "",
 }
 
+const EMPTY_EDIT_FORM = {
+  business_name: "",
+  website: "",
+  email: "",
+  phone: "",
+  address: "",
+  industry: "",
+  employee_count: "",
+  revenue: "",
+  country: "",
+  state: "",
+  city: "",
+  priority: "medium",
+  deal_value: "",
+  next_followup_date: "",
+}
+
+const EMPTY_CONTACT_FORM = {
+  name: "",
+  job_title: "",
+  email: "",
+  phone: "",
+  linkedin_url: "",
+  is_primary: false,
+}
+
 export default function LeadDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -50,6 +76,14 @@ export default function LeadDetailPage() {
   const [movingStage, setMovingStage] = useState(false)
   const [assigning, setAssigning] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [editForm, setEditForm] = useState({ ...EMPTY_EDIT_FORM })
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [deletingLead, setDeletingLead] = useState(false)
+  const [showAddContact, setShowAddContact] = useState(false)
+  const [contactForm, setContactForm] = useState({ ...EMPTY_CONTACT_FORM })
+  const [addingContact, setAddingContact] = useState(false)
+  const [deletingContactId, setDeletingContactId] = useState<string | null>(null)
 
   const isAdmin = me?.is_admin === true
   const isAssignee = lead?.assigned_user_id === me?.id
@@ -133,6 +167,113 @@ export default function LeadDetailPage() {
     }
   }
 
+  function openEdit() {
+    setEditForm({
+      business_name: lead.business_name || "",
+      website: lead.website || "",
+      email: lead.email || "",
+      phone: lead.phone || "",
+      address: lead.address || "",
+      industry: lead.industry || "",
+      employee_count: lead.employee_count != null ? String(lead.employee_count) : "",
+      revenue: lead.revenue || "",
+      country: lead.country || "",
+      state: lead.state || "",
+      city: lead.city || "",
+      priority: lead.priority || "medium",
+      deal_value: lead.deal_value != null ? String(lead.deal_value) : "",
+      next_followup_date: lead.next_followup_date ? toLocalInput(new Date(lead.next_followup_date)) : "",
+    })
+    setEditing(true)
+  }
+
+  async function handleSaveEdit(e: React.FormEvent) {
+    e.preventDefault()
+    setSavingEdit(true)
+    setMsg(null)
+    try {
+      const body: any = {
+        business_name: editForm.business_name || null,
+        website: editForm.website || null,
+        email: editForm.email || null,
+        phone: editForm.phone || null,
+        address: editForm.address || null,
+        industry: editForm.industry || null,
+        employee_count: editForm.employee_count ? Number(editForm.employee_count) : null,
+        revenue: editForm.revenue || null,
+        country: editForm.country || null,
+        state: editForm.state || null,
+        city: editForm.city || null,
+        priority: editForm.priority || null,
+        deal_value: editForm.deal_value ? Number(editForm.deal_value) : 0,
+        next_followup_date: editForm.next_followup_date
+          ? new Date(editForm.next_followup_date).toISOString()
+          : null,
+      }
+      const updated = await api.updateLead(lead.id, body)
+      setLead(updated)
+      setEditing(false)
+      setMsg({ ok: true, text: "Lead updated" })
+    } catch (err: any) {
+      setMsg({ ok: false, text: err.message || "Failed to update lead" })
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
+  async function handleDeleteLead() {
+    if (!confirm(`Delete "${lead.business_name}"? This cannot be undone (all contacts, activities and timeline are removed).`)) return
+    setDeletingLead(true)
+    setMsg(null)
+    try {
+      await api.deleteLead(lead.id)
+      router.replace("/pipeline")
+    } catch (err: any) {
+      setMsg({ ok: false, text: err.message || "Failed to delete lead" })
+      setDeletingLead(false)
+    }
+  }
+
+  async function handleAddContact(e: React.FormEvent) {
+    e.preventDefault()
+    setAddingContact(true)
+    setMsg(null)
+    try {
+      const body: any = {
+        name: contactForm.name,
+        job_title: contactForm.job_title || null,
+        email: contactForm.email || null,
+        phone: contactForm.phone || null,
+        linkedin_url: contactForm.linkedin_url || null,
+        is_primary: contactForm.is_primary,
+      }
+      await api.createContact(lead.id, body)
+      const updatedLead = await api.getLead(lead.id)
+      setLead(updatedLead)
+      setContactForm({ ...EMPTY_CONTACT_FORM })
+      setShowAddContact(false)
+      setMsg({ ok: true, text: "Contact added" })
+    } catch (err: any) {
+      setMsg({ ok: false, text: err.message || "Failed to add contact" })
+    } finally {
+      setAddingContact(false)
+    }
+  }
+
+  async function handleDeleteContact(contactId: string) {
+    setDeletingContactId(contactId)
+    setMsg(null)
+    try {
+      await api.deleteContact(lead.id, contactId)
+      setLead(await api.getLead(lead.id))
+      setMsg({ ok: true, text: "Contact removed" })
+    } catch (err: any) {
+      setMsg({ ok: false, text: err.message || "Failed to remove contact" })
+    } finally {
+      setDeletingContactId(null)
+    }
+  }
+
   if (loading) {
     return (
       <div className="p-8 max-w-5xl mx-auto animate-pulse space-y-6">
@@ -186,9 +327,30 @@ export default function LeadDetailPage() {
             {" · "}AI: {(lead.ai_confidence * 100).toFixed(0)}%
           </p>
         </div>
-        {lead.company_logo_url && (
-          <img src={lead.company_logo_url} alt="" className="w-16 h-16 rounded-xl bg-white/5 object-contain" />
-        )}
+        <div className="flex flex-col items-end gap-3 shrink-0">
+          {isAdmin && (
+            <div className="flex gap-2">
+              <button
+                onClick={openEdit}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-gray-300 hover:bg-white/10 transition-colors"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Edit
+              </button>
+              <button
+                onClick={handleDeleteLead}
+                disabled={deletingLead}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+              >
+                {deletingLead ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                Delete
+              </button>
+            </div>
+          )}
+          {lead.company_logo_url && (
+            <img src={lead.company_logo_url} alt="" className="w-16 h-16 rounded-xl bg-white/5 object-contain" />
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -333,9 +495,79 @@ export default function LeadDetailPage() {
             </div>
           </Card>
 
-          {lead.contacts && lead.contacts.length > 0 && (
-            <Card>
-              <h3 className="font-semibold text-white mb-4">Contacts</h3>
+          <Card>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-white">Contacts ({lead.contacts?.length || 0})</h3>
+              <button
+                onClick={() => setShowAddContact((s) => !s)}
+                className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                {showAddContact ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                {showAddContact ? "Cancel" : "Add contact"}
+              </button>
+            </div>
+
+            {showAddContact && (
+              <form onSubmit={handleAddContact} className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-3 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    value={contactForm.name}
+                    onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                    placeholder="Name *"
+                    required
+                    className="px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
+                  />
+                  <input
+                    value={contactForm.job_title}
+                    onChange={(e) => setContactForm({ ...contactForm, job_title: e.target.value })}
+                    placeholder="Job title"
+                    className="px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
+                  />
+                  <input
+                    value={contactForm.email}
+                    onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                    placeholder="Email"
+                    type="email"
+                    className="px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
+                  />
+                  <input
+                    value={contactForm.phone}
+                    onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
+                    placeholder="Phone"
+                    className="px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
+                  />
+                  <input
+                    value={contactForm.linkedin_url}
+                    onChange={(e) => setContactForm({ ...contactForm, linkedin_url: e.target.value })}
+                    placeholder="LinkedIn URL"
+                    className="px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
+                  />
+                  <label className="flex items-center gap-2 text-xs text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={contactForm.is_primary}
+                      onChange={(e) => setContactForm({ ...contactForm, is_primary: e.target.checked })}
+                      className="accent-blue-500"
+                    />
+                    Primary contact
+                  </label>
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={addingContact}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
+                  >
+                    {addingContact && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Save contact
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {(lead.contacts || []).length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-6">No contacts yet</p>
+            ) : (
               <div className="space-y-3">
                 {lead.contacts.map((contact: any) => (
                   <div key={contact.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
@@ -346,19 +578,33 @@ export default function LeadDetailPage() {
                       </p>
                       {contact.job_title && <p className="text-xs text-gray-400">{contact.job_title}</p>}
                     </div>
-                    <div className="text-right text-xs text-gray-400">
-                      {contact.email && <p>{contact.email}</p>}
-                      {contact.phone && (
-                        <a href={`tel:${contact.phone}`} className="text-white hover:text-blue-400 transition-colors">
-                          {contact.phone}
-                        </a>
-                      )}
+                    <div className="flex items-center gap-3 text-right">
+                      <div className="text-xs text-gray-400">
+                        {contact.email && <p>{contact.email}</p>}
+                        {contact.phone && (
+                          <a href={`tel:${contact.phone}`} className="text-white hover:text-blue-400 transition-colors">
+                            {contact.phone}
+                          </a>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteContact(contact.id)}
+                        disabled={deletingContactId === contact.id}
+                        className="text-red-400 hover:text-red-300 transition-colors disabled:opacity-40"
+                        title="Remove contact"
+                      >
+                        {deletingContactId === contact.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5" />
+                        )}
+                      </button>
                     </div>
                   </div>
                 ))}
               </div>
-            </Card>
-          )}
+            )}
+          </Card>
         </div>
 
         <div>
@@ -504,8 +750,98 @@ export default function LeadDetailPage() {
           })}
         </div>
       </Card>
+
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#0f172a] p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-semibold text-lg text-white">Edit Lead</h3>
+              <button
+                onClick={() => setEditing(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSaveEdit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Business name">
+                <input value={editForm.business_name} onChange={(e) => setEditForm({ ...editForm, business_name: e.target.value })} className="w-full px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+              </Field>
+              <Field label="Website">
+                <input value={editForm.website} onChange={(e) => setEditForm({ ...editForm, website: e.target.value })} className="w-full px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+              </Field>
+              <Field label="Email">
+                <input value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className="w-full px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+              </Field>
+              <Field label="Phone">
+                <input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="w-full px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+              </Field>
+              <Field label="Address">
+                <input value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} className="w-full px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+              </Field>
+              <Field label="Industry">
+                <input value={editForm.industry} onChange={(e) => setEditForm({ ...editForm, industry: e.target.value })} className="w-full px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+              </Field>
+              <Field label="Employees">
+                <input value={editForm.employee_count} onChange={(e) => setEditForm({ ...editForm, employee_count: e.target.value })} type="number" className="w-full px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+              </Field>
+              <Field label="Revenue">
+                <input value={editForm.revenue} onChange={(e) => setEditForm({ ...editForm, revenue: e.target.value })} className="w-full px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+              </Field>
+              <Field label="Country">
+                <input value={editForm.country} onChange={(e) => setEditForm({ ...editForm, country: e.target.value })} className="w-full px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+              </Field>
+              <Field label="State">
+                <input value={editForm.state} onChange={(e) => setEditForm({ ...editForm, state: e.target.value })} className="w-full px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+              </Field>
+              <Field label="City">
+                <input value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} className="w-full px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+              </Field>
+              <Field label="Priority">
+                <select value={editForm.priority} onChange={(e) => setEditForm({ ...editForm, priority: e.target.value })} className="w-full px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors">
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </Field>
+              <Field label="Deal value ($)">
+                <input value={editForm.deal_value} onChange={(e) => setEditForm({ ...editForm, deal_value: e.target.value })} type="number" step="0.01" className="w-full px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+              </Field>
+              <Field label="Next follow-up">
+                <input value={editForm.next_followup_date} onChange={(e) => setEditForm({ ...editForm, next_followup_date: e.target.value })} type="datetime-local" className="w-full px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+              </Field>
+              <div className="sm:col-span-2 flex justify-end gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditing(false)}
+                  className="px-4 py-2 rounded-lg bg-white/10 text-gray-300 text-sm font-medium hover:bg-white/20 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
+                >
+                  {savingEdit && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Save changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
     </AuthGuard>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-xs text-gray-400 mb-1.5">{label}</label>
+      {children}
+    </div>
   )
 }
 

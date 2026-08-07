@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { Fragment, useEffect, useState } from "react"
-import { BarChart3, Target, Settings as SettingsIcon, History, Menu, X, Eye, RotateCcw, Loader2, Inbox, Calendar, ShieldCheck, Users, ChevronRight, ChevronDown } from "lucide-react"
+import { BarChart3, Target, Settings as SettingsIcon, History, Menu, X, Eye, RotateCcw, Loader2, Inbox, Calendar, ShieldCheck, Users, ChevronRight, ChevronDown, Archive } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { AuthGuard } from "@/components/auth/auth-guard"
@@ -43,6 +43,7 @@ export default function SearchesPage() {
   const [page, setPage] = useState(1)
   const [pageSize] = useState(20)
   const [rerunning, setRerunning] = useState<string | null>(null)
+  const [archiving, setArchiving] = useState<string | null>(null)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [searchLeads, setSearchLeads] = useState<Record<string, LeadListItem[]>>({})
@@ -73,7 +74,7 @@ export default function SearchesPage() {
     load(p)
   }
 
-  async function rerun(s: SearchItem) {
+async function rerun(s: SearchItem) {
     setRerunning(s.id)
     setMsg(null)
     try {
@@ -84,6 +85,21 @@ export default function SearchesPage() {
       setMsg({ ok: false, text: err.message || "Re-run failed" })
     } finally {
       setRerunning(null)
+    }
+  }
+
+  async function archive(s: SearchItem) {
+    if (!confirm(`Archive "${s.query}"? Its leads stay in the pipeline; the search is hidden from history.`)) return
+    setArchiving(s.id)
+    setMsg(null)
+    try {
+      await api.deleteSearch(s.id)
+      setMsg({ ok: true, text: "Search archived" })
+      load(page)
+    } catch (err: any) {
+      setMsg({ ok: false, text: err.message || "Archive failed" })
+    } finally {
+      setArchiving(null)
     }
   }
 
@@ -265,8 +281,17 @@ export default function SearchesPage() {
                                 title="Re-run this search"
                                 className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg disabled:opacity-50 transition-colors"
                               >
-                                {rerunning === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+{rerunning === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
                                 Re-run
+                              </button>
+                              <button
+                                onClick={() => archive(s)}
+                                disabled={archiving === s.id}
+                                title="Archive this search"
+                                className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-300 hover:text-red-400 bg-white/5 hover:bg-red-500/10 rounded-lg disabled:opacity-50 transition-colors"
+                              >
+                                {archiving === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+                                Archive
                               </button>
                             </div>
                           </td>
