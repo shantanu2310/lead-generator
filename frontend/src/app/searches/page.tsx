@@ -280,7 +280,7 @@ async function rerun(s: SearchItem) {
                         <Fragment key={s.id}>
                         <tr
                           onClick={() => toggleExpand(s)}
-                          className={`border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${isExpanded ? "bg-white/5" : ""}`}
+                          className={`border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${isExpanded ? "bg-white/5" : ""} ${showArchived ? "opacity-60 hover:opacity-100" : ""}`}
                         >
                           <td className="px-4 py-3 font-medium text-white max-w-[260px] truncate">
                             <span className="flex items-center gap-2">
@@ -319,47 +319,48 @@ async function rerun(s: SearchItem) {
                               {s.lead_count}
                             </span>
                           </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+<td className="px-4 py-3">
+                            <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                               <button
                                 onClick={() => router.push(`/pipeline?search_id=${s.id}&q=${encodeURIComponent(s.query)}`)}
                                 disabled={s.lead_count === 0}
                                 title={s.lead_count === 0 ? "No leads from this search" : "View leads"}
-                                className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg disabled:opacity-30 transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-300 hover:text-white bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-400/40 rounded-lg disabled:opacity-30 disabled:pointer-events-none transition-colors"
                               >
                                 <Eye className="w-3.5 h-3.5" />
                                 View leads
                               </button>
-                              <button
-                                onClick={() => rerun(s)}
-                                disabled={rerunning === s.id}
-                                title="Re-run this search"
-                                className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg disabled:opacity-50 transition-colors"
-                              >
-{rerunning === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
-                                Re-run
-                              </button>
-                              {showArchived && (
+                              {!showArchived && (
+                                <button
+                                  onClick={() => rerun(s)}
+                                  disabled={rerunning === s.id}
+                                  title="Re-run this search"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-300 bg-white/5 hover:bg-white/10 hover:text-white rounded-lg disabled:opacity-50 transition-colors"
+                                >
+                                  {rerunning === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                                  Re-run
+                                </button>
+                              )}
+                              {showArchived ? (
                                 <button
                                   onClick={() => restore(s)}
                                   disabled={restoring === s.id}
                                   title="Restore this search"
-                                  className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-300 hover:text-blue-400 bg-white/5 hover:bg-blue-500/10 rounded-lg disabled:opacity-50 transition-colors"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-400/40 rounded-lg disabled:opacity-50 transition-colors"
                                 >
                                   {restoring === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
                                   Restore
                                 </button>
-                              )}
-                              {!showArchived && (
-                              <button
-                                onClick={() => archive(s)}
-                                disabled={archiving === s.id}
-                                title="Archive this search"
-                                className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-300 hover:text-red-400 bg-white/5 hover:bg-red-500/10 rounded-lg disabled:opacity-50 transition-colors"
-                              >
-                                {archiving === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
-                                Archive
-                              </button>
+                              ) : (
+                                <button
+                                  onClick={() => archive(s)}
+                                  disabled={archiving === s.id}
+                                  title="Archive this search"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-400/40 rounded-lg disabled:opacity-50 transition-colors"
+                                >
+                                  {archiving === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+                                  Archive
+                                </button>
                               )}
                             </div>
                           </td>
