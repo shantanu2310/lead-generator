@@ -1,57 +1,77 @@
 "use client"
 
-import { Lightbulb, RefreshCw, TrendingUp, TrendingDown, AlertCircle, Clock, Zap } from "lucide-react"
-import { useState } from "react"
+import { AlertCircle, Clock, Lightbulb, RefreshCw, TrendingUp } from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
+import { api } from "@/lib/api"
+import { formatRelativeTime } from "@/lib/utils"
+import Link from "next/link"
 
-type Insight = {
+type InsightItem = {
   id: string
-  type: "opportunity" | "warning" | "info"
-  message: string
-  icon: typeof Lightbulb
+  title: string
+  message: string | null
+  lead_id: string | null
+  created_at: string
 }
 
-const DEFAULT_INSIGHTS: Insight[] = [
-  {
-    id: "1",
-    type: "opportunity",
-    message: "Manufacturing companies convert 22% better than average",
-    icon: TrendingUp,
-  },
-  {
-    id: "2",
-    type: "warning",
-    message: "Reply rate dropped 15% this week",
-    icon: TrendingDown,
-  },
-  {
-    id: "3",
-    type: "warning",
-    message: "45 leads are stuck in Outreach for more than 7 days",
-    icon: Clock,
-  },
-  {
-    id: "4",
-    type: "info",
-    message: "Follow up with these 15 companies today",
-    icon: AlertCircle,
-  },
-  {
-    id: "5",
-    type: "opportunity",
-    message: "8 leads recently raised funding — high priority",
-    icon: Zap,
-  },
-]
+type InsightKind = "warning" | "info" | "opportunity"
+
+const ICONS = {
+  warning: Clock,
+  info: AlertCircle,
+  opportunity: TrendingUp,
+}
+
+const BORDERS: Record<InsightKind, string> = {
+  opportunity: "border-green-500/30",
+  warning: "border-yellow-500/30",
+  info: "border-blue-500/30",
+}
+
+const BGS: Record<InsightKind, string> = {
+  opportunity: "bg-green-500/5",
+  warning: "bg-yellow-500/5",
+  info: "bg-blue-500/5",
+}
+
+const ICON_COLORS: Record<InsightKind, string> = {
+  opportunity: "text-green-400",
+  warning: "text-yellow-400",
+  info: "text-blue-400",
+}
+
+function kindOf(title: string, message: string | null): InsightKind {
+  const text = `${title} ${message || ""}`.toLowerCase()
+  if (text.includes("stuck") || text.includes("dropped") || text.includes("no activity") || text.includes("inactive")) {
+    return "warning"
+  }
+  if (text.includes("convert") || text.includes("funding") || text.includes("opportunity")) {
+    return "opportunity"
+  }
+  return "info"
+}
 
 export function AIInsightsPanel() {
-  const [insights] = useState<Insight[]>(DEFAULT_INSIGHTS)
-  const [regenerating, setRegenerating] = useState(false)
+  const [insights, setInsights] = useState<InsightItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  async function regenerate() {
-    setRegenerating(true)
-    await new Promise((r) => setTimeout(r, 1500))
-    setRegenerating(false)
-  }
+  const load = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const result = await api.getPipelineInsights(30)
+      setInsights(result)
+    } catch (err: any) {
+      setError(err.message || "Failed to load insights")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    load()
+  }, [load])
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
@@ -61,43 +81,49 @@ export function AIInsightsPanel() {
           <h3 className="font-semibold text-lg text-white">AI Insights</h3>
         </div>
         <button
-          onClick={regenerate}
-          disabled={regenerating}
+          onClick={load}
+          disabled={loading}
           className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${regenerating ? "animate-spin" : ""}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           Refresh
         </button>
       </div>
       <div className="space-y-3">
-        {insights.map((insight) => {
-          const Icon = insight.icon
-          const borderColor =
-            insight.type === "opportunity"
-              ? "border-green-500/30"
-              : insight.type === "warning"
-              ? "border-yellow-500/30"
-              : "border-blue-500/30"
-          const bgColor =
-            insight.type === "opportunity"
-              ? "bg-green-500/5"
-              : insight.type === "warning"
-              ? "bg-yellow-500/5"
-              : "bg-blue-500/5"
-
-          return (
-            <div
-              key={insight.id}
-              className={`flex items-start gap-3 p-3 rounded-lg border ${borderColor} ${bgColor}`}
-            >
-              <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                insight.type === "opportunity" ? "text-green-400" :
-                insight.type === "warning" ? "text-yellow-400" : "text-blue-400"
-              }`} />
-              <p className="text-sm text-gray-300">{insight.message}</p>
-            </div>
-          )
-        })}
+        {loading && insights.length === 0 ? (
+          <p className="text-sm text-gray-500">Loading insights…</p>
+        ) : error ? (
+          <p className="text-sm text-red-400">{error}</p>
+        ) : insights.length === 0 ? (
+          <p className="text-sm text-gray-500">
+            No insights yet. They're generated automatically as leads sit too long in a stage or go
+            inactive.
+          </p>
+        ) : (
+          insights.map((insight) => {
+            const kind = kindOf(insight.title, insight.message)
+            const Icon = ICONS[kind]
+            const body = (
+              <div
+                className={`flex items-start gap-3 p-3 rounded-lg border ${BORDERS[kind]} ${BGS[kind]}`}
+              >
+                <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${ICON_COLORS[kind]}`} />
+                <div className="min-w-0">
+                  <p className="text-sm text-gray-200 font-medium">{insight.title}</p>
+                  {insight.message && <p className="text-sm text-gray-400 mt-0.5">{insight.message}</p>}
+                  <p className="text-[11px] text-gray-600 mt-1">{formatRelativeTime(insight.created_at)}</p>
+                </div>
+              </div>
+            )
+            return insight.lead_id ? (
+              <Link key={insight.id} href={`/pipeline/leads/${insight.lead_id}`} className="block">
+                {body}
+              </Link>
+            ) : (
+              <div key={insight.id}>{body}</div>
+            )
+          })
+        )}
       </div>
     </div>
   )

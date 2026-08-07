@@ -48,6 +48,7 @@ class AutomationService:
     async def generate_insights(self, db: AsyncSession) -> list[Notification]:
         insights: list[Notification] = []
         now = datetime.now(timezone.utc).replace(tzinfo=None)
+        dedup_window = now - timedelta(days=1)
 
         companies = (await db.execute(select(Company.id))).scalars().all()
         for company_id in companies:
@@ -58,7 +59,15 @@ class AutomationService:
                     Lead.updated_at <= now - timedelta(days=7),
                 )
             )
-            if stuck_outreach and stuck_outreach > 0:
+            latest_stuck = await db.scalar(
+                select(func.count(Notification.id)).where(
+                    Notification.company_id == company_id,
+                    Notification.notification_type == "ai_insight",
+                    Notification.title == f"{stuck_outreach} leads stuck in Outreach",
+                    Notification.created_at >= dedup_window,
+                )
+            )
+            if stuck_outreach and stuck_outreach > 0 and not latest_stuck:
                 n = await self.pipeline_manager.create_notification(
                     db=db,
                     company_id=company_id,
@@ -78,7 +87,15 @@ class AutomationService:
                     Lead.last_activity_at <= now - timedelta(days=14),
                 )
             )
-            if inactive and inactive > 0:
+            latest_inactive = await db.scalar(
+                select(func.count(Notification.id)).where(
+                    Notification.company_id == company_id,
+                    Notification.notification_type == "ai_insight",
+                    Notification.title == f"{inactive} inactive leads",
+                    Notification.created_at >= dedup_window,
+                )
+            )
+            if inactive and inactive > 0 and not latest_inactive:
                 n = await self.pipeline_manager.create_notification(
                     db=db,
                     company_id=company_id,

@@ -179,6 +179,14 @@ class PipelineAnalyticsResponse(BaseModel):
     forecast_revenue: float = 0.0
 
 
+class InsightResponse(BaseModel):
+    id: str
+    title: str
+    message: str | None = None
+    lead_id: str | None = None
+    created_at: datetime
+
+
 class NotificationResponse(BaseModel):
     id: str
     type: str

@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     # Sentry
     sentry_dsn: str = ""
 
+    # Background periodic jobs (auto-transitions, insights, etc.)
+    background_jobs_enabled: bool = True
+
     # Pipeline settings
     default_candidate_target: int = 50
     max_candidate_target: int = 60

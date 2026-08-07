@@ -1,8 +1,11 @@
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas.responses import (
+    InsightResponse,
     LeadListItemResponse,
     PipelineAnalyticsResponse,
     PipelineStageResponse,
@@ -10,9 +13,11 @@ from app.api.schemas.responses import (
     TeamUnassignedResponse,
     TeamUserLeadsResponse,
 )
-from app.core.constants import PipelineStage
+from app.core.constants import NotificationType, PipelineStage
 from app.dependencies import get_current_admin, get_current_user, get_db
+from app.models.contact_activity import ContactActivity
 from app.models.lead import Lead
+from app.models.pipeline import Notification
 from app.models.user import User
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -36,6 +41,14 @@ STAGE_LABELS = {
 
 def _search_filter(search_id: str | None = None):
     return Lead.search_id == search_id if search_id else None
+
+
+def _naive_utc(dt: datetime | None) -> datetime | None:
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        return dt.astimezone(UTC).replace(tzinfo=None)
+    return dt
 
 
 def _lead_item(lead: Lead, user_names: dict[str, str]) -> LeadListItemResponse:
@@ -157,6 +170,46 @@ async def get_pipeline_analytics(
             total_value=float(row.total_value),
         ))
 
+    lead_timing = (await db.execute(
+        select(Lead.pipeline_stage, Lead.created_at, Lead.last_activity_at).where(*conditions)
+    )).all()
+    stage_times: dict[str, list[float]] = {}
+    cycle_hours: list[float] = []
+    for stage, created_at, last_activity_at in lead_timing:
+        created = _naive_utc(created_at)
+        end = _naive_utc(last_activity_at) or created
+        if created is None or end is None:
+            continue
+        hours = max(0.0, (end - created).total_seconds() / 3600.0)
+        stage_times.setdefault(stage, []).append(hours)
+        cycle_hours.append(hours)
+
+    for s in stages:
+        times = stage_times.get(s.stage)
+        if times:
+            s.avg_time_hours = round(sum(times) / len(times), 1)
+
+    avg_sales_cycle_days = (
+        round((sum(cycle_hours) / len(cycle_hours)) / 24.0, 1) if cycle_hours else 0.0
+    )
+
+    response_rows = (await db.execute(
+        select(Lead.created_at, func.min(ContactActivity.contacted_at).label("first_contacted"))
+        .join(Lead, Lead.id == ContactActivity.lead_id)
+        .where(*conditions)
+        .group_by(Lead.id, Lead.created_at)
+    )).all()
+    response_hours: list[float] = []
+    for created_at, first_contacted in response_rows:
+        created = _naive_utc(created_at)
+        first = _naive_utc(first_contacted)
+        if created is None or first is None:
+            continue
+        response_hours.append(max(0.0, (first - created).total_seconds() / 3600.0))
+    avg_response_time_hours = (
+        round(sum(response_hours) / len(response_hours), 1) if response_hours else 0.0
+    )
+
     won_deal_value = await db.scalar(
         select(func.coalesce(func.sum(Lead.deal_value), 0))
         .where(Lead.pipeline_stage == PipelineStage.WON.value, *conditions)
@@ -177,12 +230,43 @@ async def get_pipeline_analytics(
         qualified_percent=(qualified / total * 100) if total > 0 else 0.0,
         conversion_percent=(won_count / total * 100) if total > 0 else 0.0,
         avg_deal_size=float(total_deal_value / total) if total > 0 else 0.0,
+        avg_response_time_hours=avg_response_time_hours,
+        avg_sales_cycle_days=avg_sales_cycle_days,
         win_rate=win_rate,
         loss_rate=loss_rate,
         revenue_generated=float(won_deal_value),
         pipeline_value=float(total_deal_value),
         forecast_revenue=float(total_deal_value * 0.3),
     )
+
+
+@router.get("/pipeline/insights", response_model=list[InsightResponse])
+async def get_pipeline_insights(
+    limit: int = 20,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> list[InsightResponse]:
+    cap = max(1, min(limit, 100))
+    result = await db.execute(
+        select(Notification)
+        .where(
+            Notification.company_id == user.company_id,
+            Notification.notification_type == NotificationType.AI_INSIGHT.value,
+        )
+        .order_by(Notification.created_at.desc())
+        .limit(cap)
+    )
+    notifications = result.scalars().all()
+    return [
+        InsightResponse(
+            id=n.id,
+            title=n.title,
+            message=n.message,
+            lead_id=n.lead_id,
+            created_at=n.created_at,
+        )
+        for n in notifications
+    ]
 
 
 @router.get("/pipeline/team-leads", response_model=TeamLeadsResponse)
