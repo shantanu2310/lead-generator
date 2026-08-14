@@ -14,7 +14,7 @@ type SearchItem = {
   created_at: string
 }
 
-export function RecentSearches() {
+export function RecentSearches({ refreshKey = 0 }: { refreshKey?: number }) {
   const [items, setItems] = useState<SearchItem[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
@@ -22,6 +22,7 @@ export function RecentSearches() {
   useEffect(() => {
     async function load() {
       try {
+        setLoading(true)
         const data = await api.listSearches({ page: "1", page_size: "5" })
         setItems(data.items)
       } catch (err) {
@@ -31,7 +32,7 @@ export function RecentSearches() {
       }
     }
     load()
-  }, [])
+  }, [refreshKey])
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">

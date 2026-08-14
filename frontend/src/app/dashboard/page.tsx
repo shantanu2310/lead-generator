@@ -154,7 +154,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <RecentSearches />
+            <RecentSearches refreshKey={refreshKey} />
           </div>
         </main>
       </div>
