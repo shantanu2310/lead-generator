@@ -32,16 +32,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     if engine:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+
+        migration_statements = [
+            "ALTER TABLE searches ADD COLUMN archived_at TIMESTAMP",
+            "ALTER TABLE leads ADD COLUMN department_id VARCHAR(36)",
+            "ALTER TABLE searches ADD COLUMN department_id VARCHAR(36)",
+        ]
+        for stmt in migration_statements:
             try:
-                await conn.execute(text("ALTER TABLE searches ADD COLUMN archived_at TIMESTAMP"))
-            except Exception:
-                pass
-            try:
-                await conn.execute(text("ALTER TABLE leads ADD COLUMN department_id VARCHAR(36)"))
-            except Exception:
-                pass
-            try:
-                await conn.execute(text("ALTER TABLE searches ADD COLUMN department_id VARCHAR(36)"))
+                async with engine.begin() as conn:
+                    await conn.execute(text(stmt))
             except Exception:
                 pass
         logger.info("database_tables_created")
