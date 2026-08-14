@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useEffect, useState } from "react"
-import { BarChart3, Target, Settings as SettingsIcon, History, Menu, X, ShieldCheck, Users, UserPlus, Loader2, Pencil, Trash2 } from "lucide-react"
+import { BarChart3, Target, Settings as SettingsIcon, History, Menu, X, ShieldCheck, Users, UserPlus, Loader2, Pencil, Trash2, Building2, type LucideIcon } from "lucide-react"
 import Link from "next/link"
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { Avatar, AvatarPicker } from "@/components/shared/avatar"
@@ -13,9 +13,10 @@ import { CompanyBadge } from "@/components/shared/company-badge"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
 import { formatDate } from "@/lib/utils"
 
-const NAV_ITEMS = [
+const NAV_ITEMS: { href: string; label: string; icon: LucideIcon; adminOnly?: boolean }[] = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
-{ href: "/pipeline", label: "Pipeline", icon: Target },
+  { href: "/departments", label: "Departments", icon: Building2, adminOnly: true },
+  { href: "/pipeline", label: "Pipeline", icon: Target },
   { href: "/pipeline/team", label: "Team Leads", icon: Users },
   { href: "/searches", label: "Search History", icon: History },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
@@ -168,7 +169,7 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
           </button>
         </div>
         <nav className="p-4 space-y-1">
-          {[...NAV_ITEMS, { href: "/users", label: "Users", icon: ShieldCheck }].map((item) => {
+          {[...NAV_ITEMS.filter((item) => !item.adminOnly || me?.is_admin), { href: "/users", label: "Users", icon: ShieldCheck }].map((item) => {
             const Icon = item.icon
             const isActive = typeof window !== "undefined" && window.location.pathname === item.href
             return (

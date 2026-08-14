@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import {
   BarChart3,
+  Building2,
   History,
   Inbox,
   Loader2,
@@ -14,6 +15,7 @@ import {
   UserRound,
   Users,
   X,
+  type LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
 import { AuthGuard } from "@/components/auth/auth-guard"
@@ -27,8 +29,9 @@ import { getUser } from "@/lib/auth"
 import { PIPELINE_STAGES, STAGE_LABELS } from "@/lib/constants"
 import { formatDate } from "@/lib/utils"
 
-const NAV_ITEMS = [
+const NAV_ITEMS: { href: string; label: string; icon: LucideIcon; adminOnly?: boolean }[] = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
+  { href: "/departments", label: "Departments", icon: Building2, adminOnly: true },
   { href: "/pipeline", label: "Pipeline", icon: Target },
   { href: "/pipeline/team", label: "Team Leads", icon: Users },
   { href: "/searches", label: "Search History", icon: History },
@@ -199,7 +202,7 @@ function TeamPageContent() {
           </button>
         </div>
         <nav className="p-4 space-y-1">
-          {[...NAV_ITEMS, ...(me?.is_admin ? [{ href: "/users", label: "Users", icon: ShieldCheck }] : [])].map((item) => {
+          {[...NAV_ITEMS.filter((item) => !item.adminOnly || me?.is_admin), ...(me?.is_admin ? [{ href: "/users", label: "Users", icon: ShieldCheck }] : [])].map((item) => {
             const Icon = item.icon
             const isActive = typeof window !== "undefined" && window.location.pathname === item.href
             return (

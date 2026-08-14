@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useState, Suspense } from "react"
-import { Target, Menu, X, BarChart3, Settings as SettingsIcon, History, SearchX, ShieldCheck, Users } from "lucide-react"
+import { Target, Menu, X, BarChart3, Settings as SettingsIcon, History, SearchX, ShieldCheck, Users, Building2, type LucideIcon } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { AuthGuard } from "@/components/auth/auth-guard"
@@ -21,9 +21,10 @@ import { getUser } from "@/lib/auth"
 
 type Tab = "kanban" | "table" | "charts"
 
-const NAV_ITEMS = [
+const NAV_ITEMS: { href: string; label: string; icon: LucideIcon; adminOnly?: boolean }[] = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
-{ href: "/pipeline", label: "Pipeline", icon: Target },
+  { href: "/departments", label: "Departments", icon: Building2, adminOnly: true },
+  { href: "/pipeline", label: "Pipeline", icon: Target },
   { href: "/pipeline/team", label: "Team Leads", icon: Users },
   { href: "/searches", label: "Search History", icon: History },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
@@ -86,7 +87,7 @@ function handleFilterChange(newFilters: any) {
           </button>
         </div>
         <nav className="p-4 space-y-1">
-          {[...NAV_ITEMS, ...(user?.is_admin ? [{ href: "/users", label: "Users", icon: ShieldCheck }] : [])].map((item) => {
+          {[...NAV_ITEMS.filter((item) => !item.adminOnly || user?.is_admin), ...(user?.is_admin ? [{ href: "/users", label: "Users", icon: ShieldCheck }] : [])].map((item) => {
             const Icon = item.icon
             const isActive = typeof window !== "undefined" && window.location.pathname === item.href
             return (
