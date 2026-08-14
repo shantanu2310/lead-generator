@@ -1,8 +1,10 @@
 "use client"
 
-import { Sparkles, Loader2 } from "lucide-react"
-import { useState } from "react"
+import { Sparkles, Loader2, Building2 } from "lucide-react"
+import { useEffect, useState } from "react"
 import { api } from "@/lib/api"
+
+type Department = { id: string; name: string; lead_count?: number }
 
 export function LeadSearchForm({
   onComplete,
@@ -13,9 +15,33 @@ export function LeadSearchForm({
   const [maxLeads, setMaxLeads] = useState(5)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [departmentId, setDepartmentId] = useState("")
+  const [departmentsLoaded, setDepartmentsLoaded] = useState(false)
+
+  useEffect(() => {
+    api
+      .listDepartments()
+      .then((depts) => {
+        setDepartments(depts || [])
+        if (depts && depts.length > 0) setDepartmentId(depts[0].id)
+      })
+      .catch(() => {})
+      .finally(() => setDepartmentsLoaded(true))
+  }, [])
+
+  const hasDepartments = departments.length > 0
 
   async function run() {
     const trimmed = query.trim()
+    if (!hasDepartments) {
+      setMessage({ ok: false, text: "Create a department in Settings before generating leads" })
+      return
+    }
+    if (!departmentId) {
+      setMessage({ ok: false, text: "Please select a department" })
+      return
+    }
     if (!trimmed) {
       setMessage({ ok: false, text: "Please enter a search query, e.g. \"plumbers in Austin Texas\"" })
       return
@@ -23,7 +49,7 @@ export function LeadSearchForm({
     setLoading(true)
     setMessage(null)
     try {
-      const result = await api.searchLeads({ query: trimmed, max_leads: maxLeads })
+      const result = await api.searchLeads({ query: trimmed, max_leads: maxLeads, department_id: departmentId })
       const count = result.leads?.length ?? 0
       setMessage({
         ok: true,
@@ -55,6 +81,30 @@ export function LeadSearchForm({
           />
         </div>
 
+        {!departmentsLoaded ? (
+          <div className="flex items-center gap-2 px-3 py-2 text-sm text-gray-400">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading departments...
+          </div>
+        ) : !hasDepartments ? (
+          <div className="flex items-center gap-2 px-3 py-2 text-sm text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+            <Building2 className="w-4 h-4" />
+            Create a department in Settings to generate leads
+          </div>
+        ) : (
+          <select
+            value={departmentId}
+            onChange={(e) => setDepartmentId(e.target.value)}
+            disabled={loading}
+            title="Department for these leads"
+            className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-white/20 disabled:opacity-50"
+          >
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </select>
+        )}
+
         <select
           value={maxLeads}
           onChange={(e) => setMaxLeads(Number(e.target.value))}
@@ -68,7 +118,7 @@ export function LeadSearchForm({
 
         <button
           onClick={run}
-          disabled={loading}
+          disabled={loading || !hasDepartments}
           className="flex items-center gap-2 px-5 py-2 bg-blue-500 hover:bg-blue-400 disabled:bg-blue-500/40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
         >
           {loading ? (

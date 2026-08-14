@@ -23,6 +23,7 @@ class PipelineManager:
         latitude: float | None = None,
         longitude: float | None = None,
         max_leads: int = 15,
+        department_id: str | None = None,
     ) -> list[Lead]:
         logger.info("pipeline_manager_started", query=query, max_leads=max_leads)
 
@@ -44,6 +45,7 @@ class PipelineManager:
             candidates_after_dedup=result.candidates_checked,
             leads_qualified=result.qualified_leads_found,
             leads_returned=len(result.leads),
+            department_id=department_id,
         )
         db.add(search)
         await db.flush()
@@ -74,6 +76,7 @@ class PipelineManager:
                 ai_confidence=lead_data.confidence_score / 100.0,
                 last_activity_at=None,
                 badges=[],
+                department_id=department_id,
             )
             db.add(lead)
             await db.flush()

@@ -12,6 +12,7 @@ class Search(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     company_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     query: Mapped[str] = mapped_column(String(1000), nullable=False)
+    department_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     latitude: Mapped[float | None] = mapped_column(nullable=True)
     longitude: Mapped[float | None] = mapped_column(nullable=True)
     max_leads: Mapped[int] = mapped_column(Integer, default=15)

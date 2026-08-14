@@ -26,6 +26,9 @@ class LeadSearchRequest(BaseModel):
     query: str = Field(
         ..., min_length=1, max_length=500, description="Natural language search query"
     )
+    department_id: str = Field(
+        ..., min_length=1, max_length=36, description="Department to categorize leads into"
+    )
     latitude: float | None = Field(
         None, ge=-90, le=90, description="Latitude for location-based search"
     )
@@ -92,6 +95,7 @@ class LeadUpdateRequest(BaseModel):
     deal_value: float | None = None
     next_followup_date: datetime | None = None
     badges: list[str] | None = None
+    department_id: str | None = None
 
 
 class ContactCreateRequest(BaseModel):

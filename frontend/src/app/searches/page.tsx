@@ -31,6 +31,7 @@ type SearchItem = {
   leads_qualified: number
   leads_returned: number
   lead_count: number
+  department_id: string | null
   created_at: string
   completed_at: string | null
 }
@@ -85,7 +86,16 @@ async function rerun(s: SearchItem) {
     setRerunning(s.id)
     setMsg(null)
     try {
-      const result = await api.searchLeads({ query: s.query, max_leads: 10 })
+      let departmentId = s.department_id || null
+      if (!departmentId) {
+        const depts = await api.listDepartments()
+        departmentId = depts?.[0]?.id || null
+      }
+      if (!departmentId) {
+        setMsg({ ok: false, text: "Create a department in Settings before re-running searches" })
+        return
+      }
+      const result = await api.searchLeads({ query: s.query, max_leads: 10, department_id: departmentId })
       setMsg({ ok: true, text: `Re-ran "${s.query}" â€” ${result.leads?.length ?? 0} leads found` })
       load(page)
     } catch (err: any) {

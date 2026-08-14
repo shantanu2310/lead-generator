@@ -2,7 +2,8 @@
 
 import { Search, X } from "lucide-react"
 import { PIPELINE_STAGES } from "@/lib/constants"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { api } from "@/lib/api"
 
 type Filters = {
   search: string
@@ -10,7 +11,10 @@ type Filters = {
   priority: string
   email_status: string
   assigned_to: string
+  department_id: string
 }
+
+type Department = { id: string; name: string; lead_count?: number }
 
 export function PipelineFilters({
   onFilterChange,
@@ -23,7 +27,13 @@ export function PipelineFilters({
     priority: "",
     email_status: "",
     assigned_to: "",
+    department_id: "",
   })
+  const [departments, setDepartments] = useState<Department[]>([])
+
+  useEffect(() => {
+    api.listDepartments().then((depts) => setDepartments(depts || [])).catch(() => {})
+  }, [])
 
   function update(key: keyof Filters, value: string) {
     const updated = { ...filters, [key]: value }
@@ -32,7 +42,7 @@ export function PipelineFilters({
   }
 
   function clear() {
-    const cleared = { search: "", pipeline_stage: "", priority: "", email_status: "", assigned_to: "" }
+    const cleared = { search: "", pipeline_stage: "", priority: "", email_status: "", assigned_to: "", department_id: "" }
     setFilters(cleared)
     onFilterChange(cleared)
   }
@@ -51,6 +61,19 @@ export function PipelineFilters({
           className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
         />
       </div>
+
+      {departments.length > 0 && (
+      <select
+        value={filters.department_id}
+        onChange={(e) => update("department_id", e.target.value)}
+        className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-white/20"
+      >
+        <option value="">All Departments</option>
+        {departments.map((d) => (
+          <option key={d.id} value={d.id}>{d.name}</option>
+        ))}
+      </select>
+      )}
 
       <select
         value={filters.pipeline_stage}
@@ -73,18 +96,6 @@ export function PipelineFilters({
         <option value="medium">Medium</option>
         <option value="high">High</option>
         <option value="critical">Critical</option>
-      </select>
-
-      <select
-        value={filters.email_status}
-        onChange={(e) => update("email_status", e.target.value)}
-        className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-white/20"
-      >
-        <option value="">All Email Status</option>
-        <option value="pending">Pending</option>
-        <option value="verified">Verified</option>
-        <option value="invalid">Invalid</option>
-        <option value="bounced">Bounced</option>
       </select>
 
       <select

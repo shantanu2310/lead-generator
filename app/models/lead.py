@@ -78,6 +78,7 @@ class Lead(Base):
 
     # Pipeline fields
     pipeline_stage: Mapped[str] = mapped_column(String(50), default=PipelineStage.NEW_LEAD.value, index=True)
+    department_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     lead_score: Mapped[int] = mapped_column(Integer, default=0, index=True)
     ai_confidence: Mapped[float] = mapped_column(Float, default=0.0)
     priority: Mapped[str] = mapped_column(String(20), default="medium")

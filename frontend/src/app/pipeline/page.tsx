@@ -50,7 +50,7 @@ function PipelinePageContent() {
   const initialParams: Record<string, string> = searchId ? { search_id: searchId } : {}
   const { data, loading, params, setParams, refetch } = useLeads(initialParams)
 
-  function handleFilterChange(newFilters: any) {
+function handleFilterChange(newFilters: any) {
     setFilters(newFilters)
     const queryParams: Record<string, string> = {}
     if (searchId) queryParams.search_id = searchId
@@ -59,6 +59,7 @@ function PipelinePageContent() {
     if (newFilters.priority) queryParams.priority = newFilters.priority
     if (newFilters.email_status) queryParams.email_status = newFilters.email_status
     if (newFilters.assigned_to) queryParams.assigned_to = newFilters.assigned_to
+    if (newFilters.department_id) queryParams.department_id = newFilters.department_id
     setParams(queryParams)
   }
 

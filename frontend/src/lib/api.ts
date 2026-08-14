@@ -100,7 +100,7 @@ export const api = {
   deleteUser: (id: string) =>
     request<any>("DELETE", `/auth/users/${id}`),
 
-  searchLeads: (body: { query: string; max_leads?: number }) =>
+  searchLeads: (body: { query: string; max_leads?: number; department_id: string }) =>
     request<any>("POST", "/leads/search", body),
 
   listLeads: (params?: Record<string, string>) => {
@@ -134,6 +134,17 @@ export const api = {
   deleteSearch: (id: string) => request<any>("DELETE", `/searches/${id}`),
 
   restoreSearch: (id: string) => request<any>("PATCH", `/searches/${id}/restore`),
+
+  listDepartments: () => request<any>("GET", "/departments"),
+
+  createDepartment: (name: string) =>
+    request<any>("POST", "/departments", { name }),
+
+  updateDepartment: (id: string, name: string) =>
+    request<any>("PATCH", `/departments/${id}`, { name }),
+
+  deleteDepartment: (id: string) =>
+    request<any>("DELETE", `/departments/${id}`),
 
   getLead: (id: string) => request<any>("GET", `/leads/${id}`),
 

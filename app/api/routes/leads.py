@@ -34,6 +34,7 @@ from app.api.schemas.responses import (
 from app.core.constants import NotificationType, OUTCOME_TO_STAGE, TimelineEventType
 from app.dependencies import get_current_admin, get_current_user, get_db, get_pipeline_manager
 from app.models.contact_activity import ContactActivity
+from app.models.department import Department
 from app.models.lead import Contact, Lead
 from app.models.pipeline import Notification, TimelineEvent
 from app.models.user import User
@@ -50,6 +51,28 @@ def _to_naive_utc(dt: datetime | None) -> datetime | None:
     return dt
 
 
+async def _department_names(
+    db: AsyncSession, company_id: str, department_ids: list[str]
+) -> dict[str, str]:
+    ids = [d for d in department_ids if d]
+    if not ids:
+        return {}
+    rows = await db.execute(
+        select(Department.id, Department.name).where(
+            Department.company_id == company_id,
+            Department.id.in_(ids),
+        )
+    )
+    return dict(rows.all())
+
+
+async def _lead_department_name(db: AsyncSession, lead: Lead) -> str | None:
+    if not lead.department_id:
+        return None
+    names = await _department_names(db, lead.company_id, [lead.department_id])
+    return names.get(lead.department_id)
+
+
 @router.post(
     "/leads/search",
     response_model=LeadSearchResponse,
@@ -61,6 +84,13 @@ async def search_leads(
     user: User = Depends(get_current_user),
     pipeline_manager: PipelineManager = Depends(get_pipeline_manager),
 ) -> LeadSearchResponse:
+    department = await db.get(Department, request.department_id)
+    if not department or department.company_id != user.company_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Select a valid department. Create one in Settings before searching.",
+        )
+
     saved_leads = await pipeline_manager.run_search(
         db=db,
         company_id=user.company_id,
@@ -68,6 +98,7 @@ async def search_leads(
         latitude=request.latitude,
         longitude=request.longitude,
         max_leads=request.max_leads,
+        department_id=request.department_id,
     )
 
     leads = []
@@ -117,6 +148,7 @@ async def list_leads(
     lead_score_min: int | None = None,
     search_id: str | None = None,
     assigned_to: str | None = None,
+    department_id: str | None = None,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> PaginatedResponse:
@@ -124,6 +156,8 @@ async def list_leads(
 
     if search_id:
         stmt = stmt.where(Lead.search_id == search_id)
+    if department_id:
+        stmt = stmt.where(Lead.department_id == department_id)
     if assigned_to:
         if assigned_to == "me":
             stmt = stmt.where(Lead.assigned_user_id == user.id)
@@ -167,6 +201,10 @@ async def list_leads(
     )).all()
     user_names = {row.id: row.name for row in user_rows}
 
+    dept_names = await _department_names(
+        db, user.company_id, [lead.department_id or "" for lead in leads]
+    )
+
     return PaginatedResponse(
         items=[
             LeadListItemResponse(
@@ -191,6 +229,8 @@ async def list_leads(
                 last_activity_at=lead.last_activity_at,
                 assigned_user_id=lead.assigned_user_id,
                 assigned_user_name=user_names.get(lead.assigned_user_id) if lead.assigned_user_id else None,
+                department_id=lead.department_id,
+                department_name=dept_names.get(lead.department_id) if lead.department_id else None,
                 badges=lead.badges,
                 created_at=lead.created_at,
             )
@@ -216,6 +256,7 @@ async def export_leads_csv(
     lead_score_min: int | None = None,
     search_id: str | None = None,
     assigned_to: str | None = None,
+    department_id: str | None = None,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> Response:
@@ -223,6 +264,8 @@ async def export_leads_csv(
 
     if search_id:
         stmt = stmt.where(Lead.search_id == search_id)
+    if department_id:
+        stmt = stmt.where(Lead.department_id == department_id)
     if assigned_to:
         if assigned_to == "me":
             stmt = stmt.where(Lead.assigned_user_id == user.id)
@@ -257,13 +300,18 @@ async def export_leads_csv(
     )).all()
     user_names = {row.id: row.name for row in user_rows}
 
+    dept_names = await _department_names(
+        db, user.company_id, [lead.department_id or "" for lead in leads]
+    )
+
     buffer = io.StringIO()
     writer = csv.writer(buffer)
     writer.writerow([
         "business_name", "website", "email", "phone", "address", "industry",
         "employee_count", "revenue", "country", "state", "city", "deal_value",
-        "pipeline_stage", "lead_score", "priority", "email_status", "meeting_status",
-        "assigned_to", "next_followup_date", "last_activity_at", "created_at",
+        "pipeline_stage", "department", "lead_score", "priority", "email_status",
+        "meeting_status", "assigned_to", "next_followup_date", "last_activity_at",
+        "created_at",
     ])
     for lead in leads:
         writer.writerow([
@@ -280,6 +328,7 @@ async def export_leads_csv(
             lead.city or "",
             lead.deal_value if lead.deal_value is not None else "",
             lead.pipeline_stage,
+            dept_names.get(lead.department_id) or "" if lead.department_id else "",
             lead.lead_score,
             lead.priority,
             lead.email_status,
@@ -341,6 +390,8 @@ async def get_lead(
         lead_score=lead.lead_score,
         ai_confidence=lead.ai_confidence,
         priority=lead.priority,
+        department_id=lead.department_id,
+        department_name=await _lead_department_name(db, lead),
         assigned_user_id=lead.assigned_user_id,
         assigned_user_name=user_names.get(lead.assigned_user_id),
         next_followup_date=lead.next_followup_date,
@@ -465,6 +516,8 @@ async def assign_lead(
         lead_score=lead.lead_score,
         ai_confidence=lead.ai_confidence,
         priority=lead.priority,
+        department_id=lead.department_id,
+        department_name=await _lead_department_name(db, lead),
         assigned_user_id=lead.assigned_user_id,
         assigned_user_name=assignee_name,
         next_followup_date=lead.next_followup_date,
@@ -746,6 +799,12 @@ async def update_lead(
     update_values = {k: v for k, v in update_data.model_dump(exclude_none=True).items()}
     if "next_followup_date" in update_values:
         update_values["next_followup_date"] = _to_naive_utc(update_values["next_followup_date"])
+    if "department_id" in update_values:
+        if not user.is_admin:
+            raise HTTPException(status_code=403, detail="Admin access required to change department")
+        target_dept = await db.get(Department, update_values["department_id"])
+        if not target_dept or target_dept.company_id != user.company_id:
+            raise HTTPException(status_code=400, detail="Invalid department")
     if update_values:
         await db.execute(
             update(Lead).where(
@@ -785,6 +844,8 @@ async def update_lead(
         lead_score=lead.lead_score,
         ai_confidence=lead.ai_confidence,
         priority=lead.priority,
+        department_id=lead.department_id,
+        department_name=await _lead_department_name(db, lead),
         assigned_user_id=lead.assigned_user_id,
         next_followup_date=lead.next_followup_date,
         last_activity_at=lead.last_activity_at,

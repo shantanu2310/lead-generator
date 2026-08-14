@@ -52,6 +52,7 @@ const EMPTY_EDIT_FORM = {
   priority: "medium",
   deal_value: "",
   next_followup_date: "",
+  department_id: "",
 }
 
 const EMPTY_CONTACT_FORM = {
@@ -70,6 +71,7 @@ export default function LeadDetailPage() {
   const [lead, setLead] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState<any[]>([])
+  const [departments, setDepartments] = useState<any[]>([])
   const [activities, setActivities] = useState<any[]>([])
   const [logForm, setLogForm] = useState({ ...EMPTY_LOG_FORM, contacted_at: toLocalInput(new Date()) })
   const [savingLog, setSavingLog] = useState(false)
@@ -92,6 +94,7 @@ export default function LeadDetailPage() {
     if (me?.is_admin) {
       api.listUsers().then(setUsers).catch(() => {})
     }
+    api.listDepartments().then(setDepartments).catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -183,6 +186,7 @@ export default function LeadDetailPage() {
       priority: lead.priority || "medium",
       deal_value: lead.deal_value != null ? String(lead.deal_value) : "",
       next_followup_date: lead.next_followup_date ? toLocalInput(new Date(lead.next_followup_date)) : "",
+      department_id: lead.department_id || "",
     })
     setEditing(true)
   }
@@ -209,6 +213,7 @@ export default function LeadDetailPage() {
         next_followup_date: editForm.next_followup_date
           ? new Date(editForm.next_followup_date).toISOString()
           : null,
+        department_id: editForm.department_id || null,
       }
       const updated = await api.updateLead(lead.id, body)
       setLead(updated)
@@ -311,6 +316,12 @@ export default function LeadDetailPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">{lead.business_name}</h1>
           <div className="flex items-center gap-2 mt-1">
+            {lead.department_name && (
+              <span className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300">
+                <Building2 className="w-3.5 h-3.5" />
+                {lead.department_name}
+              </span>
+            )}
             <span className="text-gray-400">Stage:</span>
             <select
               value={lead.pipeline_stage}
@@ -803,6 +814,14 @@ export default function LeadDetailPage() {
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
+                </select>
+              </Field>
+              <Field label="Department">
+                <select value={editForm.department_id} onChange={(e) => setEditForm({ ...editForm, department_id: e.target.value })} className="w-full px-3 py-2 bg-[#0f172a] border border-white/10 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors">
+                  <option value="">None</option>
+                  {departments.map((d: any) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
                 </select>
               </Field>
               <Field label="Deal value ($)">

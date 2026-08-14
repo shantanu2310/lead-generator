@@ -63,6 +63,7 @@ async def list_searches(
             leads_qualified=s.leads_qualified,
             leads_returned=s.leads_returned,
             lead_count=lead_counts.get(s.id, 0),
+            department_id=s.department_id,
             created_at=s.created_at,
             completed_at=s.completed_at,
         )
@@ -112,6 +113,7 @@ async def restore_search(
         leads_qualified=search.leads_qualified,
         leads_returned=search.leads_returned,
         lead_count=0,
+        department_id=search.department_id,
         created_at=search.created_at,
         completed_at=search.completed_at,
     )

@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.routes.auth import router as auth_router
+from app.api.routes.departments import router as departments_router
 from app.api.routes.health import router as health_router
 from app.api.routes.leads import router as leads_router
 from app.api.routes.notifications import router as notifications_router
@@ -11,6 +12,7 @@ from app.api.routes.settings import router as settings_router
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(health_router, tags=["health"])
 api_router.include_router(auth_router, tags=["auth"])
+api_router.include_router(departments_router, tags=["departments"])
 api_router.include_router(leads_router, tags=["leads"])
 api_router.include_router(pipeline_router, tags=["pipeline"])
 api_router.include_router(notifications_router, tags=["notifications"])

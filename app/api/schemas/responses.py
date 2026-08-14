@@ -74,6 +74,8 @@ class LeadDetailResponse(BaseModel):
     lead_score: int = 0
     ai_confidence: float = 0.0
     priority: str = "medium"
+    department_id: str | None = None
+    department_name: str | None = None
     assigned_user_id: str | None = None
     assigned_user_name: str | None = None
     next_followup_date: datetime | None = None
@@ -118,6 +120,8 @@ class LeadListItemResponse(BaseModel):
     last_activity_at: datetime | None = None
     assigned_user_id: str | None = None
     assigned_user_name: str | None = None
+    department_id: str | None = None
+    department_name: str | None = None
     badges: list | None = None
     created_at: datetime
 
@@ -152,6 +156,7 @@ class SearchResponse(BaseModel):
     leads_qualified: int = 0
     leads_returned: int = 0
     lead_count: int = 0
+    department_id: str | None = None
     created_at: datetime
     completed_at: datetime | None = None
 

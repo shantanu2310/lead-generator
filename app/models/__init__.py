@@ -1,5 +1,6 @@
 from app.models.company import Company
 from app.models.contact_activity import ContactActivity
+from app.models.department import Department
 from app.models.evidence import Evidence
 from app.models.lead import CandidateLead, Contact, Lead
 from app.models.pipeline import Notification, PipelineLog, TimelineEvent
@@ -12,6 +13,7 @@ __all__ = [
     "Company",
     "Contact",
     "ContactActivity",
+    "Department",
     "Evidence",
     "Lead",
     "Notification",
