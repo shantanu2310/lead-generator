@@ -26,21 +26,21 @@ export function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className="flex-shrink-0 w-72 bg-white/3 rounded-xl border border-white/5 flex flex-col max-h-[calc(100vh-300px)]"
+      className="flex-shrink-0 w-72 bg-white rounded-xl border border-slate-200 flex flex-col max-h-[calc(100vh-300px)]"
       style={{
-        borderColor: isOver ? stage.color + "66" : undefined,
-        background: isOver ? stage.color + "08" : undefined,
+        borderColor: isOver ? stage.color + "99" : undefined,
+        background: isOver ? "#f8fafc" : undefined,
       }}
     >
       <div
-        className="flex items-center justify-between px-4 py-3 border-b border-white/5"
-        style={{ borderBottomColor: stage.color + "22" }}
+        className="flex items-center justify-between px-4 py-3 border-b border-slate-100"
+        style={{ borderBottomColor: stage.color + "33" }}
       >
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: stage.color }} />
-          <h3 className="text-sm font-medium text-white">{stage.label}</h3>
+          <h3 className="text-sm font-medium text-slate-900">{stage.label}</h3>
         </div>
-        <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded-full">
+        <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
           {formatNumber(leads.length)}
         </span>
       </div>
@@ -53,7 +53,7 @@ export function KanbanColumn({
             <LeadCardSkeleton />
           </>
         ) : leads.length === 0 ? (
-          <p className="text-xs text-gray-500 text-center py-8">Drop leads here</p>
+          <p className="text-xs text-slate-400 text-center py-8">Drop leads here</p>
         ) : (
           <SortableContext items={leads.map((l) => l.id)} strategy={verticalListSortingStrategy}>
             {leads.map((lead) => (

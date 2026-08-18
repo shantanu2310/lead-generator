@@ -1,14 +1,9 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Open_Sans } from "next/font/google"
 import "./globals.css"
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-})
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const openSans = Open_Sans({
+  variable: "--font-open-sans",
   subsets: ["latin"],
 })
 
@@ -24,8 +19,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="min-h-screen bg-[#050816] text-[#e2e8f0] antialiased">
+    <html lang="en" className={openSans.variable}>
+      <body className="min-h-screen bg-[#E5ECE9] text-[#1e293b] antialiased">
         {children}
       </body>
     </html>

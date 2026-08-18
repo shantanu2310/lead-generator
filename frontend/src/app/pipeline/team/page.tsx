@@ -24,6 +24,7 @@ import { NotificationsDropdown } from "@/components/shared/notifications-dropdow
 import { UserMenu } from "@/components/shared/user-menu"
 import { CompanyBadge } from "@/components/shared/company-badge"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
+import { Logo } from "@/components/shared/logo"
 import { api } from "@/lib/api"
 import { getUser } from "@/lib/auth"
 import { PIPELINE_STAGES, STAGE_LABELS } from "@/lib/constants"
@@ -125,31 +126,31 @@ function TeamPageContent() {
   const renderUserCard = (u: TeamUser) => {
     const visible = u.leads.filter(matchesQuery)
     return (
-      <section key={u.id} className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden">
-        <header className="flex flex-wrap items-center gap-4 px-5 py-4 border-b border-white/10">
+      <section key={u.id} className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <header className="flex flex-wrap items-center gap-4 px-5 py-4 border-b border-slate-200">
           <Avatar name={u.name} src={u.avatar_url} className="w-10 h-10" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold text-white truncate">{u.name}</p>
-              {u.id === me?.id && <span className="text-xs text-gray-500">(you)</span>}
+              <p className="text-sm font-semibold text-slate-900 truncate">{u.name}</p>
+              {u.id === me?.id && <span className="text-xs text-slate-400">(you)</span>}
               {u.is_admin ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-300 text-[11px] font-medium">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 text-[11px] font-medium">
                   <ShieldCheck className="w-3 h-3" />
                   Admin
                 </span>
               ) : (
-                <span className="px-2 py-0.5 rounded-full bg-white/5 text-gray-400 text-[11px]">Member</span>
+                <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px]">Member</span>
               )}
               {!u.is_active && (
-                <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 text-[11px]">Disabled</span>
+                <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-[11px]">Disabled</span>
               )}
             </div>
-            <p className="text-xs text-gray-500 truncate">{u.email}</p>
+            <p className="text-xs text-slate-500 truncate">{u.email}</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-2xl font-bold text-white leading-none">{u.total}</p>
-              <p className="text-[11px] text-gray-500 mt-1">assigned</p>
+              <p className="text-2xl font-bold text-slate-900 leading-none">{u.total}</p>
+              <p className="text-[11px] text-slate-500 mt-1">assigned</p>
             </div>
             <div className="flex flex-wrap gap-1.5 max-w-[240px] justify-end">
               {Object.entries(u.by_stage).map(([stage, count]) => (
@@ -169,11 +170,11 @@ function TeamPageContent() {
         </header>
 
         {visible.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-gray-500 text-center">
+          <p className="px-5 py-6 text-sm text-slate-500 text-center">
             {u.total === 0 ? "No leads assigned" : "No leads match your search"}
           </p>
         ) : (
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-slate-100">
             {visible.map((lead) => (
               <LeadRow key={lead.id} lead={lead} />
             ))}
@@ -188,16 +189,17 @@ function TeamPageContent() {
   return (
     <div className="flex h-screen">
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0f1e] border-r border-white/5 transform transition-transform duration-200
+        fixed inset-y-0 left-0 z-50 w-64 bg-[#41808B] border-r border-white/10 transform transition-transform duration-200
         lg:relative lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
-        <div className="flex items-center justify-between h-16 px-6 border-b border-white/5">
+        <div className="flex items-center justify-between h-16 px-6 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <Target className="w-6 h-6 text-blue-400" />
-            <span className="font-bold text-white text-lg">LeadGen</span>
+            <span className="flex items-center rounded-lg bg-white p-1.5">
+              <Logo className="h-6" />
+            </span>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white">
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-teal-100 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -211,8 +213,8 @@ function TeamPageContent() {
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors ${
                   isActive
-                    ? "bg-blue-500/10 text-blue-400"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                    ? "bg-white/15 text-white font-medium"
+                    : "text-teal-50/80 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -229,12 +231,12 @@ function TeamPageContent() {
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="relative z-40 flex items-center justify-between h-16 px-6 border-b border-white/5 bg-[#0a0f1e]/50 backdrop-blur-xl">
+        <header className="relative z-40 flex items-center justify-between h-16 px-6 border-b border-slate-200 bg-white/70 backdrop-blur-xl">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-400 hover:text-white">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-slate-500 hover:text-slate-900">
               <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-semibold text-white">
+            <h1 className="text-lg font-semibold text-slate-900">
               {isAdmin ? "Team Leads" : "My Leads"}
             </h1>
             <CompanyBadge />
@@ -249,22 +251,22 @@ function TeamPageContent() {
           <div className="max-w-5xl mx-auto space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold text-white">
+                <h2 className="text-xl font-bold text-slate-900">
                   {isAdmin ? "Assigned leads per user" : "Leads assigned to you"}
                 </h2>
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="text-sm text-slate-500 mt-1">
                   {isAdmin
                     ? "See every team member's workload and track unassigned leads"
                     : "Everything you own across the pipeline"}
                 </p>
               </div>
               <div className="relative w-full sm:w-72">
-                <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search leads, emails, phones…"
-                  className="w-full pl-10 pr-4 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036] transition-colors"
                 />
               </div>
             </div>
@@ -273,8 +275,8 @@ function TeamPageContent() {
               <div
                 className={`text-sm rounded-lg px-4 py-2.5 border ${
                   msg.ok
-                    ? "text-green-400 bg-green-500/10 border-green-500/20"
-                    : "text-red-400 bg-red-500/10 border-red-500/20"
+                    ? "text-green-700 bg-green-50 border-green-200"
+                    : "text-red-700 bg-red-50 border-red-200"
                 }`}
               >
                 {msg.text}
@@ -284,7 +286,7 @@ function TeamPageContent() {
             {loading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-40 bg-white/5 rounded-xl animate-pulse" />
+                  <div key={i} className="h-40 bg-slate-100 rounded-xl animate-pulse" />
                 ))}
               </div>
             ) : isAdmin && team ? (
@@ -293,19 +295,19 @@ function TeamPageContent() {
                   {team.users.map((u) => renderUserCard(u))}
                 </div>
 
-                <section className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden">
-                  <header className="flex flex-wrap items-center gap-3 px-5 py-4 border-b border-white/10">
-                    <div className="w-10 h-10 rounded-full bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
-                      <Inbox className="w-4.5 h-4.5 text-gray-400" style={{ width: 18, height: 18 }} />
+                <section className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                  <header className="flex flex-wrap items-center gap-3 px-5 py-4 border-b border-slate-200">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
+                      <Inbox className="w-4.5 h-4.5 text-slate-500" style={{ width: 18, height: 18 }} />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-white">Unassigned</p>
-                      <p className="text-xs text-gray-500">Leads with no owner yet</p>
+                      <p className="text-sm font-semibold text-slate-900">Unassigned</p>
+                      <p className="text-xs text-slate-500">Leads with no owner yet</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <p className="text-2xl font-bold text-white leading-none">{team.unassigned.total}</p>
-                        <p className="text-[11px] text-gray-500 mt-1">leads</p>
+                        <p className="text-2xl font-bold text-slate-900 leading-none">{team.unassigned.total}</p>
+                        <p className="text-[11px] text-slate-500 mt-1">leads</p>
                       </div>
                       <div className="flex flex-wrap gap-1.5 max-w-[240px] justify-end">
                         {Object.entries(team.unassigned.by_stage).map(([stage, count]) => (
@@ -321,11 +323,11 @@ function TeamPageContent() {
                     </div>
                   </header>
                   {unassignedVisible.length === 0 ? (
-                    <p className="px-5 py-6 text-sm text-gray-500 text-center">
+                    <p className="px-5 py-6 text-sm text-slate-500 text-center">
                       {team.unassigned.total === 0 ? "No unassigned leads" : "No leads match your search"}
                     </p>
                   ) : (
-                    <div className="divide-y divide-white/5">
+                    <div className="divide-y divide-slate-100">
                       {unassignedVisible.map((lead) => (
                         <LeadRow key={lead.id} lead={lead} />
                       ))}
@@ -335,22 +337,22 @@ function TeamPageContent() {
               </>
             ) : myLeads ? (
               myLeads.length === 0 ? (
-                <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl py-14 text-center">
-                  <UserRound className="w-10 h-10 text-gray-600 mx-auto" />
-                  <p className="mt-3 text-sm text-gray-400">
+                <div className="rounded-xl border border-slate-200 bg-white shadow-sm py-14 text-center">
+                  <UserRound className="w-10 h-10 text-slate-300 mx-auto" />
+                  <p className="mt-3 text-sm text-slate-500">
                     No leads assigned to you yet
                   </p>
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-slate-400 mt-1">
                     Leads will appear here once your admin assigns them
                   </p>
                 </div>
               ) : (
-                <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl divide-y divide-white/5 overflow-hidden">
+                <div className="rounded-xl border border-slate-200 bg-white shadow-sm divide-y divide-slate-100 overflow-hidden">
                   {myLeads.filter(matchesQuery).map((lead) => (
                     <LeadRow key={lead.id} lead={lead} />
                   ))}
                   {myLeads.filter(matchesQuery).length === 0 && (
-                    <p className="px-5 py-6 text-sm text-gray-500 text-center">No leads match your search</p>
+                    <p className="px-5 py-6 text-sm text-slate-500 text-center">No leads match your search</p>
                   )}
                 </div>
               )
@@ -371,13 +373,13 @@ function LeadRow({ lead }: { lead: TeamLead }) {
   return (
     <Link
       href={`/pipeline/leads/${lead.id}`}
-      className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5 hover:bg-white/[0.03] transition-colors group"
+      className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5 hover:bg-slate-50 transition-colors group"
     >
       <div className="min-w-0 flex-1 basis-52">
-        <p className="text-sm font-medium text-white group-hover:text-blue-300 transition-colors truncate">
+        <p className="text-sm font-medium text-slate-900 group-hover:text-[#F46036] transition-colors truncate">
           {lead.business_name}
         </p>
-        <p className="text-xs text-gray-500 truncate">
+        <p className="text-xs text-slate-500 truncate">
           {lead.email || lead.phone || lead.website || "—"}
         </p>
       </div>
@@ -387,14 +389,14 @@ function LeadRow({ lead }: { lead: TeamLead }) {
       >
         {STAGE_LABELS[lead.pipeline_stage] || lead.pipeline_stage.replace(/_/g, " ")}
       </span>
-      <span className="text-xs font-bold text-white tabular-nums">
+      <span className="text-xs font-bold text-slate-900 tabular-nums">
         {lead.lead_score}
-        <span className="text-gray-600 font-normal">/100</span>
+        <span className="text-slate-400 font-normal">/100</span>
       </span>
-      <span className="px-2 py-0.5 rounded-full bg-white/5 text-gray-400 text-[11px] capitalize">
+      <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] capitalize">
         {lead.priority}
       </span>
-      <span className="text-xs text-gray-500 w-28 text-right">
+      <span className="text-xs text-slate-500 w-28 text-right">
         {lead.next_followup_date
           ? `Next: ${formatDate(lead.next_followup_date)}`
           : lead.last_activity_at

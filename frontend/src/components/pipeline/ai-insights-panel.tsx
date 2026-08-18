@@ -23,21 +23,21 @@ const ICONS = {
 }
 
 const BORDERS: Record<InsightKind, string> = {
-  opportunity: "border-green-500/30",
-  warning: "border-yellow-500/30",
-  info: "border-blue-500/30",
+  opportunity: "border-green-200",
+  warning: "border-yellow-200",
+  info: "border-blue-200",
 }
 
 const BGS: Record<InsightKind, string> = {
-  opportunity: "bg-green-500/5",
-  warning: "bg-yellow-500/5",
-  info: "bg-blue-500/5",
+  opportunity: "bg-green-50",
+  warning: "bg-yellow-50",
+  info: "bg-blue-50",
 }
 
 const ICON_COLORS: Record<InsightKind, string> = {
-  opportunity: "text-green-400",
-  warning: "text-yellow-400",
-  info: "text-blue-400",
+  opportunity: "text-green-600",
+  warning: "text-yellow-600",
+  info: "text-blue-600",
 }
 
 function kindOf(title: string, message: string | null): InsightKind {
@@ -74,16 +74,16 @@ export function AIInsightsPanel() {
   }, [load])
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Lightbulb className="w-5 h-5 text-yellow-400" />
-          <h3 className="font-semibold text-lg text-white">AI Insights</h3>
+          <Lightbulb className="w-5 h-5 text-[#F46036]" />
+          <h3 className="font-semibold text-lg text-slate-900">AI Insights</h3>
         </div>
         <button
           onClick={load}
           disabled={loading}
-          className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors"
+          className="flex items-center gap-1 text-xs text-slate-500 hover:text-[#F46036] transition-colors"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           Refresh
@@ -91,11 +91,11 @@ export function AIInsightsPanel() {
       </div>
       <div className="space-y-3">
         {loading && insights.length === 0 ? (
-          <p className="text-sm text-gray-500">Loading insights…</p>
+          <p className="text-sm text-slate-500">Loading insights…</p>
         ) : error ? (
-          <p className="text-sm text-red-400">{error}</p>
+          <p className="text-sm text-red-600">{error}</p>
         ) : insights.length === 0 ? (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-slate-500">
             No insights yet. They're generated automatically as leads sit too long in a stage or go
             inactive.
           </p>
@@ -109,9 +109,9 @@ export function AIInsightsPanel() {
               >
                 <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${ICON_COLORS[kind]}`} />
                 <div className="min-w-0">
-                  <p className="text-sm text-gray-200 font-medium">{insight.title}</p>
-                  {insight.message && <p className="text-sm text-gray-400 mt-0.5">{insight.message}</p>}
-                  <p className="text-[11px] text-gray-600 mt-1">{formatRelativeTime(insight.created_at)}</p>
+                  <p className="text-sm text-slate-800 font-medium">{insight.title}</p>
+                  {insight.message && <p className="text-sm text-slate-500 mt-0.5">{insight.message}</p>}
+                  <p className="text-[11px] text-slate-400 mt-1">{formatRelativeTime(insight.created_at)}</p>
                 </div>
               </div>
             )

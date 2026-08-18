@@ -59,7 +59,7 @@ export const ARCHITECTURE_MODULES: ArchitectureModule[] = [
     icon: Brain,
     title: "AI Query Understanding",
     description: "Transforms natural language into an optimized search plan.",
-    color: "#a855f7",
+    color: "#41808B",
     flow: [
       "User Query",
       "Intent Parsing",

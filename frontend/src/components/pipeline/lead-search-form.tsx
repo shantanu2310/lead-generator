@@ -64,10 +64,10 @@ export function LeadSearchForm({
   }
 
   return (
-    <div className="p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 backdrop-blur-xl">
+    <div className="p-4 rounded-xl border border-[#57A3AF]/25 bg-[#57A3AF]/5">
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[220px]">
-          <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
+          <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#41808B]" />
           <input
             type="text"
             placeholder='e.g. plumbers in Austin Texas'
@@ -77,17 +77,17 @@ export function LeadSearchForm({
               if (e.key === "Enter") run()
             }}
             disabled={loading}
-            className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-400/40 disabled:opacity-50"
+            className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036] disabled:opacity-50"
           />
         </div>
 
         {!departmentsLoaded ? (
-          <div className="flex items-center gap-2 px-3 py-2 text-sm text-gray-400">
+          <div className="flex items-center gap-2 px-3 py-2 text-sm text-slate-500">
             <Loader2 className="w-4 h-4 animate-spin" />
             Loading departments...
           </div>
         ) : !hasDepartments ? (
-          <div className="flex items-center gap-2 px-3 py-2 text-sm text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+          <div className="flex items-center gap-2 px-3 py-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg">
             <Building2 className="w-4 h-4" />
             Create a department in Settings to generate leads
           </div>
@@ -97,7 +97,7 @@ export function LeadSearchForm({
             onChange={(e) => setDepartmentId(e.target.value)}
             disabled={loading}
             title="Department for these leads"
-            className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-white/20 disabled:opacity-50"
+            className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#F46036] disabled:opacity-50"
           >
             {departments.map((d) => (
               <option key={d.id} value={d.id}>{d.name}</option>
@@ -109,7 +109,7 @@ export function LeadSearchForm({
           value={maxLeads}
           onChange={(e) => setMaxLeads(Number(e.target.value))}
           disabled={loading}
-          className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-white/20 disabled:opacity-50"
+          className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#F46036] disabled:opacity-50"
         >
           {[5, 10, 15, 25].map((n) => (
             <option key={n} value={n}>{n} leads</option>
@@ -119,7 +119,7 @@ export function LeadSearchForm({
         <button
           onClick={run}
           disabled={loading || !hasDepartments}
-          className="flex items-center gap-2 px-5 py-2 bg-blue-500 hover:bg-blue-400 disabled:bg-blue-500/40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
+          className="flex items-center gap-2 px-5 py-2 bg-[#F46036] hover:bg-[#D94A22] disabled:bg-[#F46036]/40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
         >
           {loading ? (
             <>
@@ -136,7 +136,7 @@ export function LeadSearchForm({
       </div>
 
       {message && (
-        <p className={`mt-3 text-sm ${message.ok ? "text-green-400" : "text-red-400"}`}>
+        <p className={`mt-3 text-sm ${message.ok ? "text-green-700" : "text-red-700"}`}>
           {message.text}
         </p>
       )}

@@ -11,6 +11,7 @@ import { NotificationsDropdown } from "@/components/shared/notifications-dropdow
 import { UserMenu } from "@/components/shared/user-menu"
 import { CompanyBadge } from "@/components/shared/company-badge"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
+import { Logo } from "@/components/shared/logo"
 import { formatDate } from "@/lib/utils"
 
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon; adminOnly?: boolean }[] = [
@@ -155,16 +156,17 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
     <AuthGuard adminOnly>
     <div className="flex h-screen">
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0f1e] border-r border-white/5 transform transition-transform duration-200
+        fixed inset-y-0 left-0 z-50 w-64 bg-[#41808B] border-r border-white/10 transform transition-transform duration-200
         lg:relative lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
-        <div className="flex items-center justify-between h-16 px-6 border-b border-white/5">
+        <div className="flex items-center justify-between h-16 px-6 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <Target className="w-6 h-6 text-blue-400" />
-            <span className="font-bold text-white text-lg">LeadGen</span>
+            <span className="flex items-center rounded-lg bg-white p-1.5">
+              <Logo className="h-6" />
+            </span>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white">
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-teal-100 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -178,8 +180,8 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors ${
                   isActive
-                    ? "bg-blue-500/10 text-blue-400"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                    ? "bg-white/15 text-white font-medium"
+                    : "text-teal-50/80 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -196,12 +198,12 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="relative z-40 flex items-center justify-between h-16 px-6 border-b border-white/5 bg-[#0a0f1e]/50 backdrop-blur-xl">
+        <header className="relative z-40 flex items-center justify-between h-16 px-6 border-b border-slate-200 bg-white/70 backdrop-blur-xl">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-400 hover:text-white">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-slate-500 hover:text-slate-900">
               <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-semibold text-white">Users</h1>
+            <h1 className="text-lg font-semibold text-slate-900">Users</h1>
             <CompanyBadge />
           </div>
           <div className="flex items-center gap-4">
@@ -214,14 +216,14 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
           <div className="max-w-5xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold text-white">Team Accounts</h2>
-                <p className="text-sm text-gray-400 mt-1">
+                <h2 className="text-xl font-bold text-slate-900">Team Accounts</h2>
+                <p className="text-sm text-slate-500 mt-1">
                   Invite team members and control who can log in
                 </p>
               </div>
               <button
                 onClick={() => setShowAdd((v) => !v)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#F46036] hover:bg-[#D94A22] text-white text-sm font-semibold transition-colors"
               >
                 <UserPlus className="w-4 h-4" />
                 Add User
@@ -231,34 +233,34 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
             {showAdd && (
               <form
                 onSubmit={addUser}
-                className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 space-y-4"
+                className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 space-y-4"
               >
-<h3 className="font-semibold text-white">New Account</h3>
+                <h3 className="font-semibold text-slate-900">New Account</h3>
                 <AvatarPicker value={avatar} onChange={setAvatar} size={72} />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1.5">Name</label>
+                    <label className="block text-sm text-slate-500 mb-1.5">Name</label>
                     <input
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
                       placeholder="Jane Doe"
-                      className="w-full px-4 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036] transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1.5">Email</label>
+                    <label className="block text-sm text-slate-500 mb-1.5">Email</label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       placeholder="jane@company.com"
-                      className="w-full px-4 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036] transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1.5">Temporary password</label>
+                    <label className="block text-sm text-slate-500 mb-1.5">Temporary password</label>
                     <input
                       type="password"
                       value={password}
@@ -266,7 +268,7 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
                       required
                       minLength={6}
                       placeholder="min 6 characters"
-                      className="w-full px-4 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036] transition-colors"
                     />
                   </div>
                 </div>
@@ -274,7 +276,7 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-500 text-white text-sm font-semibold hover:bg-blue-400 disabled:opacity-50 transition-colors"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#F46036] hover:bg-[#D94A22] text-white text-sm font-semibold disabled:opacity-50 transition-colors"
                   >
                     {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                     Create Account
@@ -282,7 +284,7 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
                   <button
                     type="button"
                     onClick={() => setShowAdd(false)}
-                    className="px-5 py-2.5 rounded-xl bg-white/5 text-gray-300 text-sm hover:bg-white/10 transition-colors"
+                    className="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm hover:bg-slate-200 transition-colors"
                   >
                     Cancel
                   </button>
@@ -293,35 +295,35 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
             {editing && (
               <form
                 onSubmit={saveEdit}
-                className="rounded-xl border border-blue-500/30 bg-blue-500/5 backdrop-blur-xl p-6 space-y-4"
+                className="rounded-xl border border-[#F46036]/30 bg-orange-50/60 p-6 space-y-4"
               >
-<h3 className="font-semibold text-white">
+                <h3 className="font-semibold text-slate-900">
                   Edit Account — {editing.email}
                 </h3>
                 <AvatarPicker value={editForm.avatar_url} onChange={(v) => setEditForm({ ...editForm, avatar_url: v })} size={72} />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1.5">Name</label>
+                    <label className="block text-sm text-slate-500 mb-1.5">Name</label>
                     <input
                       value={editForm.name}
                       onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                       required
-                      className="w-full px-4 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036] transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1.5">Email</label>
+                    <label className="block text-sm text-slate-500 mb-1.5">Email</label>
                     <input
                       type="email"
                       value={editForm.email}
                       onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                       required
-                      className="w-full px-4 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036] transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1.5">
-                      New password <span className="text-gray-600">(blank = keep)</span>
+                    <label className="block text-sm text-slate-500 mb-1.5">
+                      New password <span className="text-slate-400">(blank = keep)</span>
                     </label>
                     <input
                       type="password"
@@ -329,18 +331,18 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
                       onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
                       minLength={6}
                       placeholder="optional"
-                      className="w-full px-4 py-2.5 bg-[#0f172a] border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036] transition-colors"
                     />
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                  <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={editForm.is_admin}
                       disabled={editing.id === me?.id}
                       onChange={(e) => setEditForm({ ...editForm, is_admin: e.target.checked })}
-                      className="w-4 h-4 accent-blue-500"
+                      className="w-4 h-4 accent-[#F46036]"
                     />
                     Admin role
                   </label>
@@ -349,7 +351,7 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
                   <button
                     type="submit"
                     disabled={savingEdit}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-500 text-white text-sm font-semibold hover:bg-blue-400 disabled:opacity-50 transition-colors"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#F46036] hover:bg-[#D94A22] text-white text-sm font-semibold disabled:opacity-50 transition-colors"
                   >
                     {savingEdit && <Loader2 className="w-4 h-4 animate-spin" />}
                     Save Changes
@@ -357,7 +359,7 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
                   <button
                     type="button"
                     onClick={() => setEditing(null)}
-                    className="px-5 py-2.5 rounded-xl bg-white/5 text-gray-300 text-sm hover:bg-white/10 transition-colors"
+                    className="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm hover:bg-slate-200 transition-colors"
                   >
                     Cancel
                   </button>
@@ -369,69 +371,69 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
               <div
                 className={`text-sm rounded-lg px-4 py-2.5 border ${
                   msg.ok
-                    ? "text-green-400 bg-green-500/10 border-green-500/20"
-                    : "text-red-400 bg-red-500/10 border-red-500/20"
+                    ? "text-green-700 bg-green-50 border-green-200"
+                    : "text-red-700 bg-red-50 border-red-200"
                 }`}
               >
                 {msg.text}
               </div>
             )}
 
-            <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden">
+            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
               {loading ? (
                 <div className="p-8 animate-pulse space-y-3">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="h-14 bg-white/5 rounded-xl" />
+                    <div key={i} className="h-14 bg-slate-100 rounded-xl" />
                   ))}
                 </div>
               ) : (
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-white/10 text-left">
-                      <th className="px-5 py-3 text-xs font-medium text-gray-400">User</th>
-                      <th className="px-5 py-3 text-xs font-medium text-gray-400">Role</th>
-                      <th className="px-5 py-3 text-xs font-medium text-gray-400">Created</th>
-                      <th className="px-5 py-3 text-xs font-medium text-gray-400">Status</th>
-                      <th className="px-5 py-3 text-xs font-medium text-gray-400 text-right">Access</th>
+                    <tr className="border-b border-slate-200 text-left">
+                      <th className="px-5 py-3 text-xs font-medium text-slate-500">User</th>
+                      <th className="px-5 py-3 text-xs font-medium text-slate-500">Role</th>
+                      <th className="px-5 py-3 text-xs font-medium text-slate-500">Created</th>
+                      <th className="px-5 py-3 text-xs font-medium text-slate-500">Status</th>
+                      <th className="px-5 py-3 text-xs font-medium text-slate-500 text-right">Access</th>
                     </tr>
                   </thead>
                   <tbody>
                     {users.map((u) => (
-                      <tr key={u.id} className="border-b border-white/5 last:border-0">
+                      <tr key={u.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
                         <td className="px-5 py-4">
-<div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3">
                             <Avatar name={u.name} src={u.avatar_url} className="w-9 h-9" />
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-white">
+                              <p className="text-sm font-medium text-slate-900">
                                 {u.name}
-                                {u.id === me?.id && <span className="text-xs text-gray-500 ml-2">(you)</span>}
+                                {u.id === me?.id && <span className="text-xs text-slate-400 ml-2">(you)</span>}
                               </p>
-                              <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                              <p className="text-xs text-slate-500 truncate">{u.email}</p>
                             </div>
                           </div>
                         </td>
                         <td className="px-5 py-4">
                           {u.is_admin ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-violet-500/10 text-violet-300 text-xs font-medium">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 text-xs font-medium">
                               <ShieldCheck className="w-3 h-3" />
                               Admin
                             </span>
                           ) : (
-                            <span className="px-2.5 py-1 rounded-full bg-white/5 text-gray-400 text-xs">Member</span>
+                            <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs">Member</span>
                           )}
                         </td>
-                        <td className="px-5 py-4 text-sm text-gray-400">
-                          {u.created_at ? formatDate(u.created_at) : "â€”"}
+                        <td className="px-5 py-4 text-sm text-slate-500">
+                          {u.created_at ? formatDate(u.created_at) : "—"}
                         </td>
                         <td className="px-5 py-4">
                           <span
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                               u.is_active
-                                ? "bg-green-500/10 text-green-400"
-                                : "bg-red-500/10 text-red-400"
+                                ? "bg-green-50 text-green-700"
+                                : "bg-red-50 text-red-700"
                             }`}
                           >
-                            <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? "bg-green-400" : "bg-red-400"}`} />
+                            <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? "bg-green-600" : "bg-red-600"}`} />
                             {u.is_active ? "Active" : "Disabled"}
                           </span>
                         </td>
@@ -443,8 +445,8 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
                               title={u.id === me?.id ? "You cannot disable your own account" : u.is_active ? "Revoke login access" : "Grant login access"}
                               className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors disabled:opacity-40 ${
                                 u.is_active
-                                  ? "text-red-400 border-red-500/30 hover:bg-red-500/10"
-                                  : "text-green-400 border-green-500/30 hover:bg-green-500/10"
+                                  ? "text-red-600 border-red-200 hover:bg-red-50"
+                                  : "text-green-700 border-green-200 hover:bg-green-50"
                               }`}
                             >
                               {togglingId === u.id ? (
@@ -458,7 +460,7 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
                             <button
                               onClick={() => openEdit(u)}
                               title="Edit user"
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors"
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 transition-colors"
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
@@ -466,7 +468,7 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
                               onClick={() => confirmDelete(u)}
                               disabled={deletingId === u.id || u.id === me?.id}
                               title={u.id === me?.id ? "You cannot delete your own account" : "Delete user"}
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 bg-white/5 hover:bg-red-500/10 transition-colors disabled:opacity-40"
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 bg-white border border-slate-200 hover:bg-red-50 transition-colors disabled:opacity-40"
                             >
                               {deletingId === u.id ? (
                                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

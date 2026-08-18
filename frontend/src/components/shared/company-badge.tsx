@@ -9,7 +9,7 @@ export function CompanyBadge() {
   return (
     <span
       title={user.company_name}
-      className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-medium text-blue-300 truncate max-w-[200px]"
+      className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#57A3AF]/10 border border-[#57A3AF]/25 text-xs font-medium text-[#41808B] truncate max-w-[200px]"
     >
       <Building2 className="w-3 h-3 shrink-0" />
       <span className="truncate">{user.company_name}</span>

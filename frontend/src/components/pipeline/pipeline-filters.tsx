@@ -50,15 +50,15 @@ export function PipelineFilters({
   const activeCount = Object.values(filters).filter((v) => v !== "").length
 
   return (
-    <div className="flex flex-wrap items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl">
+    <div className="flex flex-wrap items-center gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="relative flex-1 min-w-[200px] max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           type="text"
           placeholder="Filter companies..."
           value={filters.search}
           onChange={(e) => update("search", e.target.value)}
-          className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
+          className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
         />
       </div>
 
@@ -66,7 +66,7 @@ export function PipelineFilters({
       <select
         value={filters.department_id}
         onChange={(e) => update("department_id", e.target.value)}
-        className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-white/20"
+        className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#F46036]"
       >
         <option value="">All Departments</option>
         {departments.map((d) => (
@@ -78,7 +78,7 @@ export function PipelineFilters({
       <select
         value={filters.pipeline_stage}
         onChange={(e) => update("pipeline_stage", e.target.value)}
-        className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-white/20"
+        className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#F46036]"
       >
         <option value="">All Stages</option>
         {PIPELINE_STAGES.map((s) => (
@@ -89,7 +89,7 @@ export function PipelineFilters({
       <select
         value={filters.priority}
         onChange={(e) => update("priority", e.target.value)}
-        className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-white/20"
+        className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#F46036]"
       >
         <option value="">All Priorities</option>
         <option value="low">Low</option>
@@ -101,7 +101,7 @@ export function PipelineFilters({
       <select
         value={filters.assigned_to}
         onChange={(e) => update("assigned_to", e.target.value)}
-        className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-white/20"
+        className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#F46036]"
       >
         <option value="">All Assignments</option>
         <option value="me">My Leads</option>
@@ -111,7 +111,7 @@ export function PipelineFilters({
       {activeCount > 0 && (
         <button
           onClick={clear}
-          className="flex items-center gap-1 px-3 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+          className="flex items-center gap-1 px-3 py-2 text-sm text-slate-500 hover:text-[#F46036] transition-colors"
         >
           <X className="w-4 h-4" />
           Clear ({activeCount})

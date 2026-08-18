@@ -43,12 +43,12 @@ export function StatCards({ data }: { data?: StatCardData[] }) {
             transition={{ delay: i * 0.05 }}
           >
             <Card className="relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-gray-400 mb-1">{stat.label}</p>
+                  <p className="text-sm text-slate-500 mb-1">{stat.label}</p>
                   <motion.p
-                    className="text-2xl font-bold text-white"
+                    className="text-2xl font-bold text-slate-900"
                     key={String(stat.value)}
                     initial={{ scale: 1.2 }}
                     animate={{ scale: 1 }}
@@ -57,12 +57,12 @@ export function StatCards({ data }: { data?: StatCardData[] }) {
                     {isCurrency || typeof stat.value === "string" ? stat.value : formatNumber(Number(stat.value))}
                   </motion.p>
                 </div>
-                <div className="p-2 rounded-lg bg-white/5">
-                  <Icon className="w-5 h-5 text-gray-400" />
+                <div className="p-2 rounded-lg bg-slate-100">
+                  <Icon className="w-5 h-5 text-[#41808B]" />
                 </div>
               </div>
               {stat.trend !== undefined && (
-                <p className={`text-xs mt-2 ${stat.trend >= 0 ? "text-green-400" : "text-red-400"}`}>
+                <p className={`text-xs mt-2 ${stat.trend >= 0 ? "text-green-600" : "text-red-600"}`}>
                   {stat.trend >= 0 ? "+" : ""}{stat.trend}% vs last week
                 </p>
               )}

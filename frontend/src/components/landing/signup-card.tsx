@@ -51,15 +51,15 @@ export default function SignupCard() {
   return (
     <div id="signup" className="glass-card-glow animate-card-float w-full max-w-md scroll-mt-28 p-8">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white">Create Your Workspace</h2>
-        <p className="mt-1.5 text-sm text-[#94a3b8]">
+        <h2 className="text-2xl font-bold text-slate-900">Create Your Workspace</h2>
+        <p className="mt-1.5 text-sm text-slate-500">
           Start your free trial. No credit card required.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3.5">
         <div>
-          <label htmlFor="fullName" className="mb-1.5 block text-xs font-medium text-[#cbd5e1]">
+          <label htmlFor="fullName" className="mb-1.5 block text-xs font-medium text-slate-600">
             Full Name
           </label>
           <input
@@ -73,7 +73,7 @@ export default function SignupCard() {
           />
         </div>
         <div>
-          <label htmlFor="companyName" className="mb-1.5 block text-xs font-medium text-[#cbd5e1]">
+          <label htmlFor="companyName" className="mb-1.5 block text-xs font-medium text-slate-600">
             Company Name
           </label>
           <input
@@ -87,7 +87,7 @@ export default function SignupCard() {
           />
         </div>
         <div>
-          <label htmlFor="workEmail" className="mb-1.5 block text-xs font-medium text-[#cbd5e1]">
+          <label htmlFor="workEmail" className="mb-1.5 block text-xs font-medium text-slate-600">
             Work Email
           </label>
           <input
@@ -101,7 +101,7 @@ export default function SignupCard() {
           />
         </div>
         <div>
-          <label htmlFor="password" className="mb-1.5 block text-xs font-medium text-[#cbd5e1]">
+          <label htmlFor="password" className="mb-1.5 block text-xs font-medium text-slate-600">
             Password
           </label>
           <input
@@ -116,7 +116,7 @@ export default function SignupCard() {
           />
         </div>
         <div>
-          <label htmlFor="confirm" className="mb-1.5 block text-xs font-medium text-[#cbd5e1]">
+          <label htmlFor="confirm" className="mb-1.5 block text-xs font-medium text-slate-600">
             Confirm Password
           </label>
           <input
@@ -131,7 +131,7 @@ export default function SignupCard() {
         </div>
 
         {error && (
-          <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-400">
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
             {error}
           </div>
         )}
@@ -147,19 +147,19 @@ export default function SignupCard() {
       </form>
 
       <div className="my-5 flex items-center gap-3">
-        <div className="h-px flex-1 bg-white/10" />
-        <span className="text-xs text-[#64748b]">Free trial · No credit card</span>
-        <div className="h-px flex-1 bg-white/10" />
+        <div className="h-px flex-1 bg-slate-200" />
+        <span className="text-xs text-slate-500">Free trial · No credit card</span>
+        <div className="h-px flex-1 bg-slate-200" />
       </div>
 
-      <div className="flex items-center justify-center gap-2 text-xs text-[#64748b]">
+      <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
         <Lock className="h-3.5 w-3.5" />
         Your workspace is private and secure
       </div>
 
-      <p className="mt-5 text-center text-sm text-[#94a3b8]">
+      <p className="mt-5 text-center text-sm text-slate-500">
         Already have an account?{" "}
-        <Link href="/login" className="font-semibold text-[#a855f7] transition-colors hover:text-[#c084fc]">
+        <Link href="/login" className="font-semibold text-[#41808B] transition-colors hover:text-[#F46036]">
           Sign In
         </Link>
       </p>

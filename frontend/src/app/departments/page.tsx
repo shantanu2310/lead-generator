@@ -10,6 +10,7 @@ import { NotificationsDropdown } from "@/components/shared/notifications-dropdow
 import { UserMenu } from "@/components/shared/user-menu"
 import { CompanyBadge } from "@/components/shared/company-badge"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
+import { Logo } from "@/components/shared/logo"
 
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon; adminOnly?: boolean }[] = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -107,16 +108,17 @@ export default function DepartmentsPage() {
     <AuthGuard>
     <div className="flex h-screen">
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0f1e] border-r border-white/5 transform transition-transform duration-200
+        fixed inset-y-0 left-0 z-50 w-64 bg-[#41808B] border-r border-white/10 transform transition-transform duration-200
         lg:relative lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
-        <div className="flex items-center justify-between h-16 px-6 border-b border-white/5">
+        <div className="flex items-center justify-between h-16 px-6 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <Target className="w-6 h-6 text-blue-400" />
-            <span className="font-bold text-white text-lg">LeadGen</span>
+            <span className="flex items-center rounded-lg bg-white p-1.5">
+              <Logo className="h-6" />
+            </span>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white">
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-teal-100 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -130,8 +132,8 @@ export default function DepartmentsPage() {
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors ${
                   isActive
-                    ? "bg-blue-500/10 text-blue-400"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                    ? "bg-white/15 text-white font-medium"
+                    : "text-teal-50/80 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -148,12 +150,12 @@ export default function DepartmentsPage() {
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="relative z-40 flex items-center justify-between h-16 px-6 border-b border-white/5 bg-[#0a0f1e]/50 backdrop-blur-xl">
+        <header className="relative z-40 flex items-center justify-between h-16 px-6 border-b border-slate-200 bg-white/70 backdrop-blur-xl">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-400 hover:text-white">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-slate-500 hover:text-slate-900">
               <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-semibold text-white">Departments</h1>
+            <h1 className="text-lg font-semibold text-slate-900">Departments</h1>
             <CompanyBadge />
           </div>
           <div className="flex items-center gap-4">
@@ -166,19 +168,19 @@ export default function DepartmentsPage() {
           <div className="max-w-4xl mx-auto space-y-6">
             {msg && (
               <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm ${
-                msg.ok ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+                msg.ok ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
               }`}>
                 {msg.ok ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                 {msg.text}
               </div>
             )}
 
-            <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
+            <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
               <div className="flex items-center gap-2 mb-1">
-                <Building2 className="w-5 h-5 text-blue-400" />
-                <h2 className="font-semibold text-lg text-white">Departments</h2>
+                <Building2 className="w-5 h-5 text-[#F46036]" />
+                <h2 className="font-semibold text-lg text-slate-900">Departments</h2>
               </div>
-              <p className="text-sm text-gray-400 mb-5">
+              <p className="text-sm text-slate-500 mb-5">
                 A department is required to generate leads. Search results are tagged with the department you pick.
               </p>
 
@@ -190,12 +192,12 @@ export default function DepartmentsPage() {
                     if (e.key === "Enter") addDepartment()
                   }}
                   placeholder="New department name, e.g. Plumbers"
-                  className="flex-1 max-w-sm px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-400/40"
+                  className="flex-1 max-w-sm px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
                 />
                 <button
                   onClick={addDepartment}
                   disabled={savingDept}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-blue-500 hover:bg-blue-400 disabled:bg-blue-500/40 text-sm font-medium text-white rounded-lg transition-colors"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-[#F46036] hover:bg-[#D94A22] disabled:bg-[#F46036]/40 text-sm font-medium text-white rounded-lg transition-colors"
                 >
                   {savingDept ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                   Add
@@ -203,15 +205,15 @@ export default function DepartmentsPage() {
               </div>
 
               {loading ? (
-                <div className="flex items-center justify-center py-8 text-gray-500">
+                <div className="flex items-center justify-center py-8 text-slate-400">
                   <Loader2 className="w-5 h-5 animate-spin" />
                 </div>
               ) : departments.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-6 border border-dashed border-white/10 rounded-lg">
+                <p className="text-sm text-slate-500 text-center py-6 border border-dashed border-slate-300 rounded-lg">
                   No departments yet. Add your first one to start generating leads.
                 </p>
               ) : (
-                <div className="divide-y divide-white/5">
+                <div className="divide-y divide-slate-100">
                   {departments.map((d) => (
                     <div key={d.id} className="flex items-center justify-between gap-4 py-3">
                       {editingDeptId === d.id ? (
@@ -224,18 +226,18 @@ export default function DepartmentsPage() {
                               if (e.key === "Escape") setEditingDeptId(null)
                             }}
                             autoFocus
-                            className="flex-1 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-blue-400/40"
+                            className="flex-1 px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#F46036]"
                           />
                           <button
                             onClick={() => saveDepartmentRename(d)}
                             disabled={savingDept}
-                            className="px-3 py-1.5 text-xs font-medium text-white bg-blue-500 hover:bg-blue-400 rounded-lg transition-colors"
+                            className="px-3 py-1.5 text-xs font-medium text-white bg-[#F46036] hover:bg-[#D94A22] rounded-lg transition-colors"
                           >
                             Save
                           </button>
                           <button
                             onClick={() => setEditingDeptId(null)}
-                            className="px-2 py-1.5 text-xs text-gray-400 hover:text-white transition-colors"
+                            className="px-2 py-1.5 text-xs text-slate-500 hover:text-slate-900 transition-colors"
                           >
                             Cancel
                           </button>
@@ -243,21 +245,21 @@ export default function DepartmentsPage() {
                       ) : (
                         <>
                           <div className="flex items-center gap-3 min-w-0">
-                            <Building2 className="w-4 h-4 text-gray-500 shrink-0" />
-                            <p className="text-sm font-medium text-white">{d.name}</p>
-                            <span className="text-xs text-gray-500">{d.lead_count} leads</span>
+                            <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
+                            <p className="text-sm font-medium text-slate-900">{d.name}</p>
+                            <span className="text-xs text-slate-500">{d.lead_count} leads</span>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             <button
                               onClick={() => { setEditingDeptId(d.id); setEditingDeptName(d.name); setMsg(null) }}
-                              className="p-2 text-gray-400 hover:text-white transition-colors"
+                              className="p-2 text-slate-400 hover:text-slate-900 transition-colors"
                               title="Rename"
                             >
                               <Pencil className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => deleteDepartment(d)}
-                              className="p-2 text-red-400 hover:text-red-300 transition-colors"
+                              className="p-2 text-red-500 hover:text-red-600 transition-colors"
                               title="Delete"
                             >
                               <Trash2 className="w-4 h-4" />

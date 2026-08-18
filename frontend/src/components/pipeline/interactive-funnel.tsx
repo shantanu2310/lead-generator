@@ -12,8 +12,8 @@ export function InteractiveFunnel({ onStageClick, searchId }: { onStageClick?: (
 
   if (loading || !data) {
     return (
-      <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 animate-pulse">
-        <div className="h-96 bg-white/5 rounded" />
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-8 animate-pulse">
+        <div className="h-96 bg-slate-100 rounded" />
       </div>
     )
   }
@@ -21,8 +21,8 @@ export function InteractiveFunnel({ onStageClick, searchId }: { onStageClick?: (
   const maxCount = Math.max(...data.stages.map((s) => s.count), 1)
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-8">
-      <h2 className="text-xl font-bold text-white mb-6">Sales Funnel</h2>
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-8">
+      <h2 className="text-xl font-bold text-slate-900 mb-6">Sales Funnel</h2>
       <div className="flex flex-col items-center gap-1.5">
         {data.stages.map((stage, i) => {
           const ratio = stage.count / maxCount
@@ -57,14 +57,14 @@ export function InteractiveFunnel({ onStageClick, searchId }: { onStageClick?: (
               </div>
               {isHovered && (
                 <motion.div
-                  className="absolute left-full ml-4 top-0 bg-gray-900 rounded-lg p-3 border border-white/10 w-48 z-10"
+                  className="absolute left-full ml-4 top-0 bg-white rounded-lg p-3 border border-slate-200 shadow-lg w-48 z-10"
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
-                  <p className="text-white text-sm font-medium mb-1">
+                  <p className="text-slate-900 text-sm font-medium mb-1">
                     {STAGE_LABELS[stage.stage] || stage.label}
                   </p>
-                  <div className="space-y-1 text-xs text-gray-400">
+                  <div className="space-y-1 text-xs text-slate-500">
                     <p>Leads: {formatNumber(stage.count)}</p>
                     <p>Value: ${stage.total_value.toLocaleString()}</p>
                     <p>Avg time: {stage.avg_time_hours.toFixed(1)}h</p>
@@ -80,11 +80,11 @@ export function InteractiveFunnel({ onStageClick, searchId }: { onStageClick?: (
 }
 
 function getGradientStart(i: number): string {
-  const colors = ["#6366f1", "#8b5cf6", "#a855f7", "#06b6d4", "#10b981", "#22c55e", "#eab308", "#f97316", "#ef4444", "#ec4899", "#f43f5e", "#22c55e", "#6b7280"]
+  const colors = ["#57A3AF", "#41808B", "#F46036", "#7FB800", "#10b981", "#22c55e", "#eab308", "#f97316", "#ef4444", "#ec4899", "#f43f5e", "#22c55e", "#94a3b8"]
   return colors[i % colors.length]
 }
 
 function getGradientEnd(i: number): string {
-  const colors = ["#4f46e5", "#7c3aed", "#9333ea", "#0891b2", "#059669", "#16a34a", "#ca8a04", "#ea580c", "#dc2626", "#db2777", "#e11d48", "#16a34a", "#4b5563"]
+  const colors = ["#41808B", "#2d5c66", "#D94A22", "#6aa300", "#059669", "#16a34a", "#ca8a04", "#ea580c", "#dc2626", "#db2777", "#e11d48", "#16a34a", "#64748b"]
   return colors[i % colors.length]
 }

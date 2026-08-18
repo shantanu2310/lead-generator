@@ -1,32 +1,32 @@
 "use client"
 
-import { Target } from "lucide-react"
 import Link from "next/link"
+import { Logo } from "@/components/shared/logo"
 
 export default function LandingNav() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-xl sm:px-6">
+        <div className="mt-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 backdrop-blur-xl sm:px-6">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#38bdf8] shadow-[0_0_24px_rgba(124,58,237,0.5)]">
-              <Target className="h-5 w-5 text-white" />
+            <div className="flex h-9 items-center justify-center rounded-xl bg-white px-1.5">
+              <Logo className="h-7" />
             </div>
-            <span className="text-lg font-bold tracking-tight text-white">
-              LeadGen <span className="gradient-text">AI</span>
+            <span className="text-lg font-bold tracking-tight text-slate-900">
+              Loggix
             </span>
           </Link>
 
           <nav className="hidden items-center gap-8 md:flex">
             <a
               href="#features"
-              className="text-sm font-medium text-[#94a3b8] transition-colors hover:text-white"
+              className="text-sm font-medium text-slate-500 transition-colors hover:text-[#F46036]"
             >
               Features
             </a>
             <Link
               href="/architecture"
-              className="text-sm font-medium text-[#94a3b8] transition-colors hover:text-white"
+              className="text-sm font-medium text-slate-500 transition-colors hover:text-[#F46036]"
             >
               Architecture
             </Link>
@@ -35,7 +35,7 @@ export default function LandingNav() {
           <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="text-sm font-medium text-[#94a3b8] transition-colors hover:text-white"
+              className="text-sm font-medium text-slate-500 transition-colors hover:text-[#F46036]"
             >
               Sign In
             </Link>

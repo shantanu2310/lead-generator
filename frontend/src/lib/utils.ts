@@ -47,14 +47,14 @@ export function formatRelativeTime(dateStr: string | null | undefined): string {
 
 export function getScoreColor(score: number): string {
   if (score >= 80) return "text-green-400"
-  if (score >= 60) return "text-yellow-400"
-  return "text-red-400"
+  if (score >= 60) return "text-yellow-600"
+  return "text-red-600"
 }
 
 export function getScoreBgColor(score: number): string {
-  if (score >= 80) return "bg-green-500/20 text-green-400"
-  if (score >= 60) return "bg-yellow-500/20 text-yellow-400"
-  return "bg-red-500/20 text-red-400"
+  if (score >= 80) return "bg-green-50 text-green-700"
+  if (score >= 60) return "bg-yellow-50 text-yellow-700"
+  return "bg-red-50 text-red-700"
 }
 
 export function resizeImageToDataUrl(file: File, maxSize = 256, quality = 0.85): Promise<string> {

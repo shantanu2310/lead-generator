@@ -20,9 +20,9 @@ import { STAGE_LABELS } from "@/lib/constants"
 import { formatNumber } from "@/lib/utils"
 
 const CHART_COLORS = [
-  "#6366f1", "#8b5cf6", "#a855f7", "#06b6d4", "#10b981",
+  "#57A3AF", "#41808B", "#F46036", "#7FB800", "#10b981",
   "#22c55e", "#eab308", "#f97316", "#ef4444", "#ec4899",
-  "#f43f5e", "#22c55e", "#6b7280",
+  "#f43f5e", "#22c55e", "#94a3b8",
 ]
 
 export function PipelineCharts({ searchId }: { searchId?: string }) {
@@ -32,9 +32,9 @@ export function PipelineCharts({ searchId }: { searchId?: string }) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 animate-pulse">
-            <div className="h-4 bg-white/5 rounded w-1/3 mb-4" />
-            <div className="h-64 bg-white/5 rounded" />
+          <div key={i} className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 animate-pulse">
+            <div className="h-4 bg-slate-100 rounded w-1/3 mb-4" />
+            <div className="h-64 bg-slate-100 rounded" />
           </div>
         ))}
       </div>
@@ -62,16 +62,16 @@ export function PipelineCharts({ searchId }: { searchId?: string }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
-        <h3 className="text-sm font-medium text-white mb-4">Leads by Stage</h3>
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+        <h3 className="text-sm font-medium text-slate-900 mb-4">Leads by Stage</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={funnelData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-            <XAxis dataKey="name" tick={{ fill: "#9ca3af", fontSize: 11 }} />
-            <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} />
+            <YAxis tick={{ fill: "#64748b", fontSize: 11 }} />
             <Tooltip
-              contentStyle={{ background: "#1f2937", border: "1px solid #374151", borderRadius: "8px" }}
-              labelStyle={{ color: "#fff" }}
+              contentStyle={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px" }}
+              labelStyle={{ color: "#0f172a" }}
             />
             <Bar dataKey="value" radius={[4, 4, 0, 0]}>
               {funnelData.map((entry, i) => (
@@ -82,8 +82,8 @@ export function PipelineCharts({ searchId }: { searchId?: string }) {
         </ResponsiveContainer>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
-        <h3 className="text-sm font-medium text-white mb-4">Win / Loss Ratio</h3>
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+        <h3 className="text-sm font-medium text-slate-900 mb-4">Win / Loss Ratio</h3>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
@@ -96,32 +96,32 @@ export function PipelineCharts({ searchId }: { searchId?: string }) {
               dataKey="value"
             >
               {pieData.map((_, i) => (
-                <Cell key={i} fill={i === 0 ? "#22c55e" : i === 1 ? "#6b7280" : "#6366f1"} />
+                <Cell key={i} fill={i === 0 ? "#22c55e" : i === 1 ? "#94a3b8" : "#57A3AF"} />
               ))}
             </Pie>
             <Tooltip
-              contentStyle={{ background: "#1f2937", border: "1px solid #374151", borderRadius: "8px" }}
-              labelStyle={{ color: "#fff" }}
+              contentStyle={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px" }}
+              labelStyle={{ color: "#0f172a" }}
             />
-            <Legend formatter={(value) => <span className="text-gray-400 text-xs">{value}</span>} />
+            <Legend formatter={(value) => <span className="text-slate-500 text-xs">{value}</span>} />
           </PieChart>
         </ResponsiveContainer>
       </div>
 
       {valueData.length > 0 && (
-        <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 lg:col-span-2">
-          <h3 className="text-sm font-medium text-white mb-4">Pipeline Value by Stage</h3>
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 lg:col-span-2">
+          <h3 className="text-sm font-medium text-slate-900 mb-4">Pipeline Value by Stage</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={valueData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-              <XAxis dataKey="name" tick={{ fill: "#9ca3af", fontSize: 11 }} />
-              <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} />
+              <YAxis tick={{ fill: "#64748b", fontSize: 11 }} />
               <Tooltip
-                contentStyle={{ background: "#1f2937", border: "1px solid #374151", borderRadius: "8px" }}
-                labelStyle={{ color: "#fff" }}
+                contentStyle={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px" }}
+                labelStyle={{ color: "#0f172a" }}
                 formatter={(value: any) => [`$${Number(value).toLocaleString()}`, "Value"]}
               />
-              <Bar dataKey="value" fill="#10b981" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="value" fill="#41808B" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

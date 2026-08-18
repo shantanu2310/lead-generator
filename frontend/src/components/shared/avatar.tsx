@@ -18,13 +18,13 @@ export function Avatar({
       <img
         src={src}
         alt={name}
-        className={`rounded-full object-cover shrink-0 border border-white/10 ${className || "w-9 h-9"}`}
+        className={`rounded-full object-cover shrink-0 border border-slate-200 ${className || "w-9 h-9"}`}
       />
     )
   }
   return (
     <div
-      className={`rounded-full bg-gradient-to-br from-blue-500/40 to-violet-500/40 border border-white/15 flex items-center justify-center shrink-0 ${className || "w-9 h-9"}`}
+      className={`rounded-full bg-gradient-to-br from-[#57A3AF]/60 to-[#41808B]/60 border border-white/15 flex items-center justify-center shrink-0 ${className || "w-9 h-9"}`}
     >
       <span className="text-sm font-bold text-white text-[length:inherit]">
         {name.charAt(0).toUpperCase() || "?"}
@@ -75,7 +75,7 @@ export function AvatarPicker({
           {value ? (
             <img src={value} alt="Avatar preview" className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-blue-500/30 to-violet-500/30 flex items-center justify-center text-gray-400">
+            <div className="w-full h-full bg-gradient-to-br from-[#57A3AF]/40 to-[#41808B]/40 flex items-center justify-center text-slate-500">
               <Camera className="w-6 h-6" />
             </div>
           )}
@@ -95,7 +95,7 @@ export function AvatarPicker({
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={busy}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 text-gray-300 text-xs hover:bg-white/10 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 text-xs hover:bg-slate-50 transition-colors disabled:opacity-50"
           >
             <ImagePlus className="w-4 h-4" />
             {value ? "Replace photo" : "Add photo"}

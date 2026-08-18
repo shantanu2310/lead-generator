@@ -16,6 +16,7 @@ import { NotificationsDropdown } from "@/components/shared/notifications-dropdow
 import { UserMenu } from "@/components/shared/user-menu"
 import { CompanyBadge } from "@/components/shared/company-badge"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
+import { Logo } from "@/components/shared/logo"
 import { useLeads } from "@/hooks/use-leads"
 import { getUser } from "@/lib/auth"
 
@@ -32,7 +33,7 @@ const NAV_ITEMS: { href: string; label: string; icon: LucideIcon; adminOnly?: bo
 
 export default function PipelinePage() {
   return (
-    <Suspense fallback={<div className="h-screen animate-pulse bg-white/5" />}>
+    <Suspense fallback={<div className="h-screen animate-pulse bg-slate-100" />}>
       <AuthGuard>
         <PipelinePageContent />
       </AuthGuard>
@@ -73,16 +74,17 @@ function handleFilterChange(newFilters: any) {
   return (
     <div className="flex h-screen">
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0f1e] border-r border-white/5 transform transition-transform duration-200
+        fixed inset-y-0 left-0 z-50 w-64 bg-[#41808B] border-r border-white/10 transform transition-transform duration-200
         lg:relative lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
-        <div className="flex items-center justify-between h-16 px-6 border-b border-white/5">
+        <div className="flex items-center justify-between h-16 px-6 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <Target className="w-6 h-6 text-blue-400" />
-            <span className="font-bold text-white text-lg">LeadGen</span>
+            <span className="flex items-center rounded-lg bg-white p-1.5">
+              <Logo className="h-6" />
+            </span>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white">
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-teal-100 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -96,8 +98,8 @@ function handleFilterChange(newFilters: any) {
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors ${
                   isActive
-                    ? "bg-blue-500/10 text-blue-400"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                    ? "bg-white/15 text-white font-medium"
+                    : "text-teal-50/80 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -114,12 +116,12 @@ function handleFilterChange(newFilters: any) {
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="relative z-40 flex items-center justify-between h-16 px-6 border-b border-white/5 bg-[#0a0f1e]/50 backdrop-blur-xl">
+        <header className="relative z-40 flex items-center justify-between h-16 px-6 border-b border-slate-200 bg-white/70 backdrop-blur-xl">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-400 hover:text-white">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-slate-500 hover:text-slate-900">
               <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-semibold text-white">Sales Pipeline</h1>
+            <h1 className="text-lg font-semibold text-slate-900">Sales Pipeline</h1>
             <CompanyBadge />
           </div>
           <div className="flex items-center gap-4">
@@ -133,15 +135,15 @@ function handleFilterChange(newFilters: any) {
             <LeadSearchForm onComplete={refetch} />
 
             {searchId && (
-              <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-blue-500/20 bg-blue-500/5 backdrop-blur-xl">
-                <div className="flex items-center gap-2 text-sm text-gray-300">
-                  <SearchX className="w-4 h-4 text-blue-400" />
+              <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-[#57A3AF]/25 bg-[#57A3AF]/5">
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <SearchX className="w-4 h-4 text-[#41808B]" />
                   <span>
                     Showing leads from this search{searchQuery ? `: "${searchQuery}"` : ""}
                   </span>
                   <Link
                     href="/searches"
-                    className="text-xs text-blue-400 hover:text-blue-300 ml-1 flex items-center gap-1"
+                    className="text-xs text-[#41808B] hover:text-[#F46036] ml-1 flex items-center gap-1"
                   >
                     <History className="w-3 h-3" />
                     Search history
@@ -149,7 +151,7 @@ function handleFilterChange(newFilters: any) {
                 </div>
                 <button
                   onClick={clearSearchFilter}
-                  className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors"
+                  className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-900 transition-colors"
                 >
                   <SearchX className="w-3.5 h-3.5" />
                   Clear filter
@@ -171,7 +173,7 @@ function handleFilterChange(newFilters: any) {
               </div>
             </div>
 
-            <div className="flex items-center gap-1 border-b border-white/10">
+            <div className="flex items-center gap-1 border-b border-slate-200">
               <TabButton active={activeTab === "kanban"} onClick={() => setActiveTab("kanban")}>
                 Kanban
               </TabButton>
@@ -209,8 +211,8 @@ function TabButton({
       onClick={onClick}
       className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
         active
-          ? "text-blue-400 border-blue-400"
-          : "text-gray-400 border-transparent hover:text-white"
+          ? "text-[#F46036] border-[#F46036]"
+          : "text-slate-500 border-transparent hover:text-slate-900"
       }`}
     >
       {children}

@@ -10,13 +10,13 @@ export function WebSocketIndicator() {
     <div className="flex items-center gap-1.5">
       {connected ? (
         <>
-          <Wifi className="w-3.5 h-3.5 text-green-400" />
-          <span className="text-xs text-green-400">Live</span>
+          <Wifi className="w-3.5 h-3.5 text-green-600" />
+          <span className="text-xs text-green-600">Live</span>
         </>
       ) : (
         <>
-          <WifiOff className="w-3.5 h-3.5 text-gray-500" />
-          <span className="text-xs text-gray-500">Offline</span>
+          <WifiOff className="w-3.5 h-3.5 text-slate-400" />
+          <span className="text-xs text-slate-400">Offline</span>
         </>
       )}
     </div>

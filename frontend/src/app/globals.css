@@ -1,22 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  --background: #050816;
-  --foreground: #e2e8f0;
-  --card: rgba(20, 20, 40, 0.75);
-  --primary: #7c3aed;
-  --secondary: #a855f7;
-  --accent: #38bdf8;
-  --success: #22c55e;
-  --muted: #94a3b8;
-  color-scheme: dark;
+  --background: #e5ece9;
+  --foreground: #1e293b;
+  --card: #ffffff;
+  --primary: #f46036;
+  --primary-dark: #d94a22;
+  --secondary: #41808b;
+  --accent: #57a3af;
+  --success: #7fb800;
+  --muted: #64748b;
+  color-scheme: light;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --font-sans: var(--font-open-sans);
 }
 
 html {
@@ -26,16 +31,16 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-open-sans), Arial, Helvetica, sans-serif;
 }
 
 select {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 select option {
-  background-color: #1e293b;
-  color: #e2e8f0;
+  background-color: #ffffff;
+  color: #1e293b;
 }
 
 ::-webkit-scrollbar {
@@ -48,12 +53,12 @@ select option {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #b9c7c1;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #9aa8a1;
 }
 
 /* ---------- Glassmorphism ---------- */
@@ -62,78 +67,78 @@ select option {
   background: var(--card);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(30, 41, 59, 0.08);
   border-radius: 24px;
   box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 20px 60px rgba(30, 41, 59, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .glass-card-glow {
   position: relative;
   border-radius: 26px;
   background:
-    linear-gradient(var(--card), var(--card)) padding-box,
-    linear-gradient(135deg, rgba(124, 58, 237, 0.6), rgba(56, 189, 248, 0.35)) border-box;
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(135deg, rgba(244, 96, 54, 0.55), rgba(87, 163, 175, 0.45)) border-box;
   border: 1px solid transparent;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   box-shadow:
-    0 0 50px rgba(124, 58, 237, 0.18),
-    0 24px 70px rgba(0, 0, 0, 0.5);
+    0 0 50px rgba(244, 96, 54, 0.12),
+    0 24px 70px rgba(30, 41, 59, 0.12);
 }
 
 .glass-input {
   width: 100%;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid rgba(30, 41, 59, 0.15);
   border-radius: 14px;
-  color: #fff;
+  color: #1e293b;
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
 
 .glass-input::placeholder {
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .glass-input:focus {
-  border-color: rgba(168, 85, 247, 0.7);
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15);
+  border-color: rgba(244, 96, 54, 0.7);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(244, 96, 54, 0.12);
 }
 
 /* ---------- Text ---------- */
 
 .gradient-text {
-  background: linear-gradient(100deg, #a855f7 0%, #7c3aed 40%, #38bdf8 100%);
+  background: linear-gradient(100deg, #f46036 0%, #41808b 55%, #57a3af 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .gradient-text-glow {
-  background: linear-gradient(100deg, #c084fc 0%, #a855f7 35%, #38bdf8 100%);
+  background: linear-gradient(100deg, #f46036 0%, #41808b 40%, #57a3af 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 24px rgba(168, 85, 247, 0.45));
+  filter: drop-shadow(0 0 24px rgba(244, 96, 54, 0.25));
 }
 
 /* ---------- Buttons ---------- */
 
 .btn-gradient {
   position: relative;
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f46036 0%, #41808b 100%);
   background-size: 200% 200%;
   color: #fff;
   border: none;
   border-radius: 14px;
   font-weight: 600;
   box-shadow:
-    0 8px 32px rgba(124, 58, 237, 0.45),
+    0 8px 32px rgba(244, 96, 54, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
   transition: background-position 0.4s ease, box-shadow 0.3s ease, transform 0.15s ease;
 }
@@ -141,7 +146,7 @@ select option {
 .btn-gradient:hover {
   background-position: 100% 100%;
   box-shadow:
-    0 10px 44px rgba(168, 85, 247, 0.55),
+    0 10px 44px rgba(65, 128, 139, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
   transform: translateY(-1px);
 }
@@ -157,18 +162,18 @@ select option {
 }
 
 .btn-glass {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #ffffff;
+  border: 1px solid rgba(30, 41, 59, 0.15);
   border-radius: 14px;
-  color: #fff;
+  color: #1e293b;
   font-weight: 600;
   backdrop-filter: blur(12px);
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
 
 .btn-glass:hover {
-  background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(168, 85, 247, 0.45);
+  background: #f1f5f9;
+  border-color: rgba(244, 96, 54, 0.5);
   transform: translateY(-1px);
 }
 
@@ -254,8 +259,8 @@ select option {
 
 .grid-overlay {
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    linear-gradient(rgba(30, 41, 59, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30, 41, 59, 0.05) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, black 30%, transparent 75%);
   -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, black 30%, transparent 75%);

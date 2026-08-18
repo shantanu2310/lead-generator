@@ -14,6 +14,7 @@ import { NotificationsDropdown } from "@/components/shared/notifications-dropdow
 import { UserMenu } from "@/components/shared/user-menu"
 import { CompanyBadge } from "@/components/shared/company-badge"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
+import { Logo } from "@/components/shared/logo"
 
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon; adminOnly?: boolean }[] = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -169,16 +170,17 @@ async function rerun(s: SearchItem) {
     <AuthGuard>
     <div className="flex h-screen">
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0f1e] border-r border-white/5 transform transition-transform duration-200
+        fixed inset-y-0 left-0 z-50 w-64 bg-[#41808B] border-r border-white/10 transform transition-transform duration-200
         lg:relative lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
-        <div className="flex items-center justify-between h-16 px-6 border-b border-white/5">
+        <div className="flex items-center justify-between h-16 px-6 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <Target className="w-6 h-6 text-blue-400" />
-            <span className="font-bold text-white text-lg">LeadGen</span>
+            <span className="flex items-center rounded-lg bg-white p-1.5">
+              <Logo className="h-6" />
+            </span>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white">
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-teal-100 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -192,8 +194,8 @@ async function rerun(s: SearchItem) {
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors ${
                   isActive
-                    ? "bg-blue-500/10 text-blue-400"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                    ? "bg-white/15 text-white font-medium"
+                    : "text-teal-50/80 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -210,12 +212,12 @@ async function rerun(s: SearchItem) {
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="relative z-40 flex items-center justify-between h-16 px-6 border-b border-white/5 bg-[#0a0f1e]/50 backdrop-blur-xl">
+        <header className="relative z-40 flex items-center justify-between h-16 px-6 border-b border-slate-200 bg-white/70 backdrop-blur-xl">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-400 hover:text-white">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-slate-500 hover:text-slate-900">
               <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-semibold text-white">Search History</h1>
+            <h1 className="text-lg font-semibold text-slate-900">Search History</h1>
             <CompanyBadge />
           </div>
           <div className="flex items-center gap-4">
@@ -228,10 +230,10 @@ async function rerun(s: SearchItem) {
           <div className="max-w-5xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-slate-900">
                   {showArchived ? "Archived searches" : "Active searches"}
                 </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5">
                   {showArchived ? "Search history you have archived" : "Past lead searches"}
                 </p>
               </div>
@@ -239,8 +241,8 @@ async function rerun(s: SearchItem) {
                 onClick={toggleArchived}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   showArchived
-                    ? "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
-                    : "bg-white/5 text-gray-300 hover:bg-white/10"
+                    ? "bg-[#57A3AF]/15 text-[#41808B] hover:bg-[#57A3AF]/25"
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
                 }`}
               >
                 <Archive className="w-4 h-4" />
@@ -250,38 +252,38 @@ async function rerun(s: SearchItem) {
 
             {msg && (
               <div className={`px-4 py-3 rounded-lg text-sm ${
-                msg.ok ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+                msg.ok ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
               }`}>
                 {msg.text}
               </div>
             )}
 
-            <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden">
+            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
               {loading && items.length === 0 ? (
                 <div className="p-6 space-y-3">
                   {[...Array(5)].map((_, i) => (
-                    <div key={i} className="h-12 bg-white/5 rounded-lg animate-pulse" />
+                    <div key={i} className="h-12 bg-slate-100 rounded-lg animate-pulse" />
                   ))}
                 </div>
               ) : items.length === 0 ? (
                 <div className="text-center py-16">
-                  <Inbox className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-500">{showArchived ? "No archived searches" : "No searches yet"}</p>
-                  <p className="text-xs text-gray-600 mt-1">
+                  <Inbox className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                  <p className="text-slate-500">{showArchived ? "No archived searches" : "No searches yet"}</p>
+                  <p className="text-xs text-slate-400 mt-1">
                     {showArchived ? "Archived searches will appear here" : "Run a lead search to see history here"}
                   </p>
                 </div>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Query</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Candidates</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Qualified</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Leads</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                    <tr className="border-b border-slate-200">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Query</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Candidates</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Qualified</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Leads</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -291,19 +293,19 @@ async function rerun(s: SearchItem) {
                         <Fragment key={s.id}>
                         <tr
                           onClick={() => toggleExpand(s)}
-                          className={`border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${isExpanded ? "bg-white/5" : ""} ${showArchived ? "opacity-60 hover:opacity-100" : ""}`}
+                          className={`border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer ${isExpanded ? "bg-slate-50" : ""} ${showArchived ? "opacity-60 hover:opacity-100" : ""}`}
                         >
-                          <td className="px-4 py-3 font-medium text-white max-w-[260px] truncate">
+                          <td className="px-4 py-3 font-medium text-slate-900 max-w-[260px] truncate">
                             <span className="flex items-center gap-2">
                               {isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-blue-400 shrink-0" />
+                                <ChevronDown className="w-4 h-4 text-[#F46036] shrink-0" />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-gray-500 shrink-0" />
+                                <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
                               )}
                               {s.query}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
+                          <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
                             <span className="flex items-center gap-1.5">
                               <Calendar className="w-3.5 h-3.5" />
                               {formatDate(s.created_at)}
@@ -312,21 +314,21 @@ async function rerun(s: SearchItem) {
                           <td className="px-4 py-3">
                             <span className={`text-xs px-2 py-0.5 rounded ${
                               s.status === "completed"
-                                ? "bg-green-500/10 text-green-400"
-                                : "bg-yellow-500/10 text-yellow-400"
+                                ? "bg-green-50 text-green-700"
+                                : "bg-amber-50 text-amber-700"
                             }`}>
                               {s.status}
                             </span>
                             {showArchived && (
-                              <span className="ml-1.5 text-xs px-2 py-0.5 rounded bg-gray-500/10 text-gray-400">
+                              <span className="ml-1.5 text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-500">
                                 Archived
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-right text-gray-300">{s.candidates_discovered}</td>
-                          <td className="px-4 py-3 text-right text-gray-300">{s.leads_qualified}</td>
+                          <td className="px-4 py-3 text-right text-slate-700">{s.candidates_discovered}</td>
+                          <td className="px-4 py-3 text-right text-slate-700">{s.leads_qualified}</td>
                           <td className="px-4 py-3 text-right">
-                            <span className={`font-semibold ${s.lead_count > 0 ? "text-blue-400" : "text-gray-500"}`}>
+                            <span className={`font-semibold ${s.lead_count > 0 ? "text-[#41808B]" : "text-slate-400"}`}>
                               {s.lead_count}
                             </span>
                           </td>
@@ -336,7 +338,7 @@ async function rerun(s: SearchItem) {
                                 onClick={() => router.push(`/pipeline?search_id=${s.id}&q=${encodeURIComponent(s.query)}`)}
                                 disabled={s.lead_count === 0}
                                 title={s.lead_count === 0 ? "No leads from this search" : "View leads"}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-300 hover:text-white bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-400/40 rounded-lg disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#41808B] hover:text-white bg-[#57A3AF]/15 hover:bg-[#57A3AF] border border-[#57A3AF]/25 hover:border-[#57A3AF] rounded-lg disabled:opacity-30 disabled:pointer-events-none transition-colors"
                               >
                                 <Eye className="w-3.5 h-3.5" />
                                 View leads
@@ -346,7 +348,7 @@ async function rerun(s: SearchItem) {
                                   onClick={() => rerun(s)}
                                   disabled={rerunning === s.id}
                                   title="Re-run this search"
-                                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-300 bg-white/5 hover:bg-white/10 hover:text-white rounded-lg disabled:opacity-50 transition-colors"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-900 rounded-lg disabled:opacity-50 transition-colors"
                                 >
                                   {rerunning === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
                                   Re-run
@@ -357,7 +359,7 @@ async function rerun(s: SearchItem) {
                                   onClick={() => restore(s)}
                                   disabled={restoring === s.id}
                                   title="Restore this search"
-                                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-400/40 rounded-lg disabled:opacity-50 transition-colors"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 hover:border-emerald-300 rounded-lg disabled:opacity-50 transition-colors"
                                 >
                                   {restoring === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
                                   Restore
@@ -367,7 +369,7 @@ async function rerun(s: SearchItem) {
                                   onClick={() => archive(s)}
                                   disabled={archiving === s.id}
                                   title="Archive this search"
-                                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-400/40 rounded-lg disabled:opacity-50 transition-colors"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 rounded-lg disabled:opacity-50 transition-colors"
                                 >
                                   {archiving === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
                                   Archive
@@ -377,39 +379,39 @@ async function rerun(s: SearchItem) {
                           </td>
                         </tr>
                         {isExpanded && (
-                          <tr className="border-b border-white/5 bg-[#0a0f1e]/40">
+                          <tr className="border-b border-slate-200 bg-slate-50/60">
                             <td colSpan={7} className="px-6 py-4">
                               {loadingLeads === s.id ? (
-                                <div className="flex items-center gap-2 text-sm text-gray-400 py-2">
+                                <div className="flex items-center gap-2 text-sm text-slate-500 py-2">
                                   <Loader2 className="w-4 h-4 animate-spin" />
-                                  Loading leadsâ€¦
+                                  Loading leads…
                                 </div>
                               ) : (searchLeads[s.id] || []).length === 0 ? (
-                                <p className="text-sm text-gray-500 py-2">No leads stored for this search</p>
+                                <p className="text-sm text-slate-500 py-2">No leads stored for this search</p>
                               ) : (
-                                <div className="rounded-lg border border-white/10 overflow-hidden">
+                                <div className="rounded-lg border border-slate-200 overflow-hidden bg-white">
                                   <table className="w-full text-sm">
                                     <thead>
-                                      <tr className="bg-white/5 text-left">
-                                        <th className="px-4 py-2 text-xs font-medium text-gray-400 uppercase tracking-wider">Company</th>
-                                        <th className="px-4 py-2 text-xs font-medium text-gray-400 uppercase tracking-wider">Score</th>
-                                        <th className="px-4 py-2 text-xs font-medium text-gray-400 uppercase tracking-wider">Stage</th>
-                                        <th className="px-4 py-2 text-xs font-medium text-gray-400 uppercase tracking-wider">Assigned To</th>
-                                        <th className="px-4 py-2 text-xs font-medium text-gray-400 uppercase tracking-wider">Email</th>
-                                        <th className="px-4 py-2 text-xs font-medium text-gray-400 uppercase tracking-wider">Last Activity</th>
+                                      <tr className="bg-slate-50 text-left">
+                                        <th className="px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Company</th>
+                                        <th className="px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Score</th>
+                                        <th className="px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Stage</th>
+                                        <th className="px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Assigned To</th>
+                                        <th className="px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Email</th>
+                                        <th className="px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Last Activity</th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {(searchLeads[s.id] || []).map((lead) => (
                                         <tr
                                           key={lead.id}
-                                          className="border-t border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
+                                          className="border-t border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer"
                                           onClick={() => router.push(`/pipeline/leads/${lead.id}`)}
                                         >
-                                          <td className="px-4 py-2.5 font-medium text-white">
+                                          <td className="px-4 py-2.5 font-medium text-slate-900">
                                             <Link
                                               href={`/pipeline/leads/${lead.id}`}
-                                              className="hover:text-blue-400 transition-colors"
+                                              className="hover:text-[#F46036] transition-colors"
                                               onClick={(e) => e.stopPropagation()}
                                             >
                                               {lead.business_name}
@@ -421,28 +423,28 @@ async function rerun(s: SearchItem) {
                                             </span>
                                           </td>
                                           <td className="px-4 py-2.5">
-                                            <span className="text-xs px-2 py-0.5 rounded bg-white/10 text-gray-300">
+                                            <span className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600">
                                               {STAGE_LABELS[lead.pipeline_stage] || lead.pipeline_stage}
                                             </span>
                                           </td>
                                           <td className="px-4 py-2.5">
                                             {lead.assigned_user_name ? (
-                                              <span className="inline-flex items-center gap-1.5 text-xs text-blue-300">
-                                                <span className="w-4 h-4 rounded-full bg-blue-500/30 flex items-center justify-center text-[8px] font-bold">
+                                              <span className="inline-flex items-center gap-1.5 text-xs text-[#41808B]">
+                                                <span className="w-4 h-4 rounded-full bg-[#57A3AF]/30 flex items-center justify-center text-[8px] font-bold">
                                                   {lead.assigned_user_name.charAt(0).toUpperCase()}
                                                 </span>
                                                 {lead.assigned_user_name}
                                               </span>
                                             ) : (
-                                              <span className="text-xs text-gray-600">Unassigned</span>
+                                              <span className="text-xs text-slate-400">Unassigned</span>
                                             )}
                                           </td>
                                           <td className="px-4 py-2.5">
-                                            <span className={lead.email_status === "verified" ? "text-green-400" : "text-gray-500"}>
+                                            <span className={lead.email_status === "verified" ? "text-green-600" : "text-slate-500"}>
                                               {lead.email_status}
                                             </span>
                                           </td>
-                                          <td className="px-4 py-2.5 text-gray-400">
+                                          <td className="px-4 py-2.5 text-slate-500">
                                             {formatRelativeTime(lead.last_activity_at)}
                                           </td>
                                         </tr>
@@ -462,22 +464,22 @@ async function rerun(s: SearchItem) {
               )}
 
               {totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-3 border-t border-white/10">
-                  <p className="text-xs text-gray-400">
-                    Page {page} of {totalPages} Â· {total} searches
+                <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200">
+                  <p className="text-xs text-slate-500">
+                    Page {page} of {totalPages} · {total} searches
                   </p>
                   <div className="flex gap-2">
                     <button
                       disabled={page <= 1}
                       onClick={() => goToPage(page - 1)}
-                      className="px-3 py-1 text-xs bg-white/5 rounded-lg disabled:opacity-30 text-gray-300 hover:text-white transition-colors"
+                      className="px-3 py-1 text-xs bg-white border border-slate-200 rounded-lg disabled:opacity-30 text-slate-600 hover:text-slate-900 transition-colors"
                     >
                       Previous
                     </button>
                     <button
                       disabled={page >= totalPages}
                       onClick={() => goToPage(page + 1)}
-                      className="px-3 py-1 text-xs bg-white/5 rounded-lg disabled:opacity-30 text-gray-300 hover:text-white transition-colors"
+                      className="px-3 py-1 text-xs bg-white border border-slate-200 rounded-lg disabled:opacity-30 text-slate-600 hover:text-slate-900 transition-colors"
                     >
                       Next
                     </button>

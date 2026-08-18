@@ -48,8 +48,8 @@ export function AuthGuard({
 
   if (status !== "ok") {
     return (
-      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
-        <div className="animate-pulse text-gray-500">Loading…</div>
+      <div className="min-h-screen bg-[#E5ECE9] flex items-center justify-center">
+        <div className="animate-pulse text-slate-500">Loading…</div>
       </div>
     )
   }

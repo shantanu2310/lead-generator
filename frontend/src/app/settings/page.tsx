@@ -11,6 +11,7 @@ import { NotificationsDropdown } from "@/components/shared/notifications-dropdow
 import { UserMenu } from "@/components/shared/user-menu"
 import { CompanyBadge } from "@/components/shared/company-badge"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
+import { Logo } from "@/components/shared/logo"
 
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon; adminOnly?: boolean }[] = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -164,16 +165,17 @@ useEffect(() => {
     <AuthGuard>
     <div className="flex h-screen">
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0f1e] border-r border-white/5 transform transition-transform duration-200
+        fixed inset-y-0 left-0 z-50 w-64 bg-[#41808B] border-r border-white/10 transform transition-transform duration-200
         lg:relative lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
-        <div className="flex items-center justify-between h-16 px-6 border-b border-white/5">
+        <div className="flex items-center justify-between h-16 px-6 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <Target className="w-6 h-6 text-blue-400" />
-            <span className="font-bold text-white text-lg">LeadGen</span>
+            <span className="flex items-center rounded-lg bg-white p-1.5">
+              <Logo className="h-6" />
+            </span>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white">
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-teal-100 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -187,8 +189,8 @@ useEffect(() => {
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors ${
                   isActive
-                    ? "bg-blue-500/10 text-blue-400"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                    ? "bg-white/15 text-white font-medium"
+                    : "text-teal-50/80 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -205,12 +207,12 @@ useEffect(() => {
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="relative z-40 flex items-center justify-between h-16 px-6 border-b border-white/5 bg-[#0a0f1e]/50 backdrop-blur-xl">
+        <header className="relative z-40 flex items-center justify-between h-16 px-6 border-b border-slate-200 bg-white/70 backdrop-blur-xl">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-400 hover:text-white">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-slate-500 hover:text-slate-900">
               <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-semibold text-white">Settings</h1>
+            <h1 className="text-lg font-semibold text-slate-900">Settings</h1>
             <CompanyBadge />
           </div>
           <div className="flex items-center gap-4">
@@ -223,35 +225,35 @@ useEffect(() => {
           <div className="max-w-4xl mx-auto space-y-6">
             {msg && (
               <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm ${
-                msg.ok ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+                msg.ok ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
               }`}>
                 {msg.ok ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                 {msg.text}
               </div>
             )}
 
-            <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
+            <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
               <div className="flex items-center gap-2 mb-1">
-                <UserRound className="w-5 h-5 text-blue-400" />
-                <h2 className="font-semibold text-lg text-white">Profile</h2>
+                <UserRound className="w-5 h-5 text-[#F46036]" />
+                <h2 className="font-semibold text-lg text-slate-900">Profile</h2>
               </div>
-              <p className="text-sm text-gray-400 mb-5">
+              <p className="text-sm text-slate-500 mb-5">
                 Your photo shows in the sidebar menu, user list and team leads view.
               </p>
               <div className="space-y-5">
                 <AvatarPicker value={avatar} onChange={setAvatar} />
                 <div className="max-w-sm">
-                  <label className="block text-xs text-gray-400 mb-1.5">Display name</label>
+                  <label className="block text-xs text-slate-500 mb-1.5">Display name</label>
                   <input
                     value={profileName}
                     onChange={(e) => setProfileName(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-blue-400/40"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#F46036]"
                   />
                 </div>
                 <button
                   onClick={saveProfile}
                   disabled={savingProfile}
-                  className="flex items-center gap-2 px-5 py-2 bg-blue-500 hover:bg-blue-400 disabled:bg-blue-500/40 text-sm font-medium text-white rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-5 py-2 bg-[#F46036] hover:bg-[#D94A22] disabled:bg-[#F46036]/40 text-sm font-medium text-white rounded-lg transition-colors"
                 >
                   {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Save profile
@@ -260,13 +262,13 @@ useEffect(() => {
             </div>
 
             {user?.is_admin && (
-            <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
+            <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
               <div className="flex items-center gap-2 mb-1">
-                <KeyRound className="w-5 h-5 text-blue-400" />
-                <h2 className="font-semibold text-lg text-white">API Providers</h2>
+                <KeyRound className="w-5 h-5 text-[#F46036]" />
+                <h2 className="font-semibold text-lg text-slate-900">API Providers</h2>
               </div>
-              <p className="text-sm text-gray-400 mb-5">
-                Keys are stored in <code className="text-gray-300">.env</code> and take effect immediately â€” no restart needed.
+              <p className="text-sm text-slate-500 mb-5">
+                Keys are stored in <code className="text-slate-700">.env</code> and take effect immediately — no restart needed.
               </p>
 
               <div className="space-y-4">
@@ -274,21 +276,21 @@ useEffect(() => {
                   const editing = editingKey === p.key
                   const saving = savingKey === p.key
                   return (
-                    <div key={p.key} className="flex items-center justify-between gap-4 p-4 rounded-lg bg-white/3 border border-white/5">
+                    <div key={p.key} className="flex items-center justify-between gap-4 p-4 rounded-lg bg-slate-50 border border-slate-200">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-white">{p.name}</p>
+                          <p className="text-sm font-medium text-slate-900">{p.name}</p>
                           {p.configured ? (
-                            <span className="flex items-center gap-1 text-[11px] text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">
+                            <span className="flex items-center gap-1 text-[11px] text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
                               <CheckCircle2 className="w-3 h-3" /> Configured
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 text-[11px] text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full">
+                            <span className="flex items-center gap-1 text-[11px] text-red-700 bg-red-50 px-2 py-0.5 rounded-full">
                               <XCircle className="w-3 h-3" /> Not configured
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 mt-1 font-mono">
+                        <p className="text-xs text-slate-500 mt-1 font-mono">
                           {p.configured ? p.masked_key : "No key set"}
                         </p>
                       </div>
@@ -300,19 +302,19 @@ useEffect(() => {
                             placeholder="Paste new API key"
                             value={keyValues[p.key] || ""}
                             onChange={(e) => setKeyValues((prev) => ({ ...prev, [p.key]: e.target.value }))}
-                            className="w-56 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-400/40"
+                            className="w-56 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
                           />
                           <button
                             onClick={() => saveProvider(p)}
                             disabled={saving}
-                            className="flex items-center gap-1.5 px-4 py-2 bg-blue-500 hover:bg-blue-400 disabled:bg-blue-500/40 text-sm font-medium text-white rounded-lg transition-colors"
+                            className="flex items-center gap-1.5 px-4 py-2 bg-[#F46036] hover:bg-[#D94A22] disabled:bg-[#F46036]/40 text-sm font-medium text-white rounded-lg transition-colors"
                           >
                             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                             Save
                           </button>
                           <button
                             onClick={() => setEditingKey(null)}
-                            className="px-3 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                            className="px-3 py-2 text-sm text-slate-500 hover:text-slate-900 transition-colors"
                           >
                             Cancel
                           </button>
@@ -320,7 +322,7 @@ useEffect(() => {
                       ) : (
                         <button
                           onClick={() => { setEditingKey(p.key); setMsg(null) }}
-                          className="flex-shrink-0 px-4 py-2 text-sm text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
+                          className="flex-shrink-0 px-4 py-2 text-sm text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors"
                         >
                           {p.configured ? "Replace key" : "Add key"}
                         </button>
@@ -330,12 +332,12 @@ useEffect(() => {
                 })}
               </div>
 
-              <div className="flex items-center gap-3 mt-5 pt-5 border-t border-white/5">
-                <label className="text-sm text-gray-400">LLM Model</label>
+              <div className="flex items-center gap-3 mt-5 pt-5 border-t border-slate-200">
+                <label className="text-sm text-slate-500">LLM Model</label>
                 <select
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
-                  className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-white/20"
+                  className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#F46036]"
                 >
                   <option value="gpt-4o">gpt-4o</option>
                   <option value="gpt-4o-mini">gpt-4o-mini</option>
@@ -344,7 +346,7 @@ useEffect(() => {
                 </select>
                 <button
                   onClick={saveModel}
-                  className="px-4 py-2 text-sm text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors"
                 >
                   Save model
                 </button>
@@ -353,18 +355,18 @@ useEffect(() => {
             )}
 
             {user?.is_admin && (
-            <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
-              <h2 className="font-semibold text-lg text-white mb-1">Pipeline Defaults</h2>
-              <p className="text-sm text-gray-400 mb-5">Defaults used for new lead searches and scoring.</p>
+            <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+              <h2 className="font-semibold text-lg text-slate-900 mb-1">Pipeline Defaults</h2>
+              <p className="text-sm text-slate-500 mb-5">Defaults used for new lead searches and scoring.</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {PIPELINE_FIELDS.map((f) => (
                   <div key={f.key}>
-                    <label className="block text-xs text-gray-400 mb-1.5">{f.label}</label>
+                    <label className="block text-xs text-slate-500 mb-1.5">{f.label}</label>
                     <input
                       type="number"
                       value={pipelineForm[f.key] ?? ""}
                       onChange={(e) => setPipelineForm((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-blue-400/40"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#F46036]"
                     />
                   </div>
                 ))}
@@ -372,7 +374,7 @@ useEffect(() => {
               <button
                 onClick={savePipeline}
                 disabled={savingPipeline}
-                className="mt-5 flex items-center gap-2 px-5 py-2 bg-blue-500 hover:bg-blue-400 disabled:bg-blue-500/40 text-sm font-medium text-white rounded-lg transition-colors"
+                className="mt-5 flex items-center gap-2 px-5 py-2 bg-[#F46036] hover:bg-[#D94A22] disabled:bg-[#F46036]/40 text-sm font-medium text-white rounded-lg transition-colors"
               >
                 {savingPipeline ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Save pipeline settings
@@ -381,20 +383,20 @@ useEffect(() => {
             )}
 
             {app && user?.is_admin && (
-              <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
-                <h2 className="font-semibold text-lg text-white mb-4">Application</h2>
+              <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+                <h2 className="font-semibold text-lg text-slate-900 mb-4">Application</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div className="flex items-center gap-2 text-gray-400">
+                  <div className="flex items-center gap-2 text-slate-500">
                     <Server className="w-4 h-4" />
-                    Version <span className="text-white">{app.version}</span>
+                    Version <span className="text-slate-900">{app.version}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-400">
+                  <div className="flex items-center gap-2 text-slate-500">
                     <Target className="w-4 h-4" />
-                    Environment <span className="text-white capitalize">{app.environment}</span>
+                    Environment <span className="text-slate-900 capitalize">{app.environment}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-400">
+                  <div className="flex items-center gap-2 text-slate-500">
                     <Database className="w-4 h-4" />
-                    Database <span className="text-white">{app.database}</span>
+                    Database <span className="text-slate-900">{app.database}</span>
                   </div>
                 </div>
               </div>

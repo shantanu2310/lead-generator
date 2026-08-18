@@ -146,27 +146,27 @@ export function PipelineTable() {
   }
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden">
-      <div className="flex items-center justify-end px-4 py-2 border-b border-white/5">
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="flex items-center justify-end px-4 py-2 border-b border-slate-200">
         <button
           onClick={exportCsv}
           disabled={exporting}
-          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-[#F46036] transition-colors disabled:opacity-50"
         >
           {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
           Export CSV
         </button>
       </div>
       {isAdmin && selected.size > 0 && (
-        <div className="flex items-center gap-3 flex-wrap px-4 py-3 border-b border-blue-500/20 bg-blue-500/10">
-          <span className="flex items-center gap-2 text-xs font-semibold text-blue-300 whitespace-nowrap">
+        <div className="flex items-center gap-3 flex-wrap px-4 py-3 border-b border-[#F46036]/20 bg-orange-50">
+          <span className="flex items-center gap-2 text-xs font-semibold text-[#D94A22] whitespace-nowrap">
             <CheckSquare className="w-4 h-4" />
             {selected.size} selected
           </span>
           <select
             value={targetUserId}
             onChange={(e) => setTargetUserId(e.target.value)}
-            className="bg-[#0a0f1e] border border-white/15 rounded-lg text-xs text-gray-200 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[160px]"
+            className="bg-white border border-slate-300 rounded-lg text-xs text-slate-700 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#F46036] min-w-[160px]"
           >
             <option value="">Unassigned</option>
             {users.map((u) => (
@@ -178,7 +178,7 @@ export function PipelineTable() {
           <button
             onClick={applyBulkAssign}
             disabled={assigning}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500 text-white text-xs font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F46036] text-white text-xs font-semibold hover:bg-[#D94A22] transition-colors disabled:opacity-50"
           >
             {assigning && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             {targetUserId ? "Assign to user" : "Unassign"}
@@ -189,20 +189,20 @@ export function PipelineTable() {
               setTargetUserId("")
             }}
             disabled={assigning}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-gray-300 text-xs font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50"
           >
             <X className="w-3.5 h-3.5" />
             Clear
           </button>
           {msg && (
-            <span className={`text-xs ${msg.ok ? "text-green-400" : "text-red-400"} ml-auto`}>{msg.text}</span>
+            <span className={`text-xs ${msg.ok ? "text-green-700" : "text-red-700"} ml-auto`}>{msg.text}</span>
           )}
         </div>
       )}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-white/10">
+            <tr className="border-b border-slate-200 bg-slate-50">
               {isAdmin && (
                 <th className="px-4 py-3 w-8">
                   <input
@@ -210,7 +210,7 @@ export function PipelineTable() {
                     type="checkbox"
                     checked={allSelected}
                     onChange={toggleAll}
-                    className="accent-blue-500"
+                    className="accent-[#F46036]"
                   />
                 </th>
               )}
@@ -237,17 +237,17 @@ export function PipelineTable() {
           <tbody>
             {loading ? (
               [...Array(8)].map((_, i) => (
-                <tr key={i} className="border-b border-white/5 animate-pulse">
+                <tr key={i} className="border-b border-slate-100 animate-pulse">
                   {[...Array(isAdmin ? 9 : 8)].map((_, j) => (
                     <td key={j} className="px-4 py-3">
-                      <div className="h-4 bg-white/5 rounded w-3/4" />
+                      <div className="h-4 bg-slate-100 rounded w-3/4" />
                     </td>
                   ))}
                 </tr>
               ))
             ) : data?.items.length === 0 ? (
               <tr>
-                <td colSpan={isAdmin ? 9 : 8} className="px-4 py-12 text-center text-gray-500">
+                <td colSpan={isAdmin ? 9 : 8} className="px-4 py-12 text-center text-slate-500">
                   No leads found
                 </td>
               </tr>
@@ -267,22 +267,22 @@ export function PipelineTable() {
         </table>
       </div>
       {data && data.total_pages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-white/10">
-          <p className="text-xs text-gray-400">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200">
+          <p className="text-xs text-slate-500">
             Showing {data.items.length} of {formatNumber(data.total)} leads
           </p>
           <div className="flex gap-2">
             <button
               disabled={data.page <= 1}
               onClick={() => setParams({ ...params, page: String(data.page - 1) })}
-              className="px-3 py-1 text-xs bg-white/5 rounded-lg disabled:opacity-30 text-gray-300 hover:text-white transition-colors"
+              className="px-3 py-1 text-xs bg-white border border-slate-200 rounded-lg disabled:opacity-30 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
             >
               Previous
             </button>
             <button
               disabled={data.page >= data.total_pages}
               onClick={() => setParams({ ...params, page: String(data.page + 1) })}
-              className="px-3 py-1 text-xs bg-white/5 rounded-lg disabled:opacity-30 text-gray-300 hover:text-white transition-colors"
+              className="px-3 py-1 text-xs bg-white border border-slate-200 rounded-lg disabled:opacity-30 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
             >
               Next
             </button>
@@ -310,23 +310,23 @@ function GroupRows({
 }) {
   return (
     <>
-      <tr className="border-b border-white/10 bg-[#0a0f1e]/40">
+      <tr className="border-b border-slate-200 bg-slate-50">
         <td colSpan={isAdmin ? 9 : 8} className="px-4 py-2.5">
           <div className="flex items-center gap-2">
-            <Search className="w-3.5 h-3.5 text-blue-400" />
+            <Search className="w-3.5 h-3.5 text-[#41808B]" />
             {group.info ? (
               <>
-                <span className="text-xs font-semibold text-blue-300 truncate">{group.info.query}</span>
+                <span className="text-xs font-semibold text-slate-700 truncate">{group.info.query}</span>
                 {group.info.created_at && (
-                  <span className="text-[11px] text-gray-500 whitespace-nowrap">
+                  <span className="text-[11px] text-slate-400 whitespace-nowrap">
                     {formatDate(group.info.created_at)}
                   </span>
                 )}
               </>
             ) : (
-              <span className="text-xs font-semibold text-gray-400">Other / Unknown search</span>
+              <span className="text-xs font-semibold text-slate-500">Other / Unknown search</span>
             )}
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-gray-300 ml-auto whitespace-nowrap">
+            <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 ml-auto whitespace-nowrap">
               {group.leads.length} lead{group.leads.length === 1 ? "" : "s"}
             </span>
           </div>
@@ -342,8 +342,8 @@ function GroupRows({
               onLeadClick(lead.id)
             }
           }}
-          className={`border-b border-white/5 transition-colors cursor-pointer ${
-            selected.has(lead.id) ? "bg-blue-500/10" : "hover:bg-white/5"
+          className={`border-b border-slate-100 transition-colors cursor-pointer ${
+            selected.has(lead.id) ? "bg-orange-50" : "hover:bg-slate-50"
           }`}
         >
           {isAdmin && (
@@ -353,21 +353,21 @@ function GroupRows({
                 checked={selected.has(lead.id)}
                 onChange={() => onToggle(lead.id)}
                 onClick={(e) => e.stopPropagation()}
-                className="accent-blue-500"
+                className="accent-[#F46036]"
               />
             </td>
           )}
-          <td className="px-4 py-3 font-medium text-white">
+          <td className="px-4 py-3 font-medium text-slate-900">
             <Link
               href={`/pipeline/leads/${lead.id}`}
-              className="hover:text-blue-400 transition-colors"
+              className="hover:text-[#F46036] transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
               {lead.business_name}
             </Link>
           </td>
           <td className="px-4 py-3">
-            <span className="text-xs px-2 py-0.5 rounded bg-white/10 text-gray-300">
+            <span className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600">
               {STAGE_LABELS[lead.pipeline_stage] || lead.pipeline_stage}
             </span>
           </td>
@@ -376,26 +376,26 @@ function GroupRows({
               {formatNumber(lead.lead_score)}
             </span>
           </td>
-          <td className="px-4 py-3 text-gray-400">{lead.industry || "—"}</td>
-          <td className="px-4 py-3 text-gray-300">${formatNumber(lead.deal_value)}</td>
+          <td className="px-4 py-3 text-slate-500">{lead.industry || "—"}</td>
+          <td className="px-4 py-3 text-slate-700">${formatNumber(lead.deal_value)}</td>
           <td className="px-4 py-3">
             {lead.assigned_user_name ? (
-              <span className="inline-flex items-center gap-1.5 text-xs text-blue-300">
-                <span className="w-4 h-4 rounded-full bg-blue-500/30 flex items-center justify-center text-[8px] font-bold">
+              <span className="inline-flex items-center gap-1.5 text-xs text-[#41808B]">
+                <span className="w-4 h-4 rounded-full bg-[#57A3AF]/25 flex items-center justify-center text-[8px] font-bold">
                   {lead.assigned_user_name.charAt(0).toUpperCase()}
                 </span>
                 {lead.assigned_user_name}
               </span>
             ) : (
-              <span className="text-xs text-gray-600">Unassigned</span>
+              <span className="text-xs text-slate-400">Unassigned</span>
             )}
           </td>
           <td className="px-4 py-3">
-            <span className={lead.email_status === "verified" ? "text-green-400" : "text-gray-500"}>
+            <span className={lead.email_status === "verified" ? "text-green-600" : "text-slate-500"}>
               {lead.email_status}
             </span>
           </td>
-          <td className="px-4 py-3 text-gray-400">{formatRelativeTime(lead.last_activity_at)}</td>
+          <td className="px-4 py-3 text-slate-500">{formatRelativeTime(lead.last_activity_at)}</td>
         </tr>
       ))}
     </>
@@ -406,8 +406,8 @@ function Th({ children, onClick }: { children: React.ReactNode; onClick?: () => 
   return (
     <th
       onClick={onClick}
-      className={`px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider ${
-        onClick ? "cursor-pointer hover:text-white transition-colors" : ""
+      className={`px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider ${
+        onClick ? "cursor-pointer hover:text-[#F46036] transition-colors" : ""
       }`}
     >
       <span className="inline-flex items-center gap-1">{children}</span>

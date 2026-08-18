@@ -53,14 +53,14 @@ export const CONTACT_CHANNELS = [
 ] as const
 
 export const CONTACT_OUTCOMES: { value: string; label: string; color: string }[] = [
-  { value: "no_answer", label: "No Answer", color: "bg-gray-500/10 text-gray-400" },
-  { value: "not_reached", label: "Not Reached", color: "bg-gray-500/10 text-gray-400" },
-  { value: "left_message", label: "Left Message", color: "bg-amber-500/10 text-amber-400" },
-  { value: "callback_requested", label: "Callback Requested", color: "bg-amber-500/10 text-amber-400" },
-  { value: "follow_up_required", label: "Follow-up Required", color: "bg-orange-500/10 text-orange-400" },
-  { value: "interested", label: "Interested", color: "bg-green-500/10 text-green-400" },
-  { value: "meeting_scheduled", label: "Meeting Scheduled", color: "bg-blue-500/10 text-blue-400" },
-  { value: "not_interested", label: "Not Interested", color: "bg-red-500/10 text-red-400" },
+  { value: "no_answer", label: "No Answer", color: "bg-slate-100 text-slate-600" },
+  { value: "not_reached", label: "Not Reached", color: "bg-slate-100 text-slate-600" },
+  { value: "left_message", label: "Left Message", color: "bg-amber-50 text-amber-700" },
+  { value: "callback_requested", label: "Callback Requested", color: "bg-amber-50 text-amber-700" },
+  { value: "follow_up_required", label: "Follow-up Required", color: "bg-orange-50 text-orange-700" },
+  { value: "interested", label: "Interested", color: "bg-green-50 text-green-700" },
+  { value: "meeting_scheduled", label: "Meeting Scheduled", color: "bg-blue-50 text-blue-700" },
+  { value: "not_interested", label: "Not Interested", color: "bg-red-50 text-red-700" },
 ]
 
 export function outcomeStyle(outcome: string) {

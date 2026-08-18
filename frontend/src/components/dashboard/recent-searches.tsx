@@ -35,10 +35,10 @@ export function RecentSearches({ refreshKey = 0 }: { refreshKey?: number }) {
   }, [refreshKey])
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-lg text-white">Recent Searches</h3>
-        <Link href="/searches" className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors">
+        <h3 className="font-semibold text-lg text-slate-900">Recent Searches</h3>
+        <Link href="/searches" className="flex items-center gap-1 text-xs text-[#41808B] hover:text-[#F46036] transition-colors">
           View all
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
@@ -47,26 +47,26 @@ export function RecentSearches({ refreshKey = 0 }: { refreshKey?: number }) {
       {loading ? (
         <div className="space-y-2">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-10 bg-white/5 rounded-lg animate-pulse" />
+            <div key={i} className="h-10 bg-slate-100 rounded-lg animate-pulse" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <p className="text-sm text-gray-500 text-center py-6">No searches yet</p>
+        <p className="text-sm text-slate-500 text-center py-6">No searches yet</p>
       ) : (
         <div className="space-y-2">
           {items.map((s) => (
             <button
               key={s.id}
               onClick={() => router.push(`/pipeline?search_id=${s.id}&q=${encodeURIComponent(s.query)}`)}
-              className="w-full text-left flex items-center justify-between gap-3 p-3 rounded-lg bg-white/3 border border-white/5 hover:bg-white/5 hover:border-white/10 transition-colors"
+              className="w-full text-left flex items-center justify-between gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-colors"
             >
               <div className="flex items-center gap-2 min-w-0">
-                <History className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                <span className="text-sm text-gray-200 truncate">{s.query}</span>
+                <History className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <span className="text-sm text-slate-700 truncate">{s.query}</span>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-xs text-blue-400">{s.lead_count} leads</p>
-                <p className="text-[11px] text-gray-600">{formatRelativeTime(s.created_at)}</p>
+                <p className="text-xs text-[#41808B]">{s.lead_count} leads</p>
+                <p className="text-[11px] text-slate-400">{formatRelativeTime(s.created_at)}</p>
               </div>
             </button>
           ))}

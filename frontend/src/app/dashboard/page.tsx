@@ -12,6 +12,7 @@ import { NotificationsDropdown } from "@/components/shared/notifications-dropdow
 import { UserMenu } from "@/components/shared/user-menu"
 import { CompanyBadge } from "@/components/shared/company-badge"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
+import { Logo } from "@/components/shared/logo"
 import { usePipelineAnalytics, type AnalyticsData } from "@/hooks/use-pipeline-analytics"
 import { getUser } from "@/lib/auth"
 import { formatCurrency, formatPercent } from "@/lib/utils"
@@ -54,16 +55,17 @@ export default function DashboardPage() {
     <AuthGuard>
     <div className="flex h-screen">
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0f1e] border-r border-white/5 transform transition-transform duration-200
+        fixed inset-y-0 left-0 z-50 w-64 bg-[#41808B] border-r border-white/10 transform transition-transform duration-200
         lg:relative lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
-        <div className="flex items-center justify-between h-16 px-6 border-b border-white/5">
+        <div className="flex items-center justify-between h-16 px-6 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <Target className="w-6 h-6 text-blue-400" />
-            <span className="font-bold text-white text-lg">LeadGen</span>
+            <span className="flex items-center rounded-lg bg-white p-1.5">
+              <Logo className="h-6" />
+            </span>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white">
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-teal-100 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -77,8 +79,8 @@ export default function DashboardPage() {
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors ${
                   isActive
-                    ? "bg-blue-500/10 text-blue-400"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                    ? "bg-white/15 text-white font-medium"
+                    : "text-teal-50/80 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -95,12 +97,12 @@ export default function DashboardPage() {
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="relative z-40 flex items-center justify-between h-16 px-6 border-b border-white/5 bg-[#0a0f1e]/50 backdrop-blur-xl">
+        <header className="relative z-40 flex items-center justify-between h-16 px-6 border-b border-slate-200 bg-white/70 backdrop-blur-xl">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-400 hover:text-white">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-slate-500 hover:text-slate-900">
               <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-semibold text-white">Dashboard</h1>
+            <h1 className="text-lg font-semibold text-slate-900">Dashboard</h1>
             <CompanyBadge />
           </div>
           <div className="flex items-center gap-4">
@@ -117,37 +119,37 @@ export default function DashboardPage() {
               <div className="lg:col-span-2">
                 <FunnelWidget refreshKey={refreshKey} />
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
-                <h3 className="font-semibold text-lg text-white mb-4">Quick Stats</h3>
+<div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+                <h3 className="font-semibold text-lg text-slate-900 mb-4">Quick Stats</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-400">Win Rate</span>
-                    <span className="text-sm font-medium text-green-400">
-                      {analytics ? formatPercent(analytics.win_rate) : "â€”"}
+                    <span className="text-sm text-slate-500">Win Rate</span>
+                    <span className="text-sm font-medium text-green-600">
+                      {analytics ? formatPercent(analytics.win_rate) : "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-400">Avg. Deal Size</span>
-                    <span className="text-sm font-medium text-white">
-                      {analytics ? formatCurrency(analytics.avg_deal_size) : "â€”"}
+                    <span className="text-sm text-slate-500">Avg. Deal Size</span>
+                    <span className="text-sm font-medium text-slate-900">
+                      {analytics ? formatCurrency(analytics.avg_deal_size) : "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-400">Sales Cycle</span>
-                    <span className="text-sm font-medium text-white">
-                      {analytics ? `${analytics.avg_sales_cycle_days.toFixed(0)} days` : "â€”"}
+                    <span className="text-sm text-slate-500">Sales Cycle</span>
+                    <span className="text-sm font-medium text-slate-900">
+                      {analytics ? `${analytics.avg_sales_cycle_days.toFixed(0)} days` : "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-400">Response Time</span>
-                    <span className="text-sm font-medium text-white">
-                      {analytics ? `${analytics.avg_response_time_hours.toFixed(1)} hrs` : "â€”"}
+                    <span className="text-sm text-slate-500">Response Time</span>
+                    <span className="text-sm font-medium text-slate-900">
+                      {analytics ? `${analytics.avg_response_time_hours.toFixed(1)} hrs` : "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-400">Pipeline Value</span>
-                    <span className="text-sm font-medium text-blue-400">
-                      {analytics ? formatCurrency(analytics.pipeline_value) : "â€”"}
+                    <span className="text-sm text-slate-500">Pipeline Value</span>
+                    <span className="text-sm font-medium text-[#41808B]">
+                      {analytics ? formatCurrency(analytics.pipeline_value) : "—"}
                     </span>
                   </div>
                 </div>

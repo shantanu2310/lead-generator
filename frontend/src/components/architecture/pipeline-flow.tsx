@@ -6,9 +6,9 @@ import { PIPELINE_STAGES } from "@/lib/constants"
 
 export default function PipelineFlow() {
   return (
-    <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-      <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#94a3b8]">
-        <Sparkles className="h-3.5 w-3.5 text-[#ec4899]" />
+    <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+      <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+        <Sparkles className="h-3.5 w-3.5 text-[#41808B]" />
         Stage Flow
       </div>
 
@@ -18,7 +18,7 @@ export default function PipelineFlow() {
             <div key={s.value} className="flex items-center gap-1.5">
               <motion.div
                 whileHover={{ y: -2, scale: 1.04 }}
-                className="rounded-lg border px-3 py-1.5 text-xs font-semibold text-white"
+                className="rounded-lg border px-3 py-1.5 text-xs font-semibold text-slate-800"
                 style={{
                   background: `${s.color}1f`,
                   borderColor: `${s.color}55`,
@@ -28,7 +28,7 @@ export default function PipelineFlow() {
                 {s.label}
               </motion.div>
               {i < PIPELINE_STAGES.length - 1 && (
-                <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[#64748b]" />
+                <ArrowRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
               )}
             </div>
           ))}
