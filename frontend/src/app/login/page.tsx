@@ -37,7 +37,7 @@ export default function LoginPage() {
 
       <main className="glass-card-glow relative z-10 w-full max-w-md p-8">
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-14 items-center justify-center rounded-2xl bg-white px-3 shadow-sm">
+          <div className="mb-4">
             <Logo className="h-8" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight">

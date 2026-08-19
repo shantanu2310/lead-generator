@@ -9,9 +9,7 @@ export default function LandingNav() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mt-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 backdrop-blur-xl sm:px-6">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 items-center justify-center rounded-xl bg-white px-1.5">
-              <Logo className="h-7" />
-            </div>
+            <Logo className="h-7" />
             <span className="text-lg font-bold tracking-tight text-slate-900">
               Loggix
             </span>
