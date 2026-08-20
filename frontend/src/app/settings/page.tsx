@@ -165,7 +165,7 @@ useEffect(() => {
     <AuthGuard>
 <div className="flex h-screen">
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-[#41808B] border-r border-white/10 transform transition-transform duration-200
+        fixed inset-y-0 left-0 z-50 w-64 bg-[#41808B] transform transition-transform duration-200
         lg:relative lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
