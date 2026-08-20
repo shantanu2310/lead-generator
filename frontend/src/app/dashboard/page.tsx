@@ -53,30 +53,15 @@ export default function DashboardPage() {
 
   return (
     <AuthGuard>
-<div className="flex h-screen flex-col">
-      <header className="relative z-40 shrink-0 flex items-center justify-between h-16 px-6 border-b border-slate-200 bg-white">
-        <div className="flex items-center gap-4">
-          <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-slate-500 hover:text-slate-900">
-            <Menu className="w-5 h-5" />
-          </button>
-          <Logo className="h-7" />
-          <h1 className="text-lg font-semibold text-slate-900">Dashboard</h1>
-          <CompanyBadge />
-        </div>
-        <div className="flex items-center gap-4">
-          <WebSocketIndicator />
-          <NotificationsDropdown />
-        </div>
-      </header>
-
-      <div className="flex flex-1 min-h-0">
+<div className="flex h-screen">
       <aside className={`
-        w-64 shrink-0 bg-[#41808B] border-r border-white/10
-        max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:z-50 max-lg:transform max-lg:transition-transform max-lg:duration-200
-        ${sidebarOpen ? "max-lg:translate-x-0" : "max-lg:-translate-x-full"}
+        fixed inset-y-0 left-0 z-50 w-64 bg-[#41808B] border-r border-white/10 transform transition-transform duration-200
+        lg:relative lg:translate-x-0
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
-        <div className="flex justify-end p-2 lg:hidden">
-          <button onClick={() => setSidebarOpen(false)} className="text-teal-100 hover:text-white">
+        <div className="flex items-center justify-between h-20 px-6 bg-white border-b border-slate-200">
+          <Logo className="h-9" />
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-slate-500 hover:text-slate-900">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -107,7 +92,22 @@ export default function DashboardPage() {
         <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-<main className="flex-1 overflow-y-auto p-6">
+<div className="flex-1 flex flex-col min-w-0">
+        <header className="relative z-40 flex items-center justify-between h-16 px-6 border-b border-slate-200 bg-white">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-slate-500 hover:text-slate-900">
+              <Menu className="w-5 h-5" />
+            </button>
+            <h1 className="text-lg font-semibold text-slate-900">Dashboard</h1>
+            <CompanyBadge />
+          </div>
+          <div className="flex items-center gap-4">
+            <WebSocketIndicator />
+            <NotificationsDropdown />
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto space-y-6">
             <LeadSearchForm onComplete={() => setRefreshKey((k) => k + 1)} />
             <StatCards data={analytics ? buildStatCards(analytics) : undefined} />
