@@ -1,12 +1,12 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { TrendingUp, Users, Flame, MessageSquare, Calendar, DollarSign, Trophy, XCircle } from "lucide-react"
+import { TrendingUp, Users, Flame, MessageSquare, Calendar, DollarSign, Trophy, XCircle, ShieldCheck } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { formatCurrency, formatNumber } from "@/lib/utils"
 
 const icons = {
-  TrendingUp, Users, Flame, MessageSquare, Calendar, DollarSign, Trophy, XCircle,
+  TrendingUp, Users, Flame, MessageSquare, Calendar, DollarSign, Trophy, XCircle, ShieldCheck,
 } as const
 
 type StatCardData = {

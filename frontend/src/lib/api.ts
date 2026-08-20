@@ -181,6 +181,9 @@ export const api = {
   getPipelineInsights: (limit?: number) =>
     request<any[]>("GET", `/pipeline/insights${limit ? `?limit=${limit}` : ""}`),
 
+  getPipelineDashboard: () =>
+    request<any>("GET", "/pipeline/dashboard"),
+
   getTeamLeads: (perUserLimit?: number) =>
     request<any>("GET", `/pipeline/team-leads${perUserLimit ? `?per_user_limit=${perUserLimit}` : ""}`),
 

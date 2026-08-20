@@ -5,10 +5,14 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas.responses import (
+    DashboardFunnelStageResponse,
+    DashboardKpisResponse,
+    DashboardResponse,
     InsightResponse,
     LeadListItemResponse,
     PipelineAnalyticsResponse,
     PipelineStageResponse,
+    PriorityLeadResponse,
     TeamLeadsResponse,
     TeamUnassignedResponse,
     TeamUserLeadsResponse,
@@ -16,7 +20,7 @@ from app.api.schemas.responses import (
 from app.core.constants import NotificationType, PipelineStage
 from app.dependencies import get_current_admin, get_current_user, get_db
 from app.models.contact_activity import ContactActivity
-from app.models.lead import Lead
+from app.models.lead import Contact, Lead
 from app.models.pipeline import Notification
 from app.models.user import User
 
@@ -267,6 +271,224 @@ async def get_pipeline_insights(
         )
         for n in notifications
     ]
+
+
+POSITIVE_OUTCOMES = ("interested", "meeting_scheduled", "callback_requested", "follow_up_required")
+
+
+def _priority_score(
+    lead: Lead,
+    has_contact: bool,
+    has_positive_activity: bool,
+    now: datetime,
+) -> int:
+    score = max(0, lead.lead_score or 0)
+    if lead.email_verified:
+        score += 15
+    if lead.phone_cross_verified:
+        score += 10
+    if has_contact:
+        score += 10
+    if has_positive_activity:
+        score += 15
+    stage_order = {s.value: i for i, s in enumerate(PipelineStage)}
+    score += min(stage_order.get(lead.pipeline_stage, 0) * 2, 20)
+    if lead.last_activity_at is not None:
+        age_hours = (now - _naive_utc(lead.last_activity_at)).total_seconds() / 3600.0
+        if age_hours < 24:
+            score += 10
+        elif age_hours < 72:
+            score += 5
+    return score
+
+
+def _priority_reason(
+    lead: Lead,
+    has_contact: bool,
+    has_positive_activity: bool,
+    now: datetime,
+) -> str:
+    parts: list[str] = []
+    if (lead.lead_score or 0) >= 80:
+        parts.append(f"High score ({lead.lead_score})")
+    if lead.email_verified:
+        parts.append("Verified email")
+    if lead.phone_cross_verified:
+        parts.append("Verified phone")
+    if has_positive_activity:
+        parts.append("Positive reply")
+    elif has_contact:
+        parts.append("Contact found")
+    if lead.last_activity_at is not None:
+        naive = _naive_utc(lead.last_activity_at)
+        if naive is not None:
+            seconds = int(max(0, (now - naive).total_seconds()))
+            if seconds < 3600:
+                parts.append(f"Active {max(1, seconds // 60)}m ago")
+            elif seconds < 86400:
+                parts.append(f"Active {seconds // 3600}h ago")
+            elif seconds < 604800:
+                parts.append(f"Active {seconds // 86400}d ago")
+            else:
+                parts.append(f"Active {seconds // 604800}w ago")
+    if lead.pipeline_stage in (
+        PipelineStage.MEETING.value,
+        PipelineStage.PROPOSAL.value,
+        PipelineStage.NEGOTIATION.value,
+    ):
+        parts.append("In negotiation")
+    return ", ".join(parts[:3]) or "Needs review"
+
+
+@router.get("/pipeline/dashboard", response_model=DashboardResponse)
+async def get_pipeline_dashboard(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> DashboardResponse:
+    conditions = [Lead.company_id == user.company_id]
+
+    total = await db.scalar(select(func.count(Lead.id)).where(*conditions)) or 0
+    qualified = await db.scalar(
+        select(func.count(Lead.id)).where(
+            Lead.pipeline_stage.notin_([PipelineStage.NEW_LEAD.value]),
+            *conditions,
+        )
+    ) or 0
+    verified_email = await db.scalar(
+        select(func.count(Lead.id)).where(Lead.email_verified.is_(True), *conditions)
+    ) or 0
+    hot_leads = await db.scalar(
+        select(func.count(Lead.id)).where(
+            Lead.lead_score >= 80,
+            Lead.pipeline_stage.notin_([PipelineStage.WON.value, PipelineStage.LOST.value]),
+            *conditions,
+        )
+    ) or 0
+
+    decision_maker = await db.scalar(
+        select(func.count(func.distinct(Contact.lead_id))).where(
+            Contact.company_id == user.company_id
+        )
+    ) or 0
+    contacted = await db.scalar(
+        select(func.count(func.distinct(ContactActivity.lead_id))).where(
+            ContactActivity.company_id == user.company_id
+        )
+    ) or 0
+    replied = await db.scalar(
+        select(func.count(func.distinct(ContactActivity.lead_id))).where(
+            ContactActivity.company_id == user.company_id,
+            ContactActivity.outcome.in_(POSITIVE_OUTCOMES),
+        )
+    ) or 0
+    outreach_ready = await db.scalar(
+        select(func.count(Lead.id)).where(
+            Lead.pipeline_stage == PipelineStage.OUTREACH_READY.value,
+            *conditions,
+        )
+    ) or 0
+    meeting = await db.scalar(
+        select(func.count(Lead.id)).where(
+            Lead.pipeline_stage == PipelineStage.MEETING.value,
+            *conditions,
+        )
+    ) or 0
+    won = await db.scalar(
+        select(func.count(Lead.id)).where(
+            Lead.pipeline_stage == PipelineStage.WON.value,
+            *conditions,
+        )
+    ) or 0
+
+    funnel_data = [
+        ("companies_found", "Companies Found", total),
+        ("qualified", "Qualified", qualified),
+        ("decision_maker_found", "Decision Maker Found", decision_maker),
+        ("verified", "Verified", verified_email),
+        ("outreach_ready", "Outreach Ready", outreach_ready),
+        ("contacted", "Contacted", contacted),
+        ("replied", "Replied", replied),
+        ("meeting", "Meeting", meeting),
+        ("won", "Won", won),
+    ]
+    funnel: list[DashboardFunnelStageResponse] = []
+    previous = total
+    for key, label, count in funnel_data:
+        conversion = (count / previous * 100) if previous > 0 else 0.0
+        funnel.append(DashboardFunnelStageResponse(
+            key=key,
+            label=label,
+            count=count,
+            conversion_percent=round(conversion, 1),
+            dropoff_percent=round(max(0.0, 100.0 - conversion), 1),
+        ))
+        previous = count
+
+    candidates = (await db.execute(
+        select(Lead)
+        .where(
+            Lead.pipeline_stage.notin_([PipelineStage.WON.value, PipelineStage.LOST.value]),
+            *conditions,
+        )
+        .order_by(Lead.lead_score.desc(), Lead.updated_at.desc())
+        .limit(100)
+    )).scalars().all()
+
+    lead_ids = [lead.id for lead in candidates]
+    contacts_map: dict[str, str] = {}
+    positive_ids: set[str] = set()
+    if lead_ids:
+        contact_rows = (await db.execute(
+            select(Contact.lead_id, Contact.name)
+            .where(Contact.lead_id.in_(lead_ids))
+            .order_by(Contact.is_primary.desc(), Contact.created_at.asc())
+        )).all()
+        for lead_id, name in contact_rows:
+            contacts_map.setdefault(lead_id, name)
+        positive_rows = (await db.execute(
+            select(ContactActivity.lead_id).where(
+                ContactActivity.lead_id.in_(lead_ids),
+                ContactActivity.outcome.in_(POSITIVE_OUTCOMES),
+            )
+        )).all()
+        positive_ids = {row[0] for row in positive_rows}
+
+    now = datetime.now(UTC).replace(tzinfo=None)
+    ranked = sorted(
+        candidates,
+        key=lambda lead: _priority_score(
+            lead, lead.id in contacts_map, lead.id in positive_ids, now
+        ),
+        reverse=True,
+    )
+
+    priority_leads = [
+        PriorityLeadResponse(
+            id=lead.id,
+            business_name=lead.business_name,
+            company_logo_url=lead.company_logo_url,
+            contact_name=contacts_map.get(lead.id),
+            lead_score=_priority_score(lead, lead.id in contacts_map, lead.id in positive_ids, now),
+            priority=lead.priority,
+            pipeline_stage=lead.pipeline_stage,
+            reason=_priority_reason(lead, lead.id in contacts_map, lead.id in positive_ids, now),
+            last_activity_at=lead.last_activity_at,
+        )
+        for lead in ranked[:5]
+    ]
+
+    return DashboardResponse(
+        kpis=DashboardKpisResponse(
+            total_leads=total,
+            qualified=qualified,
+            qualified_percent=round((qualified / total * 100) if total > 0 else 0.0, 1),
+            verified_email=verified_email,
+            verified_email_percent=round((verified_email / total * 100) if total > 0 else 0.0, 1),
+            hot_leads=hot_leads,
+        ),
+        funnel=funnel,
+        priority_leads=priority_leads,
+    )
 
 
 @router.get("/pipeline/team-leads", response_model=TeamLeadsResponse)

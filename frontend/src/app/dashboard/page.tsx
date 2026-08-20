@@ -4,18 +4,18 @@ import { BarChart3, Target, Settings as SettingsIcon, History, TrendingUp, Users
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { AuthGuard } from "@/components/auth/auth-guard"
-import { FunnelWidget } from "@/components/dashboard/funnel-widget"
-import { RecentSearches } from "@/components/dashboard/recent-searches"
+import { PriorityLeads } from "@/components/dashboard/priority-leads"
+import { SalesFunnel } from "@/components/dashboard/sales-funnel"
 import { LeadSearchForm } from "@/components/pipeline/lead-search-form"
+import { AIInsightsPanel } from "@/components/pipeline/ai-insights-panel"
 import { StatCards } from "@/components/dashboard/stat-cards"
 import { NotificationsDropdown } from "@/components/shared/notifications-dropdown"
 import { UserMenu } from "@/components/shared/user-menu"
 import { CompanyBadge } from "@/components/shared/company-badge"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
 import { Logo } from "@/components/shared/logo"
-import { usePipelineAnalytics, type AnalyticsData } from "@/hooks/use-pipeline-analytics"
+import { useDashboardData } from "@/hooks/use-dashboard-data"
 import { getUser } from "@/lib/auth"
-import { formatCurrency, formatPercent } from "@/lib/utils"
 
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon; adminOnly?: boolean }[] = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -26,25 +26,19 @@ const NAV_ITEMS: { href: string; label: string; icon: LucideIcon; adminOnly?: bo
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ]
 
-function buildStatCards(a: AnalyticsData) {
-  const won = a.stages.find((s) => s.stage === "won")?.count ?? 0
-  const lost = a.stages.find((s) => s.stage === "lost")?.count ?? 0
+function buildStatCards(k: { total_leads: number; qualified: number; qualified_percent: number; verified_email: number; verified_email_percent: number; hot_leads: number }) {
   return [
-    { key: "total_leads", label: "Total Leads", value: a.total_leads, icon: "Users" as const },
-    { key: "qualified", label: "Qualified", value: `${formatPercent(a.qualified_percent)}`, icon: "Flame" as const },
-    { key: "conversion", label: "Conversion", value: `${formatPercent(a.conversion_percent)}`, icon: "TrendingUp" as const },
-    { key: "won_deals", label: "Won Deals", value: won, icon: "Trophy" as const },
-    { key: "lost_deals", label: "Lost Deals", value: lost, icon: "XCircle" as const },
-    { key: "revenue_pipeline", label: "Revenue Pipeline", value: formatCurrency(a.pipeline_value), icon: "DollarSign" as const },
-    { key: "avg_deal_size", label: "Avg. Deal Size", value: formatCurrency(a.avg_deal_size), icon: "Calendar" as const },
-    { key: "forecast", label: "Forecast", value: formatCurrency(a.forecast_revenue), icon: "MessageSquare" as const },
+    { key: "total_leads", label: "Total Leads", value: k.total_leads, icon: "Users" as const },
+    { key: "qualified", label: "Qualified", value: `${k.qualified} (${k.qualified_percent.toFixed(0)}%)`, icon: "TrendingUp" as const },
+    { key: "verified_contacts", label: "Verified Contacts", value: `${k.verified_email} (${k.verified_email_percent.toFixed(0)}%)`, icon: "ShieldCheck" as const },
+    { key: "hot_leads", label: "Hot Leads", value: k.hot_leads, icon: "Flame" as const },
   ]
 }
 
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
-  const { data: analytics, refetch } = usePipelineAnalytics()
+  const { data, loading, refetch } = useDashboardData()
   const user = getUser()
 
   useEffect(() => {
@@ -110,49 +104,14 @@ export default function DashboardPage() {
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto space-y-6">
             <LeadSearchForm onComplete={() => setRefreshKey((k) => k + 1)} />
-            <StatCards data={analytics ? buildStatCards(analytics) : undefined} />
+            <StatCards data={data ? buildStatCards(data.kpis) : undefined} />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
-                <FunnelWidget refreshKey={refreshKey} />
+                <SalesFunnel data={data?.funnel} loading={loading} />
               </div>
-<div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
-                <h3 className="font-semibold text-lg text-slate-900 mb-4">Quick Stats</h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-500">Win Rate</span>
-                    <span className="text-sm font-medium text-green-600">
-                      {analytics ? formatPercent(analytics.win_rate) : "—"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-500">Avg. Deal Size</span>
-                    <span className="text-sm font-medium text-slate-900">
-                      {analytics ? formatCurrency(analytics.avg_deal_size) : "—"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-500">Sales Cycle</span>
-                    <span className="text-sm font-medium text-slate-900">
-                      {analytics ? `${analytics.avg_sales_cycle_days.toFixed(0)} days` : "—"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-500">Response Time</span>
-                    <span className="text-sm font-medium text-slate-900">
-                      {analytics ? `${analytics.avg_response_time_hours.toFixed(1)} hrs` : "—"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-500">Pipeline Value</span>
-                    <span className="text-sm font-medium text-[#41808B]">
-                      {analytics ? formatCurrency(analytics.pipeline_value) : "—"}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <AIInsightsPanel />
             </div>
-
-            <RecentSearches refreshKey={refreshKey} />
+            <PriorityLeads data={data?.priority_leads} loading={loading} />
           </div>
         </main>
       </div>

@@ -192,6 +192,41 @@ class InsightResponse(BaseModel):
     created_at: datetime
 
 
+class DashboardKpisResponse(BaseModel):
+    total_leads: int = 0
+    qualified: int = 0
+    qualified_percent: float = 0.0
+    verified_email: int = 0
+    verified_email_percent: float = 0.0
+    hot_leads: int = 0
+
+
+class DashboardFunnelStageResponse(BaseModel):
+    key: str
+    label: str
+    count: int
+    conversion_percent: float = 0.0
+    dropoff_percent: float = 0.0
+
+
+class PriorityLeadResponse(BaseModel):
+    id: str
+    business_name: str
+    company_logo_url: str | None = None
+    contact_name: str | None = None
+    lead_score: int = 0
+    priority: str = "medium"
+    pipeline_stage: str
+    reason: str
+    last_activity_at: datetime | None = None
+
+
+class DashboardResponse(BaseModel):
+    kpis: DashboardKpisResponse
+    funnel: list[DashboardFunnelStageResponse]
+    priority_leads: list[PriorityLeadResponse]
+
+
 class NotificationResponse(BaseModel):
     id: str
     type: str
