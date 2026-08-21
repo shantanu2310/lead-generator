@@ -5,13 +5,9 @@ import { Target, Menu, X, BarChart3, Settings as SettingsIcon, History, SearchX,
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { AuthGuard } from "@/components/auth/auth-guard"
-import { InteractiveFunnel } from "@/components/pipeline/interactive-funnel"
 import { KanbanBoard } from "@/components/pipeline/kanban-board"
 import { PipelineTable } from "@/components/pipeline/pipeline-table"
 import { PipelineCharts } from "@/components/pipeline/pipeline-charts"
-import { PipelineFilters } from "@/components/pipeline/pipeline-filters"
-import { LeadSearchForm } from "@/components/pipeline/lead-search-form"
-import { AIInsightsPanel } from "@/components/pipeline/ai-insights-panel"
 import { NotificationsDropdown } from "@/components/shared/notifications-dropdown"
 import { UserMenu } from "@/components/shared/user-menu"
 import { CompanyBadge } from "@/components/shared/company-badge"
@@ -44,29 +40,14 @@ export default function PipelinePage() {
 function PipelinePageContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab>("kanban")
-  const [filters, setFilters] = useState<any>({})
   const searchParams = useSearchParams()
   const searchId = searchParams.get("search_id") || ""
   const searchQuery = searchParams.get("q") || ""
   const user = getUser()
   const initialParams: Record<string, string> = searchId ? { search_id: searchId } : {}
-  const { data, loading, params, setParams, refetch } = useLeads(initialParams)
-
-function handleFilterChange(newFilters: any) {
-    setFilters(newFilters)
-    const queryParams: Record<string, string> = {}
-    if (searchId) queryParams.search_id = searchId
-    if (newFilters.search) queryParams.search = newFilters.search
-    if (newFilters.pipeline_stage) queryParams.pipeline_stage = newFilters.pipeline_stage
-    if (newFilters.priority) queryParams.priority = newFilters.priority
-    if (newFilters.email_status) queryParams.email_status = newFilters.email_status
-    if (newFilters.assigned_to) queryParams.assigned_to = newFilters.assigned_to
-    if (newFilters.department_id) queryParams.department_id = newFilters.department_id
-    setParams(queryParams)
-  }
+  const { data, setParams } = useLeads(initialParams)
 
   function clearSearchFilter() {
-    setFilters({})
     setParams({})
     window.history.replaceState(null, "", "/pipeline")
   }
@@ -128,8 +109,6 @@ function handleFilterChange(newFilters: any) {
 
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-[1600px] mx-auto space-y-6">
-            <LeadSearchForm onComplete={refetch} />
-
             {searchId && (
               <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-[#57A3AF]/25 bg-[#57A3AF]/5">
                 <div className="flex items-center gap-2 text-sm text-slate-600">
@@ -154,20 +133,6 @@ function handleFilterChange(newFilters: any) {
                 </button>
               </div>
             )}
-
-            <PipelineFilters onFilterChange={handleFilterChange} />
-
-            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-              <div className="xl:col-span-3">
-                <InteractiveFunnel
-                  searchId={searchId || undefined}
-                  onStageClick={(stage) => setParams({ ...params, pipeline_stage: stage })}
-                />
-              </div>
-              <div className="xl:col-span-1">
-                <AIInsightsPanel />
-              </div>
-            </div>
 
             <div className="flex items-center gap-1 border-b border-slate-200">
               <TabButton active={activeTab === "kanban"} onClick={() => setActiveTab("kanban")}>
