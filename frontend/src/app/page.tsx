@@ -126,7 +126,10 @@ export default function LandingPage() {
 
       <footer className="relative z-10 border-t border-slate-200 bg-white/60 py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 text-sm text-slate-500 sm:flex-row sm:px-6">
-          <span>© 2026 Loggix — AI-powered lead generation.</span>
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="Loggix" className="h-5 w-auto object-contain opacity-60" />
+            <span>Powered by Loggix</span>
+          </div>
           <span>Google Places · Brave Search · Hunter · Website Intelligence</span>
         </div>
       </footer>
