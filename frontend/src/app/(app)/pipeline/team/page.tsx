@@ -22,7 +22,7 @@ import Link from "next/link"
 import { Avatar } from "@/components/shared/avatar"
 import { api } from "@/lib/api"
 import { getUser } from "@/lib/auth"
-import { PIPELINE_STAGES, STAGE_LABELS } from "@/lib/constants"
+import { CONTACT_CHANNELS, CONTACT_OUTCOMES, PIPELINE_STAGES, STAGE_LABELS } from "@/lib/constants"
 import { formatDate, formatRelativeTime } from "@/lib/utils"
 
 type TeamLead = {
@@ -279,6 +279,18 @@ function LeadRow({ lead, selected, onSelect }: { lead: TeamLead; selected: boole
   )
 }
 
+function toLocalInput(d: Date): string {
+  const shifted = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+  return shifted.toISOString().slice(0, 16)
+}
+
+const EMPTY_LOG_FORM = {
+  activity_type: "call",
+  outcome: "no_answer",
+  summary: "",
+  next_followup_at: "",
+}
+
 function LeadDetailPane({
   leadId,
   onBack,
@@ -294,6 +306,20 @@ function LeadDetailPane({
   const [loading, setLoading] = useState(true)
   const [movingStage, setMovingStage] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [logForm, setLogForm] = useState({ ...EMPTY_LOG_FORM })
+  const [savingLog, setSavingLog] = useState(false)
+  const [logMsg, setLogMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
+  const refreshDetail = useCallback(async () => {
+    const [leadData, , timelineData] = await Promise.all([
+      api.getLead(leadId),
+      Promise.resolve(null),
+      api.getLeadTimeline(leadId).catch(() => []),
+    ])
+    setLead(leadData)
+    setTimeline(timelineData || [])
+    return leadData
+  }, [leadId])
 
   useEffect(() => {
     let cancelled = false
@@ -322,15 +348,49 @@ function LeadDetailPane({
     }
   }, [leadId])
 
+  async function handleLogContact(e: React.FormEvent) {
+    e.preventDefault()
+    if (!lead) return
+    setSavingLog(true)
+    setLogMsg(null)
+    const prevStage = lead.pipeline_stage
+    try {
+      const body: any = {
+        activity_type: logForm.activity_type,
+        outcome: logForm.outcome,
+        summary: logForm.summary || null,
+      }
+      if (logForm.next_followup_at) body.next_followup_at = new Date(logForm.next_followup_at).toISOString()
+      await api.createContactActivity(lead.id, body)
+      const updated = await refreshDetail()
+      setLogForm({ ...EMPTY_LOG_FORM })
+      if (updated.pipeline_stage !== prevStage) {
+        onStageMoved(updated.pipeline_stage)
+        window.dispatchEvent(new Event("pipeline:changed"))
+      }
+      setLogMsg({
+        ok: true,
+        text:
+          updated.pipeline_stage !== prevStage
+            ? `Logged — lead moved to "${STAGE_LABELS[updated.pipeline_stage] || updated.pipeline_stage}"`
+            : "Contact logged",
+      })
+    } catch (err: any) {
+      setLogMsg({ ok: false, text: err.message || "Failed to log contact" })
+    } finally {
+      setSavingLog(false)
+    }
+  }
+
   async function handleStageMove(stage: string) {
     if (!lead || !stage || stage === lead.pipeline_stage) return
     setMovingStage(true)
     try {
       await api.moveLeadStage(lead.id, stage)
-      const updated = await api.getLead(lead.id)
-      setLead(updated)
+      const updated = await refreshDetail()
       onStageMoved(stage)
       window.dispatchEvent(new Event("pipeline:changed"))
+      setError(updated ? null : "Failed to reload lead")
     } catch (err: any) {
       setError(err.message || "Failed to move lead")
     } finally {
@@ -439,6 +499,76 @@ function LeadDetailPane({
           <InfoRow icon={Clock} label="Last activity" value={lead.last_activity_at ? formatRelativeTime(lead.last_activity_at) : null} />
           <InfoRow icon={Calendar} label="Created" value={lead.created_at ? formatDate(lead.created_at) : null} />
         </div>
+
+        <section>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            Log contact
+          </h3>
+          <form onSubmit={handleLogContact} className="rounded-lg border border-slate-200 p-3.5 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] text-slate-400 mb-1">Channel</label>
+                <select
+                  value={logForm.activity_type}
+                  onChange={(e) => setLogForm({ ...logForm, activity_type: e.target.value })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-[#F46036]"
+                >
+                  {CONTACT_CHANNELS.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] text-slate-400 mb-1">Outcome</label>
+                <select
+                  value={logForm.outcome}
+                  onChange={(e) => setLogForm({ ...logForm, outcome: e.target.value })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-[#F46036]"
+                >
+                  {CONTACT_OUTCOMES.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Summary</label>
+              <textarea
+                value={logForm.summary}
+                onChange={(e) => setLogForm({ ...logForm, summary: e.target.value })}
+                rows={2}
+                placeholder="What happened on this touchpoint?"
+                className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036] resize-none"
+              />
+            </div>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="flex-1 min-w-[160px]">
+                <label className="block text-[11px] text-slate-400 mb-1">Next follow-up</label>
+                <input
+                  type="datetime-local"
+                  value={logForm.next_followup_at}
+                  onChange={(e) => setLogForm({ ...logForm, next_followup_at: e.target.value })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-[#F46036]"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={savingLog}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#F46036] hover:bg-[#D94A22] disabled:opacity-50 text-white text-xs font-semibold transition-colors"
+              >
+                {savingLog && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Log contact
+              </button>
+            </div>
+            {logMsg && (
+              <p className={`text-xs ${logMsg.ok ? "text-green-700" : "text-red-600"}`}>{logMsg.text}</p>
+            )}
+          </form>
+        </section>
 
         <section>
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
