@@ -19,7 +19,7 @@ export const Logo: FC<LogoProps> = ({ className = "h-8", variant = "icon" }) => 
 
   return (
     <div className="flex items-center gap-2.5">
-      <img src="/logo.png" alt="LeadPilot" className={iconClass} />
+      {/* <img src="/logo.png" alt="LeadPilot" className={iconClass} /> */}
       <div className="flex flex-col leading-tight min-w-0">
         <span className="font-bold text-slate-900 truncate">LeadPilot</span>
         {variant === "full" && (
