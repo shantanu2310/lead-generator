@@ -309,7 +309,6 @@ function LeadDetailPane({
   onStageMoved: (stage: string) => void
 }) {
   const [lead, setLead] = useState<any>(null)
-  const [contacts, setContacts] = useState<any[]>([])
   const [activities, setActivities] = useState<any[]>([])
   const [timeline, setTimeline] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -337,15 +336,13 @@ function LeadDetailPane({
       setLoading(true)
       setError(null)
       try {
-        const [leadData, contactData, activityData, timelineData] = await Promise.all([
+        const [leadData, activityData, timelineData] = await Promise.all([
           api.getLead(leadId),
-          api.getLeadContacts(leadId).catch(() => []),
           api.getContactActivities(leadId).catch(() => []),
           api.getLeadTimeline(leadId).catch(() => []),
         ])
         if (cancelled) return
         setLead(leadData)
-        setContacts(contactData || [])
         setActivities(activityData || [])
         setTimeline(timelineData || [])
       } catch (err: any) {
@@ -612,32 +609,6 @@ function LeadDetailPane({
                   </div>
                 )
               })}
-            </div>
-          )}
-        </section>
-
-        <section>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-            Contacts ({contacts.length})
-          </h3>
-          {contacts.length === 0 ? (
-            <p className="text-sm text-slate-400 border border-dashed border-slate-200 rounded-lg px-4 py-3">
-              No contacts found for this lead
-            </p>
-          ) : (
-            <div className="divide-y divide-slate-100 rounded-lg border border-slate-200 overflow-hidden">
-              {contacts.map((c) => (
-                <div key={c.id} className="flex items-center gap-3 px-4 py-2.5">
-                  <Avatar name={c.name} className="w-7 h-7" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-slate-900 truncate">
-                      {c.name}
-                      {c.is_primary && <span className="ml-2 text-[10px] text-[#41808B] font-semibold">PRIMARY</span>}
-                    </p>
-                    <p className="text-xs text-slate-500 truncate">{[c.job_title, c.email, c.phone].filter(Boolean).join(" · ") || "—"}</p>
-                  </div>
-                </div>
-              ))}
             </div>
           )}
         </section>
