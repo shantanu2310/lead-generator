@@ -69,9 +69,9 @@ export default function TeamPage() {
   const me = getUser()
   const isAdmin = me?.is_admin === true
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
     try {
-      setLoading(true)
+      if (!opts?.silent) setLoading(true)
       if (isAdmin) {
         setTeam(await api.getTeamLeads())
       } else {
@@ -88,6 +88,13 @@ export default function TeamPage() {
 
   useEffect(() => {
     load()
+    const onChanged = () => load({ silent: true })
+    window.addEventListener("pipeline:changed", onChanged)
+    const interval = setInterval(onChanged, 30000)
+    return () => {
+      window.removeEventListener("pipeline:changed", onChanged)
+      clearInterval(interval)
+    }
   }, [load])
 
   function matchesQuery(lead: TeamLead): boolean {
