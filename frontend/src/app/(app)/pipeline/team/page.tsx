@@ -15,6 +15,7 @@ import {
   Phone,
   Search,
   ShieldCheck,
+  CalendarClock,
   UserRound,
   X,
 } from "lucide-react"
@@ -22,7 +23,7 @@ import Link from "next/link"
 import { Avatar } from "@/components/shared/avatar"
 import { api } from "@/lib/api"
 import { getUser } from "@/lib/auth"
-import { CONTACT_CHANNELS, CONTACT_OUTCOMES, PIPELINE_STAGES, STAGE_LABELS } from "@/lib/constants"
+import { CONTACT_CHANNELS, CONTACT_OUTCOMES, outcomeStyle, PIPELINE_STAGES, STAGE_LABELS } from "@/lib/constants"
 import { formatDate, formatRelativeTime } from "@/lib/utils"
 
 type TeamLead = {
@@ -309,6 +310,7 @@ function LeadDetailPane({
 }) {
   const [lead, setLead] = useState<any>(null)
   const [contacts, setContacts] = useState<any[]>([])
+  const [activities, setActivities] = useState<any[]>([])
   const [timeline, setTimeline] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [movingStage, setMovingStage] = useState(false)
@@ -318,12 +320,13 @@ function LeadDetailPane({
   const [logMsg, setLogMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
   const refreshDetail = useCallback(async () => {
-    const [leadData, , timelineData] = await Promise.all([
+    const [leadData, activityData, timelineData] = await Promise.all([
       api.getLead(leadId),
-      Promise.resolve(null),
+      api.getContactActivities(leadId).catch(() => []),
       api.getLeadTimeline(leadId).catch(() => []),
     ])
     setLead(leadData)
+    setActivities(activityData || [])
     setTimeline(timelineData || [])
     return leadData
   }, [leadId])
@@ -334,14 +337,16 @@ function LeadDetailPane({
       setLoading(true)
       setError(null)
       try {
-        const [leadData, contactData, timelineData] = await Promise.all([
+        const [leadData, contactData, activityData, timelineData] = await Promise.all([
           api.getLead(leadId),
           api.getLeadContacts(leadId).catch(() => []),
+          api.getContactActivities(leadId).catch(() => []),
           api.getLeadTimeline(leadId).catch(() => []),
         ])
         if (cancelled) return
         setLead(leadData)
         setContacts(contactData || [])
+        setActivities(activityData || [])
         setTimeline(timelineData || [])
       } catch (err: any) {
         if (!cancelled) setError(err.message || "Failed to load lead")
@@ -575,6 +580,40 @@ function LeadDetailPane({
               <p className={`text-xs ${logMsg.ok ? "text-green-700" : "text-red-600"}`}>{logMsg.text}</p>
             )}
           </form>
+        </section>
+
+        <section>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            Contact history ({activities.length})
+          </h3>
+          {activities.length === 0 ? (
+            <p className="text-xs text-slate-400 py-3">No contact attempts logged yet</p>
+          ) : (
+            <div className="space-y-2">
+              {activities.map((a) => {
+                const o = outcomeStyle(a.outcome)
+                return (
+                  <div key={a.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-medium text-slate-900">{a.user_name || "Unknown"}</span>
+                      <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-600 capitalize">
+                        {a.activity_type}
+                      </span>
+                      <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${o.color}`}>{o.label}</span>
+                      <span className="text-[11px] text-slate-500 ml-auto">{formatDate(a.contacted_at)}</span>
+                    </div>
+                    {a.summary && <p className="text-xs text-slate-700 mt-1.5">{a.summary}</p>}
+                    {a.next_followup_at && (
+                      <p className="flex items-center gap-1 text-[11px] text-amber-600 mt-1">
+                        <CalendarClock className="w-3 h-3" />
+                        Next follow-up: {formatDate(a.next_followup_at)}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </section>
 
         <section>
