@@ -38,10 +38,10 @@ export default function LoginPage() {
       <main className="glass-card-glow relative z-10 w-full max-w-md p-8">
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-4">
-            <Logo className="h-8" />
+            <Logo className="h-8" variant="compact" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight">
-            Welcome back to <span className="gradient-text">Loggix</span>
+            Welcome back to <span className="gradient-text">LeadPilot</span>
           </h1>
           <p className="mt-1.5 text-sm text-slate-500">
             Sign in to your workspace to continue

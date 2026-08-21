@@ -175,7 +175,7 @@ async function rerun(s: SearchItem) {
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
         <div className="relative h-16 bg-white border-b border-slate-200 flex items-center justify-center">
-          <Logo className="h-8" />
+          <Logo className="h-8" variant="full" />
           <button onClick={() => setSidebarOpen(false)} className="absolute right-4 lg:hidden text-slate-500 hover:text-slate-900">
             <X className="w-5 h-5" />
           </button>
