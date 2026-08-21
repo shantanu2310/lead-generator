@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 
 import { useParams, useRouter } from "next/navigation"
 import { ArrowLeft, Mail, Phone, Globe, MapPin, Map, Target, TrendingUp, Building2, Users, UserCheck, UserPlus, UserX, Loader2, PhoneCall, CalendarClock, Pencil, Trash2, Plus, X } from "lucide-react"
-import { AuthGuard } from "@/components/auth/auth-guard"
 import { api } from "@/lib/api"
 import { getUser } from "@/lib/auth"
 import { CONTACT_CHANNELS, CONTACT_OUTCOMES, outcomeStyle, outcomeTargetStage, PIPELINE_STAGES, STAGE_LABELS, CALL_ATTEMPT_OUTCOMES } from "@/lib/constants"
@@ -302,7 +301,6 @@ export default function LeadDetailPage() {
   }
 
   return (
-    <AuthGuard>
     <div className="p-8 max-w-5xl mx-auto space-y-6">
       <button
         onClick={() => router.back()}
@@ -852,7 +850,6 @@ export default function LeadDetailPage() {
         </div>
       )}
     </div>
-    </AuthGuard>
   )
 }
 
