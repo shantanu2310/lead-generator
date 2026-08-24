@@ -29,7 +29,7 @@ export function AuthGuard({
         if (cancelled) return
         setAuth(token, me)
         if (adminOnly && !me.is_admin) {
-          router.replace("/dashboard")
+          router.replace("/pipeline/team")
           return
         }
         setStatus("ok")

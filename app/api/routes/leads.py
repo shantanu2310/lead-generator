@@ -51,6 +51,20 @@ def _to_naive_utc(dt: datetime | None) -> datetime | None:
     return dt
 
 
+async def _load_lead_for_user(
+    db: AsyncSession, lead_id: str, user: User
+) -> Lead:
+    result = await db.execute(
+        select(Lead).where(Lead.id == lead_id, Lead.company_id == user.company_id)
+    )
+    lead = result.scalar_one_or_none()
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    if not user.is_admin and lead.assigned_user_id != user.id:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    return lead
+
+
 async def _department_names(
     db: AsyncSession, company_id: str, department_ids: list[str]
 ) -> dict[str, str]:
@@ -154,6 +168,8 @@ async def list_leads(
 ) -> PaginatedResponse:
     stmt = select(Lead).where(Lead.company_id == user.company_id)
 
+    if not user.is_admin:
+        assigned_to = "me"
     if search_id:
         stmt = stmt.where(Lead.search_id == search_id)
     if department_id:
@@ -262,6 +278,8 @@ async def export_leads_csv(
 ) -> Response:
     stmt = select(Lead).where(Lead.company_id == user.company_id)
 
+    if not user.is_admin:
+        assigned_to = "me"
     if search_id:
         stmt = stmt.where(Lead.search_id == search_id)
     if department_id:
@@ -359,6 +377,8 @@ async def get_lead(
     )
     lead = result.scalar_one_or_none()
     if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    if not user.is_admin and lead.assigned_user_id != user.id:
         raise HTTPException(status_code=404, detail="Lead not found")
 
     user_names = {}
@@ -625,7 +645,7 @@ async def bulk_assign_leads(
 async def delete_lead(
     lead_id: str,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
 ) -> Response:
     result = await db.execute(
         select(Lead).where(Lead.id == lead_id, Lead.company_id == user.company_id)
@@ -652,12 +672,7 @@ async def delete_lead_contact(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> Response:
-    result = await db.execute(
-        select(Lead).where(Lead.id == lead_id, Lead.company_id == user.company_id)
-    )
-    lead = result.scalar_one_or_none()
-    if not lead:
-        raise HTTPException(status_code=404, detail="Lead not found")
+    lead = await _load_lead_for_user(db, lead_id, user)
 
     contact_result = await db.execute(
         select(Contact).where(Contact.id == contact_id, Contact.lead_id == lead_id)
@@ -677,9 +692,7 @@ async def list_contact_activities(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[ContactActivityResponse]:
-    lead = await db.scalar(select(Lead).where(Lead.id == lead_id, Lead.company_id == user.company_id))
-    if not lead:
-        raise HTTPException(status_code=404, detail="Lead not found")
+    lead = await _load_lead_for_user(db, lead_id, user)
 
     activities = (await db.execute(
         select(ContactActivity)
@@ -717,9 +730,7 @@ async def create_contact_activity(
     user: User = Depends(get_current_user),
     pipeline_manager: PipelineManager = Depends(get_pipeline_manager),
 ) -> ContactActivityResponse:
-    lead = await db.scalar(select(Lead).where(Lead.id == lead_id, Lead.company_id == user.company_id))
-    if not lead:
-        raise HTTPException(status_code=404, detail="Lead not found")
+    lead = await _load_lead_for_user(db, lead_id, user)
 
     contacted_at = _to_naive_utc(body.contacted_at) or datetime.now(UTC).replace(tzinfo=None)
     next_followup_at = _to_naive_utc(body.next_followup_at)
@@ -787,14 +798,7 @@ async def update_lead(
     user: User = Depends(get_current_user),
     pipeline_manager: PipelineManager = Depends(get_pipeline_manager),
 ) -> LeadDetailResponse:
-    result = await db.execute(
-        select(Lead).options(selectinload(Lead.contacts)).where(
-            Lead.id == lead_id, Lead.company_id == user.company_id
-        )
-    )
-    lead = result.scalar_one_or_none()
-    if not lead:
-        raise HTTPException(status_code=404, detail="Lead not found")
+    lead = await _load_lead_for_user(db, lead_id, user)
 
     update_values = {k: v for k, v in update_data.model_dump(exclude_none=True).items()}
     if "next_followup_date" in update_values:
@@ -887,12 +891,7 @@ async def move_lead_stage(
     user: User = Depends(get_current_user),
     pipeline_manager: PipelineManager = Depends(get_pipeline_manager),
 ) -> StageMoveResponse:
-    result = await db.execute(
-        select(Lead).where(Lead.id == lead_id, Lead.company_id == user.company_id)
-    )
-    lead = result.scalar_one_or_none()
-    if not lead:
-        raise HTTPException(status_code=404, detail="Lead not found")
+    lead = await _load_lead_for_user(db, lead_id, user)
 
     await pipeline_manager.move_lead_stage(
         db=db,
@@ -914,12 +913,7 @@ async def get_lead_timeline(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[TimelineEventResponse]:
-    result = await db.execute(
-        select(Lead).where(Lead.id == lead_id, Lead.company_id == user.company_id)
-    )
-    lead = result.scalar_one_or_none()
-    if not lead:
-        raise HTTPException(status_code=404, detail="Lead not found")
+    lead = await _load_lead_for_user(db, lead_id, user)
 
     events_result = await db.execute(
         select(TimelineEvent)
@@ -946,12 +940,7 @@ async def get_lead_contacts(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[ContactResponse]:
-    result = await db.execute(
-        select(Lead).where(Lead.id == lead_id, Lead.company_id == user.company_id)
-    )
-    lead = result.scalar_one_or_none()
-    if not lead:
-        raise HTTPException(status_code=404, detail="Lead not found")
+    lead = await _load_lead_for_user(db, lead_id, user)
 
     contacts_result = await db.execute(
         select(Contact).where(Contact.lead_id == lead_id).order_by(Contact.is_primary.desc())
@@ -979,12 +968,7 @@ async def create_lead_contact(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> ContactResponse:
-    result = await db.execute(
-        select(Lead).where(Lead.id == lead_id, Lead.company_id == user.company_id)
-    )
-    lead = result.scalar_one_or_none()
-    if not lead:
-        raise HTTPException(status_code=404, detail="Lead not found")
+    lead = await _load_lead_for_user(db, lead_id, user)
 
     contact = Contact(
         lead_id=lead_id,

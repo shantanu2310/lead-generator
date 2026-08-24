@@ -23,7 +23,7 @@ export default function LoginPage() {
     try {
       const res = await api.login({ email, password })
       setAuth(res.access_token, res.user)
-      router.push("/dashboard")
+      router.push(res.user?.is_admin ? "/dashboard" : "/pipeline/team")
     } catch (err: any) {
       setError(err.message || "Login failed")
     } finally {

@@ -454,13 +454,15 @@ function LeadDetailPane({
             </a>
           )}
         </div>
-        <Link
-          href={`/pipeline/leads/${lead.id}`}
-          className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:text-[#F46036] hover:border-[#F46036]/40 transition-colors"
-        >
-          Full page
-          <ArrowUpRight className="w-3.5 h-3.5" />
-        </Link>
+        {getUser()?.is_admin === true && (
+          <Link
+            href={`/pipeline/leads/${lead.id}`}
+            className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:text-[#F46036] hover:border-[#F46036]/40 transition-colors"
+          >
+            Full page
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </Link>
+        )}
         <button onClick={onBack} className="hidden lg:block p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100">
           <X className="w-4 h-4" />
         </button>

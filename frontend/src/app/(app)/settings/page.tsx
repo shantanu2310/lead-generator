@@ -45,6 +45,8 @@ export default function SettingsPage() {
   const [avatar, setAvatar] = useState<string | null>(user?.avatar_url ?? null)
   const [profileName, setProfileName] = useState(user?.name || "")
   const [savingProfile, setSavingProfile] = useState(false)
+  const [password, setPassword] = useState("")
+  const [savingPassword, setSavingPassword] = useState(false)
 
   async function load() {
     try {
@@ -66,7 +68,9 @@ export default function SettingsPage() {
   }
 
 useEffect(() => {
-    load()
+    if (user?.is_admin) load()
+    else setLoading(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function saveProvider(p: Provider) {
@@ -144,6 +148,24 @@ useEffect(() => {
     }
   }
 
+  async function changePassword() {
+    if (password.length < 6) {
+      setMsg({ ok: false, text: "Password must be at least 6 characters" })
+      return
+    }
+    setSavingPassword(true)
+    setMsg(null)
+    try {
+      await api.updateMe({ password })
+      setPassword("")
+      setMsg({ ok: true, text: "Password updated" })
+    } catch (err: any) {
+      setMsg({ ok: false, text: err.message || "Failed to update password" })
+    } finally {
+      setSavingPassword(false)
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
             {msg && (
@@ -181,6 +203,27 @@ useEffect(() => {
                   {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Save profile
                 </button>
+
+                <div className="pt-5 border-t border-slate-200 max-w-sm">
+                  <label className="block text-xs font-medium text-slate-600 mb-1.5">New password</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#F46036]"
+                    />
+                    <button
+                      onClick={changePassword}
+                      disabled={savingPassword || !password}
+                      className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 disabled:opacity-40 text-sm font-medium text-slate-700 rounded-lg transition-colors"
+                    >
+                      {savingPassword && <Loader2 className="w-4 h-4 animate-spin" />}
+                      Update
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 

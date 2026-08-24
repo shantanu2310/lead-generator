@@ -131,7 +131,7 @@ async def get_pipeline_stages(
 async def get_pipeline_analytics(
     search_id: str | None = None,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
 ) -> PipelineAnalyticsResponse:
     conditions = [Lead.company_id == user.company_id]
     search_cond = _search_filter(search_id)
@@ -248,7 +248,7 @@ async def get_pipeline_analytics(
 async def get_pipeline_insights(
     limit: int = 20,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
 ) -> list[InsightResponse]:
     cap = max(1, min(limit, 100))
     result = await db.execute(
@@ -343,7 +343,7 @@ def _priority_reason(
 @router.get("/pipeline/dashboard", response_model=DashboardResponse)
 async def get_pipeline_dashboard(
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
 ) -> DashboardResponse:
     conditions = [Lead.company_id == user.company_id]
 

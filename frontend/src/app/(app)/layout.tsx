@@ -13,11 +13,11 @@ import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
 import { getUser } from "@/lib/auth"
 
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon; adminOnly?: boolean }[] = [
-  { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
+  { href: "/dashboard", label: "Dashboard", icon: BarChart3, adminOnly: true },
   { href: "/departments", label: "Departments", icon: Building2, adminOnly: true },
-  { href: "/pipeline", label: "Pipeline", icon: Target },
+  { href: "/pipeline", label: "Pipeline", icon: Target, adminOnly: true },
   { href: "/pipeline/team", label: "Team Leads", icon: Users },
-  { href: "/searches", label: "Search History", icon: History },
+  { href: "/searches", label: "Search History", icon: History, adminOnly: true },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ]
 
@@ -43,8 +43,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [pathname])
 
   useEffect(() => {
-    if (user && !user.is_admin && (pathname.startsWith("/departments") || pathname.startsWith("/users"))) {
-      router.replace("/dashboard")
+    if (user && !user.is_admin) {
+      const allowed =
+        pathname.startsWith("/pipeline/team") || pathname.startsWith("/settings")
+      const blocked = ["/dashboard", "/pipeline", "/searches", "/departments", "/users"]
+      if (!allowed && blocked.some((p) => pathname.startsWith(p))) {
+        router.replace("/pipeline/team")
+      }
     }
   }, [user, pathname, router])
 

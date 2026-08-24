@@ -6,12 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas.responses import PaginatedResponse, SearchResponse
 from app.database.base import utcnow
-from app.dependencies import get_current_user, get_db
+from app.dependencies import get_current_admin, get_current_user, get_db
 from app.models.lead import Lead
 from app.models.search import Search
 from app.models.user import User
 
-router = APIRouter(dependencies=[Depends(get_current_user)])
+router = APIRouter(dependencies=[Depends(get_current_admin)])
 
 
 @router.get("/searches", response_model=PaginatedResponse)
