@@ -15,13 +15,9 @@ export default function ModuleCard({
 }) {
   return (
     <div
-      className="glass-card group relative overflow-hidden p-6 transition-transform duration-300 hover:-translate-y-1 sm:p-8"
+      className="glass-card group relative flex h-full flex-col overflow-hidden p-6 transition-transform duration-300 hover:-translate-y-1 sm:p-8"
       style={{ borderColor: `${m.color}26` }}
     >
-      <div
-        className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full opacity-20 blur-3xl transition-opacity duration-500 group-hover:opacity-40"
-        style={{ background: m.color }}
-      />
 
       <div className="flex items-start gap-4">
         <div
@@ -98,8 +94,10 @@ export default function ModuleCard({
         ))}
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-slate-200 pt-5">
-        <span className="mr-1 flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
+      <div className="flex-1" />
+
+      <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-slate-200 pt-5">
+        <span className="mr-1 mb-0.5 flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
           <Sparkles className="h-3.5 w-3.5" />
           Stack
         </span>

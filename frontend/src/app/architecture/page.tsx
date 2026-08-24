@@ -20,7 +20,7 @@ export default function ArchitecturePage() {
 
       <main className="relative z-10 mx-auto max-w-4xl px-4 pb-24 pt-32 sm:px-6 lg:pt-36">
         <ScrollReveal className="text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#57A3AF]/40 bg-white/70 px-4 py-1.5 text-sm font-medium text-[#41808B]">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#57A3AF]/50 bg-white px-4 py-1.5 text-sm font-semibold text-[#41808B] shadow-sm">
             <Zap className="h-4 w-4" />
             Enterprise Workflow
           </div>
@@ -35,7 +35,7 @@ export default function ArchitecturePage() {
             {INFRA_PILLS.map((pill) => (
               <span
                 key={pill}
-                className="rounded-full border border-slate-200 bg-white/80 px-4 py-1.5 text-xs font-semibold text-slate-700 backdrop-blur-md"
+                className="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-semibold text-slate-700"
               >
                 {pill}
               </span>
@@ -43,11 +43,11 @@ export default function ArchitecturePage() {
           </div>
         </ScrollReveal>
 
-        <div className="mt-20 md:grid md:grid-cols-2 md:gap-x-8">
+        <div className="mt-20 md:grid md:auto-rows-fr md:grid-cols-2 md:gap-x-8 md:gap-y-8">
           {ARCHITECTURE_MODULES.map((m, i) => (
             <Fragment key={m.id}>
               {i > 0 && <GlowingConnector className="md:hidden" />}
-              <ScrollReveal delay={(i % 2) * 0.08}>
+              <ScrollReveal delay={(i % 2) * 0.08} className="h-full">
                 <ModuleCard module={m} step={i + 1}>
                   {m.id === "scoring" && <ScoreRing />}
                   {m.id === "crm" && <PipelineFlow />}
@@ -87,7 +87,7 @@ export default function ArchitecturePage() {
         </ScrollReveal>
       </main>
 
-      <footer className="relative z-10 border-t border-slate-200 bg-white/60 py-8">
+      <footer className="relative z-10 border-t border-slate-200 bg-white py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 text-sm text-slate-500 sm:flex-row sm:px-6">
           <span>© 2026 Loggix — AI-powered lead generation.</span>
           <span>FastAPI · Next.js · Neon PostgreSQL · Render</span>
