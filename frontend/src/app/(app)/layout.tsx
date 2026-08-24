@@ -8,7 +8,6 @@ import { AuthGuard } from "@/components/auth/auth-guard"
 import { CompanyBadge } from "@/components/shared/company-badge"
 import { Logo } from "@/components/shared/logo"
 import { NotificationsDropdown } from "@/components/shared/notifications-dropdown"
-import { ProfileDropdown } from "@/components/shared/profile-dropdown"
 import { UserMenu } from "@/components/shared/user-menu"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
 import { getUser } from "@/lib/auth"
@@ -17,20 +16,20 @@ const NAV_ITEMS: { href: string; label: string; icon: LucideIcon; adminOnly?: bo
   { href: "/dashboard", label: "Dashboard", icon: BarChart3, adminOnly: true },
   { href: "/departments", label: "Departments", icon: Building2, adminOnly: true },
   { href: "/pipeline", label: "Pipeline", icon: Target, adminOnly: true },
-  { href: "/pipeline/team", label: "My Leads", icon: Users },
+  { href: "/pipeline/team", label: "Team Leads", icon: Users },
   { href: "/searches", label: "Search History", icon: History, adminOnly: true },
-  { href: "/settings", label: "Account", icon: SettingsIcon },
+  { href: "/settings", label: "Settings", icon: SettingsIcon },
 ]
 
 const TITLES: [prefix: string, title: string][] = [
   ["/pipeline/leads", "Lead Details"],
-  ["/pipeline/team", "My Leads"],
+  ["/pipeline/team", "Team Leads"],
   ["/pipeline", "Sales Pipeline"],
   ["/dashboard", "Dashboard"],
   ["/departments", "Departments"],
   ["/users", "Users"],
   ["/searches", "Search History"],
-  ["/settings", "Account"],
+  ["/settings", "Settings"],
 ]
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -55,6 +54,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [user, pathname, router])
 
   let title = TITLES.find(([prefix]) => pathname.startsWith(prefix))?.[1] || "LeadPilot"
+  if (pathname.startsWith("/pipeline/team") && user && !user.is_admin) {
+    title = "My Leads"
+  }
 
   return (
     <AuthGuard>
@@ -109,7 +111,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-4">
               <WebSocketIndicator />
               <NotificationsDropdown />
-              <ProfileDropdown />
             </div>
           </header>
 
