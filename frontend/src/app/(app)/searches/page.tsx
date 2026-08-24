@@ -5,6 +5,7 @@ import { Eye, RotateCcw, Loader2, Inbox, Calendar, ChevronRight, ChevronDown, Ar
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { api } from "@/lib/api"
+import { getUser } from "@/lib/auth"
 import { formatDate, formatRelativeTime, getScoreBgColor } from "@/lib/utils"
 import { STAGE_LABELS } from "@/lib/constants"
 import type { LeadListItem } from "@/hooks/use-leads"
@@ -37,6 +38,7 @@ export default function SearchesPage() {
   const [searchLeads, setSearchLeads] = useState<Record<string, LeadListItem[]>>({})
   const [loadingLeads, setLoadingLeads] = useState<string | null>(null)
   const router = useRouter()
+  const isAdmin = getUser()?.is_admin === true
 
   async function load(p = page) {
     try {
@@ -273,7 +275,7 @@ async function rerun(s: SearchItem) {
                             <Eye className="w-3.5 h-3.5" />
                             View leads
                           </button>
-                          {!showArchived && (
+                          {!showArchived && isAdmin && (
                             <button
                               onClick={() => rerun(s)}
                               disabled={rerunning === s.id}

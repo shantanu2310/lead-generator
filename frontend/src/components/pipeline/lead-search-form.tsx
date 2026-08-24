@@ -3,6 +3,7 @@
 import { Sparkles, Loader2, Building2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { api } from "@/lib/api"
+import { getUser } from "@/lib/auth"
 
 type Department = { id: string; name: string; lead_count?: number }
 
@@ -11,6 +12,8 @@ export function LeadSearchForm({
 }: {
   onComplete?: (count: number) => void
 }) {
+  const isAdmin = getUser()?.is_admin === true
+
   const [query, setQuery] = useState("")
   const [maxLeads, setMaxLeads] = useState(5)
   const [loading, setLoading] = useState(false)
@@ -31,6 +34,8 @@ export function LeadSearchForm({
   }, [])
 
   const hasDepartments = departments.length > 0
+
+  if (!isAdmin) return null
 
   async function run() {
     const trimmed = query.trim()

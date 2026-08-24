@@ -81,7 +81,7 @@ async def _lead_department_name(db: AsyncSession, lead: Lead) -> str | None:
 async def search_leads(
     request: LeadSearchRequest,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin),
     pipeline_manager: PipelineManager = Depends(get_pipeline_manager),
 ) -> LeadSearchResponse:
     department = await db.get(Department, request.department_id)

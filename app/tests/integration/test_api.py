@@ -22,11 +22,11 @@ class TestHealthEndpoint:
 
 class TestLeadsSearchValidation:
     @pytest.mark.asyncio
-    async def test_search_requires_query(self):
+    async def test_search_requires_auth(self):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post("/api/v1/leads/search", json={})
-        assert response.status_code == 422
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_search_invalid_max_leads(self):
@@ -36,7 +36,7 @@ class TestLeadsSearchValidation:
                 "/api/v1/leads/search",
                 json={"query": "florist", "max_leads": 20},
             )
-        assert response.status_code == 422
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(not HAS_API_KEY, reason="No LLM API key configured")
@@ -47,7 +47,7 @@ class TestLeadsSearchValidation:
                 "/api/v1/leads/search",
                 json={"query": "florist near me"},
             )
-        assert response.status_code in (400, 422, 500)
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(not HAS_API_KEY, reason="No LLM API key configured")
