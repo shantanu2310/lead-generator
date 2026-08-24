@@ -168,7 +168,7 @@ export default function DepartmentsPage() {
                           <div className="flex items-center gap-3 min-w-0">
                             <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
                             <p className="text-sm font-medium text-slate-900">{d.name}</p>
-                            <span className="text-xs text-slate-500">{d.lead_count} leads</span>
+                            <span className="text-xs font-medium text-slate-600">{d.lead_count} leads</span>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             <button

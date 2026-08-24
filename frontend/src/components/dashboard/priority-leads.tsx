@@ -62,19 +62,19 @@ export function PriorityLeads({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-slate-400 border-b border-slate-100">
-                <th className="py-2 pr-4 font-medium">Company</th>
-                <th className="py-2 pr-4 font-medium">Contact</th>
-                <th className="py-2 pr-4 font-medium">Score</th>
-                <th className="py-2 pr-4 font-medium">Status</th>
-                <th className="py-2 pr-4 font-medium">Reason</th>
-                <th className="py-2 pr-4 font-medium">Last Activity</th>
-                <th className="py-2 font-medium text-right">Action</th>
+              <tr className="text-left text-xs font-semibold text-slate-600 uppercase tracking-wide border-b border-slate-200">
+                <th className="py-2.5 pr-4">Company</th>
+                <th className="py-2.5 pr-4">Contact</th>
+                <th className="py-2.5 pr-4">Score</th>
+                <th className="py-2.5 pr-4">Status</th>
+                <th className="py-2.5 pr-4">Reason</th>
+                <th className="py-2.5 pr-4">Last Activity</th>
+                <th className="py-2.5 text-right">Action</th>
               </tr>
             </thead>
             <tbody>
               {leads.map((lead) => (
-                <tr key={lead.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                <tr key={lead.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
                   <td className="py-3 pr-4">
                     <div className="flex items-center gap-3 min-w-0">
                       {lead.company_logo_url ? (
@@ -85,12 +85,12 @@ export function PriorityLeads({
                         />
                       ) : (
                         <div className="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs font-semibold text-slate-400">
+                          <span className="text-xs font-semibold text-slate-500">
                             {(lead.business_name || "?").charAt(0).toUpperCase()}
                           </span>
                         </div>
                       )}
-                      <span className="font-medium text-slate-900 truncate">{lead.business_name}</span>
+                      <span className="font-semibold text-slate-900 truncate">{lead.business_name}</span>
                     </div>
                   </td>
                   <td className="py-3 pr-4">
@@ -116,9 +116,9 @@ export function PriorityLeads({
                     </span>
                   </td>
                   <td className="py-3 pr-4">
-                    <span className="text-xs text-slate-500">{lead.reason}</span>
+                    <span className="text-xs text-slate-600">{lead.reason}</span>
                   </td>
-                  <td className="py-3 pr-4 whitespace-nowrap text-xs text-slate-400">
+                  <td className="py-3 pr-4 whitespace-nowrap text-xs text-slate-500">
                     {lead.last_activity_at ? formatRelativeTime(lead.last_activity_at) : "—"}
                   </td>
                   <td className="py-3 text-right">

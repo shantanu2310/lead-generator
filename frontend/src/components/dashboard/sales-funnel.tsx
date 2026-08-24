@@ -27,7 +27,7 @@ export function SalesFunnel({ data, loading }: { data?: DashboardFunnelStage[]; 
           <h3 className="font-semibold text-lg text-slate-900">Sales Funnel</h3>
         </div>
         {stages.length > 0 && (
-          <span className="text-xs text-slate-400">{stages.length} stages</span>
+          <span className="text-xs font-medium text-slate-500">{stages.length} stages</span>
         )}
       </div>
       <div className="space-y-3">
@@ -47,12 +47,12 @@ export function SalesFunnel({ data, loading }: { data?: DashboardFunnelStage[]; 
                       i === stages.length - 1 ? "rotate-0 text-slate-200" : ""
                     }`}
                   />
-                  <span className="text-slate-700 font-medium truncate">{stage.label}</span>
-                  <span className="text-[11px] text-slate-400 hidden sm:inline">
+                  <span className="text-slate-800 font-medium truncate">{stage.label}</span>
+                  <span className="text-[11px] font-medium text-slate-500 hidden sm:inline">
                     → {stage.conversion_percent.toFixed(0)}%
                   </span>
                   {stage.dropoff_percent > 0 && (
-                    <span className="text-[11px] text-red-400 hidden sm:inline">
+                    <span className="text-[11px] font-medium text-red-500 hidden sm:inline">
                       −{stage.dropoff_percent.toFixed(0)}%
                     </span>
                   )}

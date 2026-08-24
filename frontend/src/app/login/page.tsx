@@ -43,7 +43,7 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold tracking-tight">
             Welcome back to <span className="gradient-text">LeadPilot</span>
           </h1>
-          <p className="mt-1.5 text-sm text-slate-500">
+          <p className="mt-1.5 text-sm font-medium text-slate-600">
             Sign in to your workspace to continue
           </p>
         </div>
@@ -95,7 +95,7 @@ export default function LoginPage() {
           Secure workspace access
         </div>
 
-        <p className="mt-6 text-center text-sm text-slate-500">
+        <p className="mt-6 text-center text-sm font-medium text-slate-600">
           New to Loggix?{" "}
           <Link href="/#signup" className="font-semibold text-[#41808B] transition-colors hover:text-[#F46036]">
             Create your workspace

@@ -95,7 +95,7 @@ function TabButton({
       className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
         active
           ? "text-[#F46036] border-[#F46036]"
-          : "text-slate-500 border-transparent hover:text-slate-900"
+          : "text-slate-600 border-transparent hover:text-slate-900"
       }`}
     >
       {children}

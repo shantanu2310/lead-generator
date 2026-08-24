@@ -43,10 +43,22 @@ export default function LandingBackground() {
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       <div className="grid-overlay absolute inset-0" />
 
-      <div className="animate-aurora absolute -top-40 -left-40 h-[34rem] w-[34rem] rounded-full bg-[#57A3AF]/25 blur-3xl" />
-      <div className="animate-aurora-slow absolute top-1/3 -right-48 h-[30rem] w-[30rem] rounded-full bg-[#F46036]/15 blur-3xl" />
-      <div className="animate-aurora absolute -bottom-48 left-1/4 h-[32rem] w-[32rem] rounded-full bg-[#7FB800]/15 blur-3xl" style={{ animationDelay: "-9s" }} />
-      <div className="animate-aurora-slow absolute bottom-1/4 -right-32 h-72 w-72 rounded-full bg-[#41808B]/20 blur-3xl" style={{ animationDelay: "-13s" }} />
+      <div
+        className="animate-aurora absolute -top-40 -left-40 h-[34rem] w-[34rem] rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(87,163,175,0.22) 0%, rgba(87,163,175,0.08) 45%, transparent 70%)" }}
+      />
+      <div
+        className="animate-aurora-slow absolute top-1/3 -right-48 h-[30rem] w-[30rem] rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(244,96,54,0.14) 0%, rgba(244,96,54,0.05) 45%, transparent 70%)" }}
+      />
+      <div
+        className="animate-aurora absolute -bottom-48 left-1/4 h-[32rem] w-[32rem] rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(127,184,0,0.13) 0%, rgba(127,184,0,0.05) 45%, transparent 70%)", animationDelay: "-9s" }}
+      />
+      <div
+        className="animate-aurora-slow absolute bottom-1/4 -right-32 h-72 w-72 rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(65,128,139,0.18) 0%, rgba(65,128,139,0.07) 45%, transparent 70%)", animationDelay: "-13s" }}
+      />
 
       <div className="absolute left-[8%] top-[24%] h-64 w-64 rounded-full border border-[#57A3AF]/25" />
       <div className="absolute left-[10%] top-[26%] h-52 w-52 rounded-full border border-[#F46036]/20" />

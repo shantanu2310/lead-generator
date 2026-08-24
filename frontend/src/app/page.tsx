@@ -58,7 +58,7 @@ export default function LandingPage() {
       <main className="relative z-10 mx-auto max-w-7xl px-4 pb-24 pt-32 sm:px-6 lg:pt-40">
         <div className="grid items-start gap-14 lg:grid-cols-2">
           <section className="space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#57A3AF]/40 bg-white/70 px-4 py-1.5 text-sm font-medium text-[#41808B] backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#57A3AF]/50 bg-white px-4 py-1.5 text-sm font-semibold text-[#41808B] shadow-sm">
               <Sparkles className="h-4 w-4" />
               AI Powered Lead Generation Platform
             </div>
@@ -96,7 +96,7 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-slate-900">{f.title}</p>
-                    <p className="mt-0.5 text-xs leading-relaxed text-slate-500">{f.desc}</p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-slate-600">{f.desc}</p>
                   </div>
                 </div>
               ))}
@@ -109,7 +109,7 @@ export default function LandingPage() {
         </div>
 
         <section className="mt-28">
-          <h2 className="text-center text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
+          <h2 className="text-center text-sm font-semibold uppercase tracking-[0.2em] text-slate-600">
             Trusted by Growing Businesses
           </h2>
           <div className="mx-auto mt-8 grid max-w-4xl grid-cols-2 gap-4 lg:grid-cols-4">
@@ -117,17 +117,17 @@ export default function LandingPage() {
               <div key={s.label} className="glass-card flex flex-col items-center gap-2 p-6 text-center">
                 <s.icon className="h-6 w-6 text-[#F46036]" />
                 <span className="text-3xl font-bold tracking-tight text-slate-900">{s.value}</span>
-                <span className="text-sm text-slate-500">{s.label}</span>
+                <span className="text-sm font-medium text-slate-600">{s.label}</span>
               </div>
             ))}
           </div>
         </section>
       </main>
 
-      <footer className="relative z-10 border-t border-slate-200 bg-white/60 py-8">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 text-sm text-slate-500 sm:flex-row sm:px-6">
+      <footer className="relative z-10 border-t border-slate-200 bg-white py-8">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 text-sm font-medium text-slate-600 sm:flex-row sm:px-6">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Loggix" className="h-5 w-auto object-contain opacity-60" />
+            <img src="/logo.png" alt="Loggix" className="h-5 w-auto object-contain opacity-90" />
             <span>Powered by Loggix</span>
           </div>
           <span>Google Places · Brave Search · Hunter · Website Intelligence</span>

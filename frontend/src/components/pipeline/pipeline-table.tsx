@@ -376,7 +376,7 @@ function GroupRows({
               {formatNumber(lead.lead_score)}
             </span>
           </td>
-          <td className="px-4 py-3 text-slate-500">{lead.industry || "—"}</td>
+          <td className="px-4 py-3 text-slate-600">{lead.industry || "—"}</td>
           <td className="px-4 py-3 text-slate-700">${formatNumber(lead.deal_value)}</td>
           <td className="px-4 py-3">
             {lead.assigned_user_name ? (
@@ -387,11 +387,11 @@ function GroupRows({
                 {lead.assigned_user_name}
               </span>
             ) : (
-              <span className="text-xs text-slate-400">Unassigned</span>
+              <span className="text-xs text-slate-500">Unassigned</span>
             )}
           </td>
           <td className="px-4 py-3">
-            <span className={lead.email_status === "verified" ? "text-green-600" : "text-slate-500"}>
+            <span className={lead.email_status === "verified" ? "text-green-700 font-medium" : "text-slate-600"}>
               {lead.email_status}
             </span>
           </td>
@@ -406,7 +406,7 @@ function Th({ children, onClick }: { children: React.ReactNode; onClick?: () => 
   return (
     <th
       onClick={onClick}
-      className={`px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider ${
+      className={`px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider ${
         onClick ? "cursor-pointer hover:text-[#F46036] transition-colors" : ""
       }`}
     >

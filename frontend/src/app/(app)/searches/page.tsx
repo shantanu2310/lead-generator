@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { Fragment, useEffect, useState } from "react"
 import { Eye, RotateCcw, Loader2, Inbox, Calendar, ChevronRight, ChevronDown, Archive } from "lucide-react"
@@ -201,13 +201,13 @@ async function rerun(s: SearchItem) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/80">
-                <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Query</th>
-                <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3.5 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Candidates</th>
-                <th className="px-6 py-3.5 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Qualified</th>
-                <th className="px-6 py-3.5 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Leads</th>
-                <th className="px-6 py-3.5 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-slate-600 uppercase tracking-wider">Query</th>
+                <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-slate-600 uppercase tracking-wider">Date</th>
+                <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-slate-600 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3.5 text-right text-[11px] font-semibold text-slate-600 uppercase tracking-wider">Candidates</th>
+                <th className="px-6 py-3.5 text-right text-[11px] font-semibold text-slate-600 uppercase tracking-wider">Qualified</th>
+                <th className="px-6 py-3.5 text-right text-[11px] font-semibold text-slate-600 uppercase tracking-wider">Leads</th>
+                <th className="px-6 py-3.5 text-right text-[11px] font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -323,12 +323,12 @@ async function rerun(s: SearchItem) {
                               <table className="w-full text-sm">
                                 <thead>
                                   <tr className="bg-slate-50 text-left border-b border-slate-200">
-                                    <th className="px-4 py-2.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Company</th>
-                                    <th className="px-4 py-2.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Score</th>
-                                    <th className="px-4 py-2.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Stage</th>
-                                    <th className="px-4 py-2.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Assigned To</th>
-                                    <th className="px-4 py-2.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Email</th>
-                                    <th className="px-4 py-2.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Last Activity</th>
+                                    <th className="px-4 py-2.5 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">Company</th>
+                                    <th className="px-4 py-2.5 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">Score</th>
+                                    <th className="px-4 py-2.5 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">Stage</th>
+                                    <th className="px-4 py-2.5 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">Assigned To</th>
+                                    <th className="px-4 py-2.5 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">Email</th>
+                                    <th className="px-4 py-2.5 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">Last Activity</th>
                                   </tr>
                                 </thead>
                                 <tbody>

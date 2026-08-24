@@ -272,7 +272,7 @@ function LeadRow({ lead, selected, onSelect }: { lead: TeamLead; selected: boole
     >
       <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
       <div className="min-w-0 flex-1">
-        <p className={`text-sm font-medium truncate ${selected ? "text-[#41808B]" : "text-slate-900"}`}>
+        <p className={`text-sm font-semibold truncate ${selected ? "text-[#41808B]" : "text-slate-900"}`}>
           {lead.business_name}
         </p>
         <p className="text-xs text-slate-500 truncate">
@@ -510,13 +510,13 @@ function LeadDetailPane({
         </div>
 
         <section>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
             Log contact
           </h3>
           <form onSubmit={handleLogContact} className="rounded-lg border border-slate-200 p-3.5 space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] text-slate-400 mb-1">Channel</label>
+                <label className="block text-[11px] font-medium text-slate-500 mb-1">Channel</label>
                 <select
                   value={logForm.activity_type}
                   onChange={(e) => setLogForm({ ...logForm, activity_type: e.target.value })}
@@ -530,7 +530,7 @@ function LeadDetailPane({
                 </select>
               </div>
               <div>
-                <label className="block text-[11px] text-slate-400 mb-1">Outcome</label>
+                <label className="block text-[11px] font-medium text-slate-500 mb-1">Outcome</label>
                 <select
                   value={logForm.outcome}
                   onChange={(e) => setLogForm({ ...logForm, outcome: e.target.value })}
@@ -545,7 +545,7 @@ function LeadDetailPane({
               </div>
             </div>
             <div>
-              <label className="block text-[11px] text-slate-400 mb-1">Summary</label>
+              <label className="block text-[11px] font-medium text-slate-500 mb-1">Summary</label>
               <textarea
                 value={logForm.summary}
                 onChange={(e) => setLogForm({ ...logForm, summary: e.target.value })}
@@ -556,7 +556,7 @@ function LeadDetailPane({
             </div>
             <div className="flex flex-wrap items-end gap-3">
               <div className="flex-1 min-w-[160px]">
-                <label className="block text-[11px] text-slate-400 mb-1">Next follow-up</label>
+                <label className="block text-[11px] font-medium text-slate-500 mb-1">Next follow-up</label>
                 <input
                   type="datetime-local"
                   value={logForm.next_followup_at}
@@ -580,7 +580,7 @@ function LeadDetailPane({
         </section>
 
         <section>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
             Contact history ({activities.length})
           </h3>
           {activities.length === 0 ? (
@@ -614,7 +614,7 @@ function LeadDetailPane({
         </section>
 
         <section>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
             Recent activity
           </h3>
           {timeline.length === 0 ? (

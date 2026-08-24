@@ -46,7 +46,7 @@ export function StatCards({ data }: { data?: StatCardData[] }) {
               <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-slate-500 mb-1">{stat.label}</p>
+                  <p className="text-sm font-medium text-slate-600 mb-1">{stat.label}</p>
                   <motion.p
                     className="text-2xl font-bold text-slate-900"
                     key={String(stat.value)}

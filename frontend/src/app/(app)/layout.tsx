@@ -77,8 +77,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors ${
                     isActive
-                      ? "bg-white/15 text-white font-medium"
-                      : "text-teal-50/80 hover:text-white hover:bg-white/10"
+                      ? "bg-white/20 text-white font-semibold"
+                      : "text-teal-50 hover:text-white hover:bg-white/10"
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -100,7 +100,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-slate-500 hover:text-slate-900">
                 <Menu className="w-5 h-5" />
               </button>
-              <h1 className="text-lg font-semibold text-slate-900">{title}</h1>
+              <h1 className="text-lg font-bold text-slate-900">{title}</h1>
               <CompanyBadge />
             </div>
             <div className="flex items-center gap-4">

@@ -110,7 +110,7 @@ export function AIInsightsPanel() {
                 <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${ICON_COLORS[kind]}`} />
                 <div className="min-w-0">
                   <p className="text-sm text-slate-800 font-medium">{insight.title}</p>
-                  {insight.message && <p className="text-sm text-slate-500 mt-0.5">{insight.message}</p>}
+                  {insight.message && <p className="text-sm text-slate-600 mt-0.5">{insight.message}</p>}
                   <p className="text-[11px] text-slate-400 mt-1">{formatRelativeTime(insight.created_at)}</p>
                 </div>
               </div>

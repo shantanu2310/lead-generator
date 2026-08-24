@@ -61,16 +61,14 @@ select option {
   background: #9aa8a1;
 }
 
-/* ---------- Glassmorphism ---------- */
+/* ---------- Cards ---------- */
 
 .glass-card {
   background: var(--card);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(30, 41, 59, 0.08);
+  border: 1px solid rgba(30, 41, 59, 0.1);
   border-radius: 24px;
   box-shadow:
-    0 20px 60px rgba(30, 41, 59, 0.08),
+    0 12px 32px rgba(30, 41, 59, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
@@ -81,11 +79,8 @@ select option {
     linear-gradient(#ffffff, #ffffff) padding-box,
     linear-gradient(135deg, rgba(244, 96, 54, 0.55), rgba(87, 163, 175, 0.45)) border-box;
   border: 1px solid transparent;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
   box-shadow:
-    0 0 50px rgba(244, 96, 54, 0.12),
-    0 24px 70px rgba(30, 41, 59, 0.12);
+    0 16px 40px rgba(30, 41, 59, 0.1);
 }
 
 .glass-input {
@@ -124,7 +119,6 @@ select option {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 24px rgba(244, 96, 54, 0.25));
 }
 
 /* ---------- Buttons ---------- */
@@ -167,7 +161,6 @@ select option {
   border-radius: 14px;
   color: #1e293b;
   font-weight: 600;
-  backdrop-filter: blur(12px);
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
 

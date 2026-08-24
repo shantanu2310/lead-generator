@@ -47,19 +47,19 @@ export function LeadCard({ lead }: { lead: LeadListItem }) {
         </button>
         <Link href={`/pipeline/leads/${lead.id}`} className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
-            <h4 className="text-sm font-medium text-slate-900 truncate">{lead.business_name}</h4>
+            <h4 className="text-sm font-semibold text-slate-900 truncate">{lead.business_name}</h4>
             <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${getScoreBgColor(lead.lead_score)}`}>
               {lead.lead_score}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+          <div className="flex items-center gap-2 text-xs text-slate-600 mb-2">
             {lead.city && <span>{lead.city}</span>}
             {lead.industry && <span>• {lead.industry}</span>}
             {lead.employee_count && <span>• {lead.employee_count} emp</span>}
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-400">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
             {lead.email_status && (
-              <span className={lead.email_status === "verified" ? "text-green-600" : "text-slate-400"}>
+              <span className={lead.email_status === "verified" ? "text-green-700 font-medium" : "text-slate-500"}>
                 {lead.email_status === "verified" ? "✓" : "○"} Email
               </span>
             )}
@@ -70,7 +70,7 @@ export function LeadCard({ lead }: { lead: LeadListItem }) {
               <span className="w-4 h-4 rounded-full bg-[#41808B]/15 flex items-center justify-center text-[8px] font-bold text-[#41808B]">
                 {lead.assigned_user_name.charAt(0).toUpperCase()}
               </span>
-              <span className="text-[10px] text-[#41808B]/80 truncate">{lead.assigned_user_name}</span>
+              <span className="text-[10px] font-medium text-[#41808B] truncate">{lead.assigned_user_name}</span>
             </div>
           )}
           {lead.badges && lead.badges.length > 0 && (

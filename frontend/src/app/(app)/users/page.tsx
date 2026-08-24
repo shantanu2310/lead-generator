@@ -312,12 +312,12 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
               ) : (
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-slate-200 text-left">
-                      <th className="px-5 py-3 text-xs font-medium text-slate-500">User</th>
-                      <th className="px-5 py-3 text-xs font-medium text-slate-500">Role</th>
-                      <th className="px-5 py-3 text-xs font-medium text-slate-500">Created</th>
-                      <th className="px-5 py-3 text-xs font-medium text-slate-500">Status</th>
-                      <th className="px-5 py-3 text-xs font-medium text-slate-500 text-right">Access</th>
+                    <tr className="border-b border-slate-200 text-left bg-slate-50/80">
+                      <th className="px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wide">User</th>
+                      <th className="px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wide">Role</th>
+                      <th className="px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wide">Created</th>
+                      <th className="px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wide">Status</th>
+                      <th className="px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wide text-right">Access</th>
                     </tr>
                   </thead>
                   <tbody>
