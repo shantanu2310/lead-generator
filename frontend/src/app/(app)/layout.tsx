@@ -8,6 +8,7 @@ import { AuthGuard } from "@/components/auth/auth-guard"
 import { CompanyBadge } from "@/components/shared/company-badge"
 import { Logo } from "@/components/shared/logo"
 import { NotificationsDropdown } from "@/components/shared/notifications-dropdown"
+import { ProfileDropdown } from "@/components/shared/profile-dropdown"
 import { UserMenu } from "@/components/shared/user-menu"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
 import { getUser } from "@/lib/auth"
@@ -54,8 +55,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [user, pathname, router])
 
   let title = TITLES.find(([prefix]) => pathname.startsWith(prefix))?.[1] || "LeadPilot"
-  if (pathname.startsWith("/pipeline/team") && user && !user.is_admin) {
+  if (user?.is_admin) {
+    if (pathname.startsWith("/pipeline/team")) title = "My Leads"
+    if (pathname.startsWith("/settings")) title = "Account"
+  } else if (pathname.startsWith("/pipeline/team")) {
     title = "My Leads"
+  }
+
+  function navLabel(label: string) {
+    if (!user?.is_admin) return label
+    if (label === "Team Leads") return "My Leads"
+    if (label === "Settings") return "Account"
+    return label
   }
 
   return (
@@ -87,7 +98,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   }`}
                 >
                   <Icon className="w-5 h-5" />
-                  {item.label}
+                  {navLabel(item.label)}
                 </Link>
               )
             })}
@@ -111,6 +122,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-4">
               <WebSocketIndicator />
               <NotificationsDropdown />
+              <ProfileDropdown />
             </div>
           </header>
 
