@@ -67,7 +67,6 @@ export function PriorityLeads({
                 <th className="py-2.5 pr-4">Contact</th>
                 <th className="py-2.5 pr-4">Score</th>
                 <th className="py-2.5 pr-4">Status</th>
-                <th className="py-2.5 pr-4">Reason</th>
                 <th className="py-2.5 pr-4">Last Activity</th>
                 <th className="py-2.5 text-right">Action</th>
               </tr>
@@ -90,7 +89,12 @@ export function PriorityLeads({
                           </span>
                         </div>
                       )}
-                      <span className="font-semibold text-slate-900 truncate">{lead.business_name}</span>
+                      <div className="min-w-0">
+                        <span className="block font-semibold text-slate-900 truncate">{lead.business_name}</span>
+                        {lead.reason && (
+                          <span className="block text-xs text-slate-500 truncate">{lead.reason}</span>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td className="py-3 pr-4">
@@ -114,9 +118,6 @@ export function PriorityLeads({
                         {STAGE_LABELS[lead.pipeline_stage] || lead.pipeline_stage.replace("_", " ")}
                       </span>
                     </span>
-                  </td>
-                  <td className="py-3 pr-4">
-                    <span className="text-xs text-slate-600">{lead.reason}</span>
                   </td>
                   <td className="py-3 pr-4 whitespace-nowrap text-xs text-slate-500">
                     {lead.last_activity_at ? formatRelativeTime(lead.last_activity_at) : "—"}
