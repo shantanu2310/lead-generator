@@ -6,6 +6,9 @@ import {
   ArrowUpRight,
   Building2,
   Calendar,
+  CalendarClock,
+  ChevronDown,
+  ChevronRight,
   Clock,
   Globe,
   Inbox,
@@ -15,7 +18,6 @@ import {
   Phone,
   Search,
   ShieldCheck,
-  CalendarClock,
   UserRound,
   X,
 } from "lucide-react"
@@ -67,8 +69,23 @@ export default function TeamPage() {
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [query, setQuery] = useState("")
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set())
   const me = getUser()
   const isAdmin = me?.is_admin === true
+
+  function toggleUser(userId: string) {
+    setExpandedUsers((prev) => {
+      const next = new Set(prev)
+      if (next.has(userId)) next.delete(userId)
+      else next.add(userId)
+      return next
+    })
+  }
+
+  function isUserExpanded(userId: string, visibleCount: number) {
+    if (query.trim() && visibleCount > 0) return true
+    return expandedUsers.has(userId)
+  }
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     try {
@@ -135,10 +152,10 @@ export default function TeamPage() {
         <div className="p-4 border-b border-slate-200 space-y-3">
           <div>
             <h2 className="text-base font-bold text-slate-900">
-              {isAdmin ? "Assigned leads per user" : "Leads assigned to you"}
+              {isAdmin ? "Team Leads" : "Leads assigned to you"}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              {isAdmin ? "Select a lead to view details" : "Everything you own across the pipeline"}
+              {isAdmin ? "Click a user to expand their leads" : "Everything you own across the pipeline"}
             </p>
           </div>
           <div className="relative">
@@ -174,43 +191,93 @@ export default function TeamPage() {
             <>
               {team.users.map((u) => {
                 const visible = u.leads.filter(matchesQuery)
+                if (u.total === 0 && visible.length === 0) {
+                  return (
+                    <div key={u.id} className="flex items-center gap-2 px-4 py-2.5 bg-slate-50/60 border-b border-slate-100 opacity-70">
+                      <Avatar name={u.name} src={u.avatar_url} className="w-6 h-6" />
+                      <p className="text-xs font-semibold text-slate-500 truncate">{u.name}</p>
+                      {u.id === me?.id && <span className="text-[10px] text-slate-400">(you)</span>}
+                      <span className="ml-auto text-[11px] text-slate-400">No leads assigned</span>
+                    </div>
+                  )
+                }
+                const expanded = isUserExpanded(u.id, visible.length)
                 return (
                   <section key={u.id}>
-                    <header className="sticky top-0 z-10 flex items-center gap-2 px-4 py-2 bg-slate-50 border-b border-slate-100">
+                    <button
+                      onClick={() => toggleUser(u.id)}
+                      className={`sticky top-0 z-10 w-full flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 transition-colors ${
+                        expanded ? "bg-[#57A3AF]/10" : "bg-slate-50 hover:bg-slate-100"
+                      }`}
+                    >
+                      {expanded ? (
+                        <ChevronDown className="w-3.5 h-3.5 text-[#F46036] shrink-0" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      )}
                       <Avatar name={u.name} src={u.avatar_url} className="w-6 h-6" />
                       <p className="text-xs font-semibold text-slate-700 truncate">{u.name}</p>
                       {u.id === me?.id && <span className="text-[10px] text-slate-400">(you)</span>}
-                      {u.is_admin && <ShieldCheck className="w-3 h-3 text-violet-500" />}
-                      <span className="ml-auto text-[11px] text-slate-400">{visible.length}</span>
-                    </header>
-                    {visible.length === 0 ? (
-                      <p className="px-4 py-3 text-xs text-slate-400">
-                        {u.total === 0 ? "No leads assigned" : "No leads match your search"}
-                      </p>
-                    ) : (
-                      visible.map((lead) => (
-                        <LeadRow key={lead.id} lead={lead} selected={lead.id === selectedId} onSelect={() => setSelectedId(lead.id)} />
-                      ))
+                      {u.is_admin && <ShieldCheck className="w-3 h-3 text-violet-500 shrink-0" />}
+                      <span className={`ml-auto text-[11px] px-1.5 rounded-full ${visible.length > 0 ? "bg-white border border-slate-200 text-slate-600" : "text-slate-400"}`}>
+                        {visible.length}
+                      </span>
+                    </button>
+                    {expanded && (
+                      <div>
+                        {visible.length === 0 ? (
+                          <p className="px-4 py-3 text-xs text-slate-400">
+                            {u.total === 0 ? "No leads assigned" : "No leads match your search"}
+                          </p>
+                        ) : (
+                          visible.map((lead) => (
+                            <LeadRow key={lead.id} lead={lead} selected={lead.id === selectedId} onSelect={() => setSelectedId(lead.id)} />
+                          ))
+                        )}
+                      </div>
                     )}
                   </section>
                 )
               })}
-              <section>
-                <header className="sticky top-0 z-10 flex items-center gap-2 px-4 py-2 bg-slate-50 border-b border-slate-100">
-                  <Inbox className="w-3.5 h-3.5 text-slate-400" />
-                  <p className="text-xs font-semibold text-slate-700">Unassigned</p>
-                  <span className="ml-auto text-[11px] text-slate-400">{team.unassigned.leads.filter(matchesQuery).length}</span>
-                </header>
-                {team.unassigned.leads.filter(matchesQuery).length === 0 ? (
-                  <p className="px-4 py-3 text-xs text-slate-400">
-                    {team.unassigned.total === 0 ? "No unassigned leads" : "No leads match your search"}
-                  </p>
-                ) : (
-                  team.unassigned.leads.filter(matchesQuery).map((lead) => (
-                    <LeadRow key={lead.id} lead={lead} selected={lead.id === selectedId} onSelect={() => setSelectedId(lead.id)} />
-                  ))
-                )}
-              </section>
+              {(() => {
+                const unassignedVisible = team.unassigned.leads.filter(matchesQuery)
+                const unassignedExpanded = isUserExpanded("unassigned", unassignedVisible.length)
+                if (team.unassigned.total === 0 && unassignedVisible.length === 0) return null
+                return (
+                  <section>
+                    <button
+                      onClick={() => toggleUser("unassigned")}
+                      className={`sticky top-0 z-10 w-full flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 transition-colors ${
+                        unassignedExpanded ? "bg-[#57A3AF]/10" : "bg-slate-50 hover:bg-slate-100"
+                      }`}
+                    >
+                      {unassignedExpanded ? (
+                        <ChevronDown className="w-3.5 h-3.5 text-[#F46036] shrink-0" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      )}
+                      <Inbox className="w-4 h-4 text-slate-400 shrink-0" />
+                      <p className="text-xs font-semibold text-slate-700">Unassigned</p>
+                      <span className={`ml-auto text-[11px] px-1.5 rounded-full ${unassignedVisible.length > 0 ? "bg-white border border-slate-200 text-slate-600" : "text-slate-400"}`}>
+                        {unassignedVisible.length}
+                      </span>
+                    </button>
+                    {unassignedExpanded && (
+                      <div>
+                        {unassignedVisible.length === 0 ? (
+                          <p className="px-4 py-3 text-xs text-slate-400">
+                            {team.unassigned.total === 0 ? "No unassigned leads" : "No leads match your search"}
+                          </p>
+                        ) : (
+                          unassignedVisible.map((lead) => (
+                            <LeadRow key={lead.id} lead={lead} selected={lead.id === selectedId} onSelect={() => setSelectedId(lead.id)} />
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </section>
+                )
+              })()}
             </>
           ) : myLeads ? (
             myLeads.length === 0 ? (
