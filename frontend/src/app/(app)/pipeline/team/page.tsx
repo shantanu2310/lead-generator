@@ -15,6 +15,7 @@ import {
   Loader2,
   Mail,
   MapPin,
+  MessageCircle,
   Phone,
   Search,
   ShieldCheck,
@@ -136,6 +137,29 @@ export default function TeamPage() {
     setMyLeads((prev) => (prev ? prev.map(patch) : prev))
   }
 
+  const quickContactAction = async (
+    leadId: string,
+    activityType: "call" | "email" | "whatsapp",
+    phone?: string,
+    email?: string
+  ) => {
+    const outcome = activityType === "call" ? "no_answer" : "sent"
+    const channelLabels = { call: "Call", email: "Email", whatsapp: "WhatsApp" }
+    const summary = `Quick action: ${channelLabels[activityType]}`
+    try {
+      const activityTypeMap = { call: "call", email: "email", whatsapp: "whatsapp" }
+      await api.createContactActivity(leadId, {
+        activity_type: activityTypeMap[activityType],
+        outcome,
+        summary,
+        contacted_at: new Date().toISOString(),
+      })
+      window.dispatchEvent(new Event("pipeline:changed"))
+    } catch (err) {
+      console.error("Failed to log quick contact:", err)
+    }
+  }
+
   const allLeads: { lead: TeamLead; user?: TeamUser }[] = []
   if (isAdmin && team) {
     for (const u of team.users) for (const l of u.leads) allLeads.push({ lead: l, user: u })
@@ -231,7 +255,7 @@ export default function TeamPage() {
                           </p>
                         ) : (
                           visible.map((lead) => (
-                            <LeadRow key={lead.id} lead={lead} selected={lead.id === selectedId} onSelect={() => setSelectedId(lead.id)} />
+                            <LeadRow key={lead.id} lead={lead} selected={lead.id === selectedId} onSelect={() => setSelectedId(lead.id)} onQuickContact={quickContactAction} />
                           ))
                         )}
                       </div>
@@ -270,7 +294,7 @@ export default function TeamPage() {
                           </p>
                         ) : (
                           unassignedVisible.map((lead) => (
-                            <LeadRow key={lead.id} lead={lead} selected={lead.id === selectedId} onSelect={() => setSelectedId(lead.id)} />
+                            <LeadRow key={lead.id} lead={lead} selected={lead.id === selectedId} onSelect={() => setSelectedId(lead.id)} onQuickContact={quickContactAction} />
                           ))
                         )}
                       </div>
@@ -288,7 +312,7 @@ export default function TeamPage() {
               </div>
             ) : (
               myLeads.filter(matchesQuery).map((lead) => (
-                <LeadRow key={lead.id} lead={lead} selected={lead.id === selectedId} onSelect={() => setSelectedId(lead.id)} />
+                <LeadRow key={lead.id} lead={lead} selected={lead.id === selectedId} onSelect={() => setSelectedId(lead.id)} onQuickContact={quickContactAction} />
               ))
             )
           ) : null}
@@ -303,6 +327,7 @@ export default function TeamPage() {
             leadId={selectedId}
             onBack={() => setSelectedId(null)}
             onStageMoved={(stage) => patchLeadStage(selectedId, stage)}
+            onQuickContact={quickContactAction}
           />
         ) : (
           <EmptyDetailState count={visibleLeads.length} />
@@ -326,17 +351,16 @@ function EmptyDetailState({ count }: { count: number }) {
   )
 }
 
-function LeadRow({ lead, selected, onSelect }: { lead: TeamLead; selected: boolean; onSelect: () => void }) {
+function LeadRow({ lead, selected, onSelect, onQuickContact }: { lead: TeamLead; selected: boolean; onSelect: () => void; onQuickContact: (leadId: string, activityType: "call" | "email" | "whatsapp", phone?: string, email?: string) => Promise<void> }) {
   const color = stageColor(lead.pipeline_stage)
+  const hasPhone = !!lead.phone
+  const hasEmail = !!lead.email
   return (
-    <button
-      onClick={onSelect}
-      className={`w-full text-left flex items-center gap-3 px-4 py-3 border-l-2 transition-colors ${
-        selected
-          ? "bg-[#57A3AF]/10 border-[#41808B]"
-          : "border-transparent hover:bg-slate-50"
-      }`}
-    >
+    <div className={`w-full flex items-center gap-3 px-4 py-3 border-l-2 transition-colors ${
+      selected
+        ? "bg-[#57A3AF]/10 border-[#41808B]"
+        : "border-transparent hover:bg-slate-50"
+    }`}>
       <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
       <div className="min-w-0 flex-1">
         <p className={`text-sm font-semibold truncate ${selected ? "text-[#41808B]" : "text-slate-900"}`}>
@@ -350,7 +374,55 @@ function LeadRow({ lead, selected, onSelect }: { lead: TeamLead; selected: boole
         {lead.lead_score}
         <span className="text-slate-400 font-normal">/100</span>
       </span>
-    </button>
+<div className="flex items-center gap-1 ml-2 shrink-0">
+        {hasPhone && lead.phone && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onQuickContact(lead.id, "call", lead.phone!)
+                window.open(`tel:${lead.phone}`, "_self")
+              }}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-[#41808B] hover:bg-slate-100 transition-colors"
+              title="Call"
+            >
+              <Phone className="w-4 h-4" />
+            </button>
+          )}
+          {hasEmail && lead.email && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onQuickContact(lead.id, "email", undefined, lead.email!)
+                window.open(`mailto:${lead.email}`, "_self")
+              }}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-[#41808B] hover:bg-slate-100 transition-colors"
+              title="Email"
+            >
+              <Mail className="w-4 h-4" />
+            </button>
+          )}
+          {hasPhone && lead.phone && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onQuickContact(lead.id, "whatsapp", lead.phone!)
+                window.open(`https://wa.me/${lead.phone!.replace(/\D/g, "")}`, "_blank")
+              }}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-green-600 hover:bg-slate-100 transition-colors"
+              title="WhatsApp"
+            >
+              <MessageCircle className="w-4 h-4" />
+            </button>
+          )}
+      </div>
+      <button
+        onClick={onSelect}
+        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0"
+        aria-label="View details"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </button>
+    </div>
   )
 }
 
@@ -370,10 +442,17 @@ function LeadDetailPane({
   leadId,
   onBack,
   onStageMoved,
+  onQuickContact,
 }: {
   leadId: string
   onBack: () => void
   onStageMoved: (stage: string) => void
+  onQuickContact: (
+    leadId: string,
+    activityType: "call" | "email" | "whatsapp",
+    phone?: string,
+    email?: string
+  ) => Promise<void>
 }) {
   const [lead, setLead] = useState<any>(null)
   const [activities, setActivities] = useState<any[]>([])
@@ -530,6 +609,44 @@ function LeadDetailPane({
             <ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
         )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {lead.phone && (
+            <button
+              onClick={() => {
+                onQuickContact(lead.id, "call", lead.phone)
+                window.open(`tel:${lead.phone}`, "_self")
+              }}
+              className="p-2 rounded-lg text-slate-400 hover:text-[#41808B] hover:bg-slate-100 transition-colors"
+              title="Call"
+            >
+              <Phone className="w-4 h-4" />
+            </button>
+          )}
+          {lead.email && (
+            <button
+              onClick={() => {
+                onQuickContact(lead.id, "email", undefined, lead.email)
+                window.open(`mailto:${lead.email}`, "_self")
+              }}
+              className="p-2 rounded-lg text-slate-400 hover:text-[#41808B] hover:bg-slate-100 transition-colors"
+              title="Email"
+            >
+              <Mail className="w-4 h-4" />
+            </button>
+          )}
+          {lead.phone && (
+            <button
+              onClick={() => {
+                onQuickContact(lead.id, "whatsapp", lead.phone)
+                window.open(`https://wa.me/${lead.phone.replace(/\D/g, "")}`, "_blank")
+              }}
+              className="p-2 rounded-lg text-slate-400 hover:text-green-600 hover:bg-slate-100 transition-colors"
+              title="WhatsApp"
+            >
+              <MessageCircle className="w-4 h-4" />
+            </button>
+          )}
+        </div>
         <button onClick={onBack} className="hidden lg:block p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100">
           <X className="w-4 h-4" />
         </button>

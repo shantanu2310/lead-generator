@@ -2,8 +2,9 @@
 
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { GripVertical } from "lucide-react"
+import { GripVertical, Phone, Mail, MessageCircle } from "lucide-react"
 import Link from "next/link"
+import { api } from "@/lib/api"
 import { getScoreBgColor, formatRelativeTime } from "@/lib/utils"
 import type { LeadListItem } from "@/hooks/use-leads"
 
@@ -30,6 +31,31 @@ export function LeadCard({ lead }: { lead: LeadListItem }) {
     transition,
     opacity: isDragging ? 0.5 : 1,
   }
+
+  async function quickContactAction(
+    leadId: string,
+    activityType: "call" | "email" | "whatsapp",
+    phone?: string,
+    email?: string
+  ) {
+    const outcome = activityType === "call" ? "no_answer" : "sent"
+    const channelLabels = { call: "Call", email: "Email", whatsapp: "WhatsApp" }
+    const summary = `Quick action: ${channelLabels[activityType]}`
+    try {
+      await api.createContactActivity(leadId, {
+        activity_type: activityType,
+        outcome,
+        summary,
+        contacted_at: new Date().toISOString(),
+      })
+      window.dispatchEvent(new Event("pipeline:changed"))
+    } catch (err) {
+      console.error("Failed to log quick contact:", err)
+    }
+  }
+
+  const hasPhone = !!lead.phone
+  const hasEmail = !!lead.email
 
   return (
     <div
@@ -86,6 +112,50 @@ export function LeadCard({ lead }: { lead: LeadListItem }) {
             </div>
           )}
         </Link>
+        <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+          {hasPhone && lead.phone && (
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                quickContactAction(lead.id, "call", lead.phone!)
+                window.open(`tel:${lead.phone}`, "_self")
+              }}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-[#41808B] hover:bg-slate-100 transition-colors"
+              title="Call"
+            >
+              <Phone className="w-4 h-4" />
+            </button>
+          )}
+          {hasEmail && lead.email && (
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                quickContactAction(lead.id, "email", undefined, lead.email!)
+                window.open(`mailto:${lead.email}`, "_self")
+              }}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-[#41808B] hover:bg-slate-100 transition-colors"
+              title="Email"
+            >
+              <Mail className="w-4 h-4" />
+            </button>
+          )}
+          {hasPhone && lead.phone && (
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                quickContactAction(lead.id, "whatsapp", lead.phone!)
+                window.open(`https://wa.me/${lead.phone!.replace(/\D/g, "")}`, "_blank")
+              }}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-green-600 hover:bg-slate-100 transition-colors"
+              title="WhatsApp"
+            >
+              <MessageCircle className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
