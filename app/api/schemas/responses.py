@@ -271,3 +271,8 @@ class BulkAssignResponse(BaseModel):
     total: int
     assigned: int
     skipped: int
+
+
+class BulkActionResponse(BaseModel):
+    total: int
+    affected: int

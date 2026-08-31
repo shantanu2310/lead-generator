@@ -21,6 +21,7 @@ const NAV_ITEMS: { href: string; label: string; icon: LucideIcon; adminOnly?: bo
   { href: "/pipeline", label: "Pipeline", icon: Target, adminOnly: true },
   { href: "/pipeline/team", label: "Team Leads", icon: Users },
   { href: "/searches", label: "Search History", icon: History, adminOnly: true },
+  { href: "/users", label: "Users", icon: ShieldCheck, adminOnly: true },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ]
 
@@ -79,7 +80,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
           </div>
           <nav className="p-4 space-y-1">
-            {[...NAV_ITEMS.filter((item) => !item.adminOnly || user?.is_admin).filter((item) => !(user?.is_admin && item.href === "/settings")), ...(user?.is_admin ? [{ href: "/users", label: "Users", icon: ShieldCheck }] : [])].map((item) => {
+            {NAV_ITEMS.filter((item) => !item.adminOnly || user?.is_admin).filter((item) => !(user?.is_admin && item.href === "/settings")).map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
               return (

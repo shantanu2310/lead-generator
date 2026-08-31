@@ -5,7 +5,7 @@ import { CheckSquare, ChevronDown, ChevronUp, Download, Loader2, Search, X } fro
 import { useLeads, type LeadListItem } from "@/hooks/use-leads"
 import { api } from "@/lib/api"
 import { getUser } from "@/lib/auth"
-import { STAGE_LABELS } from "@/lib/constants"
+import { PIPELINE_STAGES, STAGE_LABELS } from "@/lib/constants"
 import { formatNumber, formatRelativeTime, formatDate, getScoreBgColor } from "@/lib/utils"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -22,6 +22,9 @@ export function PipelineTable() {
   const [users, setUsers] = useState<Array<{ id: string; name: string; avatar_url: string | null }>>([])
   const [targetUserId, setTargetUserId] = useState<string>("")
   const [assigning, setAssigning] = useState(false)
+  const [bulkStaging, setBulkStaging] = useState(false)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
+  const [targetStage, setTargetStage] = useState("")
   const [exporting, setExporting] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const mainCheckboxRef = useRef<HTMLInputElement>(null)
@@ -119,6 +122,44 @@ export function PipelineTable() {
     }
   }
 
+  async function applyBulkStage() {
+    if (selected.size === 0 || !targetStage) return
+    setBulkStaging(true)
+    setMsg(null)
+    try {
+      const ids = Array.from(selected)
+      const res = await api.bulkMoveStage(ids, targetStage)
+      setMsg({ ok: true, text: `${res.affected} lead${res.affected === 1 ? "" : "s"} moved to "${STAGE_LABELS[targetStage] || targetStage}".` })
+      setSelected(new Set())
+      setTargetStage("")
+      await refetch()
+      window.dispatchEvent(new Event("pipeline:changed"))
+    } catch (err: any) {
+      setMsg({ ok: false, text: err.message || "Bulk stage move failed" })
+    } finally {
+      setBulkStaging(false)
+    }
+  }
+
+  async function applyBulkDelete() {
+    if (selected.size === 0) return
+    if (!confirm(`Delete ${selected.size} lead${selected.size === 1 ? "" : "s"}? This cannot be undone.`)) return
+    setBulkDeleting(true)
+    setMsg(null)
+    try {
+      const ids = Array.from(selected)
+      const res = await api.bulkDeleteLeads(ids)
+      setMsg({ ok: true, text: `${res.affected} lead${res.affected === 1 ? "" : "s"} deleted.` })
+      setSelected(new Set())
+      await refetch()
+      window.dispatchEvent(new Event("pipeline:changed"))
+    } catch (err: any) {
+      setMsg({ ok: false, text: err.message || "Bulk delete failed" })
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
   async function exportCsv() {
     setExporting(true)
     try {
@@ -183,12 +224,41 @@ export function PipelineTable() {
             {assigning && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             {targetUserId ? "Assign to user" : "Unassign"}
           </button>
+          <div className="w-px h-5 bg-slate-300" />
+          <select
+            value={targetStage}
+            onChange={(e) => setTargetStage(e.target.value)}
+            className="bg-white border border-slate-300 rounded-lg text-xs text-slate-700 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#F46036] min-w-[140px]"
+          >
+            <option value="">Move to stage…</option>
+            {PIPELINE_STAGES.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+          <button
+            onClick={applyBulkStage}
+            disabled={bulkStaging || !targetStage}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#41808B] text-white text-xs font-semibold hover:bg-[#356a6f] transition-colors disabled:opacity-50"
+          >
+            {bulkStaging && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            Move
+          </button>
+          <div className="w-px h-5 bg-slate-300" />
+          <button
+            onClick={applyBulkDelete}
+            disabled={bulkDeleting}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-50 transition-colors disabled:opacity-50"
+          >
+            {bulkDeleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            Delete
+          </button>
           <button
             onClick={() => {
               setSelected(new Set())
               setTargetUserId("")
+              setTargetStage("")
             }}
-            disabled={assigning}
+            disabled={assigning || bulkStaging || bulkDeleting}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50"
           >
             <X className="w-3.5 h-3.5" />

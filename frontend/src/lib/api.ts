@@ -160,6 +160,12 @@ export const api = {
   bulkAssignLeads: (leadIds: string[], userId: string | null) =>
     request<any>("POST", "/leads/bulk-assign", { lead_ids: leadIds, user_id: userId }),
 
+  bulkMoveStage: (leadIds: string[], stage: string) =>
+    request<any>("POST", "/leads/bulk-stage", { lead_ids: leadIds, stage }),
+
+  bulkDeleteLeads: (leadIds: string[]) =>
+    request<any>("POST", "/leads/bulk-delete", { lead_ids: leadIds }),
+
   getContactActivities: (id: string) =>
     request<any[]>("GET", `/leads/${id}/contact-activities`),
 

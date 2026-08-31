@@ -5,6 +5,7 @@ import { History, SearchX } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { KanbanBoard } from "@/components/pipeline/kanban-board"
+import { PipelineFilters } from "@/components/pipeline/pipeline-filters"
 import { PipelineTable } from "@/components/pipeline/pipeline-table"
 import { PipelineCharts } from "@/components/pipeline/pipeline-charts"
 import { useLeads } from "@/hooks/use-leads"
@@ -26,6 +27,15 @@ function PipelinePageContent() {
   const searchQuery = searchParams.get("q") || ""
   const initialParams: Record<string, string> = searchId ? { search_id: searchId } : {}
   const { data, setParams } = useLeads(initialParams)
+
+  function handleFilterChange(filters: Record<string, string>) {
+    const params: Record<string, string> = {}
+    if (searchId) params.search_id = searchId
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params[key] = value
+    })
+    setParams(params)
+  }
 
   function clearSearchFilter() {
     setParams({})
@@ -58,6 +68,8 @@ function PipelinePageContent() {
           </button>
         </div>
       )}
+
+      {!searchId && <PipelineFilters onFilterChange={handleFilterChange} />}
 
       <div className="flex items-center gap-1 border-b border-slate-200">
         <TabButton active={activeTab === "kanban"} onClick={() => setActiveTab("kanban")}>

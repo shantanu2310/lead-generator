@@ -96,7 +96,7 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-6 text-center text-sm font-medium text-slate-600">
-          New to Loggix?{" "}
+          New to LeadPilot?{" "}
           <Link href="/#signup" className="font-semibold text-[#41808B] transition-colors hover:text-[#F46036]">
             Create your workspace
           </Link>

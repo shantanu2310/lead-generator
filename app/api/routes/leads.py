@@ -10,6 +10,8 @@ from sqlalchemy.orm import selectinload
 
 from app.api.schemas.requests import (
     BulkAssignRequest,
+    BulkDeleteRequest,
+    BulkStageRequest,
     ContactActivityCreateRequest,
     ContactCreateRequest,
     ErrorResponse,
@@ -19,6 +21,7 @@ from app.api.schemas.requests import (
     StageMoveRequest,
 )
 from app.api.schemas.responses import (
+    BulkActionResponse,
     BulkAssignResponse,
     ContactActivityResponse,
     ContactResponse,
@@ -711,6 +714,50 @@ async def bulk_assign_leads(
 
     skipped = len(body.lead_ids) - assigned
     return BulkAssignResponse(total=len(body.lead_ids), assigned=assigned, skipped=skipped)
+
+
+@router.post("/leads/bulk-stage", response_model=BulkActionResponse)
+async def bulk_move_stage(
+    body: BulkStageRequest,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_admin),
+) -> BulkActionResponse:
+    result = await db.execute(
+        select(Lead).where(
+            Lead.company_id == user.company_id, Lead.id.in_(body.lead_ids)
+        )
+    )
+    leads = result.scalars().all()
+    if not leads:
+        return BulkActionResponse(total=len(body.lead_ids), affected=0)
+
+    lead_ids = [l.id for l in leads]
+    await db.execute(
+        update(Lead).where(Lead.id.in_(lead_ids)).values(pipeline_stage=body.stage)
+    )
+    await db.commit()
+    return BulkActionResponse(total=len(body.lead_ids), affected=len(leads))
+
+
+@router.post("/leads/bulk-delete", response_model=BulkActionResponse)
+async def bulk_delete_leads(
+    body: BulkDeleteRequest,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_admin),
+) -> BulkActionResponse:
+    result = await db.execute(
+        select(Lead).where(
+            Lead.company_id == user.company_id, Lead.id.in_(body.lead_ids)
+        )
+    )
+    leads = result.scalars().all()
+    if not leads:
+        return BulkActionResponse(total=len(body.lead_ids), affected=0)
+
+    lead_ids = [l.id for l in leads]
+    await db.execute(delete(Lead).where(Lead.id.in_(lead_ids)))
+    await db.commit()
+    return BulkActionResponse(total=len(body.lead_ids), affected=len(leads))
 
 
 @router.delete("/leads/{lead_id}", status_code=204)

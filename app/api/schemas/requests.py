@@ -117,6 +117,15 @@ class BulkAssignRequest(BaseModel):
     user_id: str | None = None
 
 
+class BulkStageRequest(BaseModel):
+    lead_ids: list[str] = Field(min_length=1, max_length=500)
+    stage: str = Field(..., min_length=1, max_length=50)
+
+
+class BulkDeleteRequest(BaseModel):
+    lead_ids: list[str] = Field(min_length=1, max_length=500)
+
+
 class ContactActivityCreateRequest(BaseModel):
     activity_type: str = Field(default="other", min_length=1, max_length=50)
     contacted_at: datetime | None = None
