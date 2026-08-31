@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Mail, Phone, Globe, MapPin, Map, Target, TrendingUp, Building2, Users, UserCheck, UserPlus, UserX, Loader2, PhoneCall, CalendarClock, Pencil, Trash2, Plus, X } from "lucide-react"
+import { ArrowLeft, Mail, Phone, Globe, MapPin, Map, Target, TrendingUp, Building2, Users, UserCheck, UserPlus, UserX, Loader2, PhoneCall, CalendarClock, Pencil, Trash2, Plus, StickyNote, X } from "lucide-react"
 import { api } from "@/lib/api"
 import { getUser } from "@/lib/auth"
 import { CONTACT_CHANNELS, CONTACT_OUTCOMES, outcomeStyle, outcomeTargetStage, PIPELINE_STAGES, STAGE_LABELS, CALL_ATTEMPT_OUTCOMES } from "@/lib/constants"
@@ -85,6 +85,9 @@ export default function LeadDetailPage() {
   const [contactForm, setContactForm] = useState({ ...EMPTY_CONTACT_FORM })
   const [addingContact, setAddingContact] = useState(false)
   const [deletingContactId, setDeletingContactId] = useState<string | null>(null)
+  const [notes, setNotes] = useState("")
+  const notesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const notesSavingRef = useRef(false)
 
   const isAdmin = me?.is_admin === true
   const isAssignee = lead?.assigned_user_id === me?.id
@@ -111,6 +114,25 @@ export default function LeadDetailPage() {
     }
     fetch()
   }, [params.id])
+
+  useEffect(() => {
+    if (lead) setNotes(lead.notes || "")
+  }, [params.id, lead?.notes])
+
+  const saveNotes = (value: string) => {
+    if (notesTimerRef.current) clearTimeout(notesTimerRef.current)
+    notesTimerRef.current = setTimeout(async () => {
+      if (notesSavingRef.current) return
+      notesSavingRef.current = true
+      try {
+        await api.updateLead(lead.id, { notes: value || null })
+      } catch {
+        // silent
+      } finally {
+        notesSavingRef.current = false
+      }
+    }, 800)
+  }
 
   async function handleAssign(userId: string | null) {
     setAssigning(true)
@@ -611,6 +633,23 @@ export default function LeadDetailPage() {
             )
           })}
         </div>
+      </Card>
+
+      <Card>
+        <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+          <StickyNote className="w-4 h-4 text-[#41808B]" />
+          Notes
+        </h3>
+        <textarea
+          value={notes}
+          onChange={(e) => {
+            setNotes(e.target.value)
+            saveNotes(e.target.value)
+          }}
+          placeholder="Private notes about this lead — auto-saves…"
+          rows={4}
+          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#41808B] focus:bg-white resize-none transition-colors"
+        />
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

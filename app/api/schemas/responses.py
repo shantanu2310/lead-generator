@@ -93,6 +93,7 @@ class LeadDetailResponse(BaseModel):
     badges: list | None = None
     email_status: str = "pending"
     meeting_status: str = "none"
+    notes: str | None = None
     created_at: datetime
     updated_at: datetime
     contacts: list[ContactResponse] = []

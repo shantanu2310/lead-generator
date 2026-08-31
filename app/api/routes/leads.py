@@ -500,6 +500,7 @@ async def get_lead(
         badges=lead.badges,
         email_status=lead.email_status,
         meeting_status=lead.meeting_status,
+        notes=lead.notes,
         created_at=lead.created_at,
         updated_at=lead.updated_at,
         contacts=[
@@ -937,6 +938,7 @@ async def update_lead(
         badges=lead.badges,
         email_status=lead.email_status,
         meeting_status=lead.meeting_status,
+        notes=lead.notes,
         created_at=lead.created_at,
         updated_at=lead.updated_at,
         contacts=[

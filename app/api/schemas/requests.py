@@ -96,6 +96,7 @@ class LeadUpdateRequest(BaseModel):
     next_followup_date: datetime | None = None
     badges: list[str] | None = None
     department_id: str | None = None
+    notes: str | None = None
 
 
 class ContactCreateRequest(BaseModel):

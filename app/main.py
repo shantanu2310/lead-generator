@@ -37,6 +37,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
             "ALTER TABLE searches ADD COLUMN archived_at TIMESTAMP",
             "ALTER TABLE leads ADD COLUMN department_id VARCHAR(36)",
             "ALTER TABLE searches ADD COLUMN department_id VARCHAR(36)",
+            "ALTER TABLE leads ADD COLUMN notes TEXT",
         ]
         for stmt in migration_statements:
             try:

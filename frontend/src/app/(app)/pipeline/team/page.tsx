@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -19,6 +19,7 @@ import {
   Phone,
   Search,
   ShieldCheck,
+  StickyNote,
   UserRound,
   X,
 } from "lucide-react"
@@ -463,6 +464,31 @@ function LeadDetailPane({
   const [logForm, setLogForm] = useState({ ...EMPTY_LOG_FORM })
   const [savingLog, setSavingLog] = useState(false)
   const [logMsg, setLogMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [notes, setNotes] = useState("")
+  const notesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const notesSavingRef = useRef(false)
+
+  useEffect(() => {
+    if (lead) setNotes(lead.notes || "")
+  }, [leadId, lead?.notes])
+
+  const saveNotes = useCallback(
+    (value: string) => {
+      if (notesTimerRef.current) clearTimeout(notesTimerRef.current)
+      notesTimerRef.current = setTimeout(async () => {
+        if (notesSavingRef.current) return
+        notesSavingRef.current = true
+        try {
+          await api.updateLead(leadId, { notes: value || null })
+        } catch {
+          // silent — non-critical
+        } finally {
+          notesSavingRef.current = false
+        }
+      }, 800)
+    },
+    [leadId]
+  )
 
   const refreshDetail = useCallback(async () => {
     const [leadData, activityData, timelineData] = await Promise.all([
@@ -694,6 +720,23 @@ function LeadDetailPane({
           <InfoRow icon={Clock} label="Last activity" value={lead.last_activity_at ? formatRelativeTime(lead.last_activity_at) : null} />
           <InfoRow icon={Calendar} label="Created" value={lead.created_at ? formatDate(lead.created_at) : null} />
         </div>
+
+        <section>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2 flex items-center gap-1.5">
+            <StickyNote className="w-3.5 h-3.5" />
+            Notes
+          </h3>
+          <textarea
+            value={notes}
+            onChange={(e) => {
+              setNotes(e.target.value)
+              saveNotes(e.target.value)
+            }}
+            placeholder="Private notes about this lead…"
+            rows={4}
+            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#41808B] focus:bg-white resize-none transition-colors"
+          />
+        </section>
 
         <section>
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">

@@ -87,6 +87,7 @@ class Lead(Base):
     last_activity_at: Mapped[datetime | None] = mapped_column(nullable=True)
     deal_value: Mapped[float] = mapped_column(Float, default=0.0)
     score_updated_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Company info
     industry: Mapped[str | None] = mapped_column(String(200), nullable=True)
