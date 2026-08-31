@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronRight,
   Clock,
+  Download,
   Globe,
   Inbox,
   Loader2,
@@ -72,6 +73,7 @@ export default function TeamPage() {
   const [query, setQuery] = useState("")
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set())
+  const [exportingUserId, setExportingUserId] = useState<string | null>(null)
   const me = getUser()
   const isAdmin = me?.is_admin === true
 
@@ -161,6 +163,20 @@ export default function TeamPage() {
     }
   }
 
+  async function handleExportUser(userId: string | null) {
+    setExportingUserId(userId || "unassigned")
+    try {
+      const params: Record<string, string> = { page_size: "5000", page: "1" }
+      if (userId) params.assigned_to = userId
+      else params.assigned_to = "unassigned"
+      await api.exportLeads(params)
+    } catch (err: any) {
+      setMsg({ ok: false, text: err.message || "Export failed" })
+    } finally {
+      setExportingUserId(null)
+    }
+  }
+
   const allLeads: { lead: TeamLead; user?: TeamUser }[] = []
   if (isAdmin && team) {
     for (const u of team.users) for (const l of u.leads) allLeads.push({ lead: l, user: u })
@@ -182,6 +198,16 @@ export default function TeamPage() {
             <p className="text-xs text-slate-500 mt-0.5">
               {isAdmin ? "Click a user to expand their leads" : "Everything you own across the pipeline"}
             </p>
+            {!isAdmin && myLeads && myLeads.length > 0 && (
+              <button
+                onClick={() => handleExportUser(me?.id || null)}
+                disabled={exportingUserId !== null}
+                className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-500 hover:text-[#F46036] transition-colors disabled:opacity-50"
+              >
+                {exportingUserId === me?.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                Export CSV
+              </button>
+            )}
           </div>
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -244,6 +270,16 @@ export default function TeamPage() {
                       <p className="text-xs font-semibold text-slate-700 truncate">{u.name}</p>
                       {u.id === me?.id && <span className="text-[10px] text-slate-400">(you)</span>}
                       {u.is_admin && <ShieldCheck className="w-3 h-3 text-violet-500 shrink-0" />}
+                      {visible.length > 0 && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleExportUser(u.id) }}
+                          disabled={exportingUserId !== null}
+                          className="p-1 rounded text-slate-400 hover:text-[#F46036] hover:bg-white/60 transition-colors disabled:opacity-50"
+                          title={`Export ${u.name}'s leads`}
+                        >
+                          {exportingUserId === u.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
                       <span className={`ml-auto text-[11px] px-1.5 rounded-full ${visible.length > 0 ? "bg-white border border-slate-200 text-slate-600" : "text-slate-400"}`}>
                         {visible.length}
                       </span>
@@ -283,6 +319,16 @@ export default function TeamPage() {
                       )}
                       <Inbox className="w-4 h-4 text-slate-400 shrink-0" />
                       <p className="text-xs font-semibold text-slate-700">Unassigned</p>
+                      {unassignedVisible.length > 0 && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleExportUser(null) }}
+                          disabled={exportingUserId !== null}
+                          className="p-1 rounded text-slate-400 hover:text-[#F46036] hover:bg-white/60 transition-colors disabled:opacity-50"
+                          title="Export unassigned leads"
+                        >
+                          {exportingUserId === "unassigned" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
                       <span className={`ml-auto text-[11px] px-1.5 rounded-full ${unassignedVisible.length > 0 ? "bg-white border border-slate-200 text-slate-600" : "text-slate-400"}`}>
                         {unassignedVisible.length}
                       </span>
