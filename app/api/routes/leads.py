@@ -364,6 +364,77 @@ async def export_leads_csv(
     )
 
 
+@router.get("/leads/followups/due", response_model=list[LeadListItemResponse])
+async def get_due_followups(
+    horizon_hours: int = 24,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> list[LeadListItemResponse]:
+    now = datetime.now(UTC)
+    horizon = now.replace(tzinfo=None) + __import__("datetime").timedelta(hours=horizon_hours)
+    lookback = now.replace(tzinfo=None) - __import__("datetime").timedelta(days=7)
+
+    query = (
+        select(Lead)
+        .where(
+            Lead.company_id == user.company_id,
+            Lead.next_followup_date.isnot(None),
+            Lead.next_followup_date <= horizon,
+            Lead.next_followup_date >= lookback,
+        )
+    )
+    if not user.is_admin:
+        query = query.where(Lead.assigned_user_id == user.id)
+    else:
+        query = query.where(Lead.assigned_user_id.isnot(None))
+
+    query = query.order_by(Lead.next_followup_date.asc())
+    result = await db.execute(query)
+    leads = result.scalars().all()
+
+    user_ids = list({l.assigned_user_id for l in leads if l.assigned_user_id})
+    user_names: dict[str, str] = {}
+    if user_ids:
+        urows = await db.execute(
+            select(User.id, User.name).where(User.id.in_(user_ids))
+        )
+        user_names = dict(urows.all())
+
+    dept_ids = list({l.department_id for l in leads if l.department_id})
+    dept_names = await _department_names(db, user.company_id, dept_ids) if dept_ids else {}
+
+    return [
+        LeadListItemResponse(
+            id=lead.id,
+            search_id=lead.search_id,
+            business_name=lead.business_name,
+            website=lead.website,
+            email=lead.email,
+            phone=lead.phone,
+            pipeline_stage=lead.pipeline_stage,
+            lead_score=lead.lead_score,
+            ai_confidence=lead.ai_confidence,
+            priority=lead.priority,
+            industry=lead.industry,
+            country=lead.country,
+            city=lead.city,
+            employee_count=lead.employee_count,
+            deal_value=lead.deal_value,
+            email_status=lead.email_status,
+            meeting_status=lead.meeting_status,
+            next_followup_date=lead.next_followup_date,
+            last_activity_at=lead.last_activity_at,
+            assigned_user_id=lead.assigned_user_id,
+            assigned_user_name=user_names.get(lead.assigned_user_id) if lead.assigned_user_id else None,
+            department_id=lead.department_id,
+            department_name=dept_names.get(lead.department_id) if lead.department_id else None,
+            badges=lead.badges,
+            created_at=lead.created_at,
+        )
+        for lead in leads
+    ]
+
+
 @router.get("/leads/{lead_id}", response_model=LeadDetailResponse)
 async def get_lead(
     lead_id: str,

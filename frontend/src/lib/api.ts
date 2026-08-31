@@ -187,6 +187,9 @@ export const api = {
   getTeamLeads: (perUserLimit?: number) =>
     request<any>("GET", `/pipeline/team-leads${perUserLimit ? `?per_user_limit=${perUserLimit}` : ""}`),
 
+  getDueFollowups: (horizonHours?: number) =>
+    request<any[]>("GET", `/leads/followups/due${horizonHours ? `?horizon_hours=${horizonHours}` : ""}`),
+
   getNotifications: (unreadOnly?: boolean) =>
     request<any[]>("GET", `/notifications${unreadOnly ? "?unread_only=true" : ""}`),
 

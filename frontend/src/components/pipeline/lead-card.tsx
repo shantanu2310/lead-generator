@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { GripVertical, Phone, Mail, MessageCircle } from "lucide-react"
+import { GripVertical, Phone, Mail, MessageCircle, CalendarClock } from "lucide-react"
 import Link from "next/link"
 import { api } from "@/lib/api"
 import { getScoreBgColor, formatRelativeTime } from "@/lib/utils"
@@ -99,6 +99,16 @@ export function LeadCard({ lead }: { lead: LeadListItem }) {
               <span className="text-[10px] font-medium text-[#41808B] truncate">{lead.assigned_user_name}</span>
             </div>
           )}
+          {lead.next_followup_date && (() => {
+            const due = new Date(lead.next_followup_date)
+            const isOverdue = due < new Date()
+            return (
+              <div className={`flex items-center gap-1 mt-1.5 text-[10px] font-medium ${isOverdue ? "text-red-600" : "text-amber-600"}`}>
+                <CalendarClock className="w-3 h-3" />
+                {isOverdue ? "Overdue" : `Due ${due.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`}
+              </div>
+            )
+          })()}
           {lead.badges && lead.badges.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
               {lead.badges.map((badge) => (

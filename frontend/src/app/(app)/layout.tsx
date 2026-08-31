@@ -4,6 +4,7 @@ import { BarChart3, Building2, History, Menu, Settings as SettingsIcon, ShieldCh
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { Toaster } from "sonner"
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { CompanyBadge } from "@/components/shared/company-badge"
 import { Logo } from "@/components/shared/logo"
@@ -11,6 +12,7 @@ import { NotificationsDropdown } from "@/components/shared/notifications-dropdow
 import { ProfileDropdown } from "@/components/shared/profile-dropdown"
 import { UserMenu } from "@/components/shared/user-menu"
 import { WebSocketIndicator } from "@/components/shared/websocket-indicator"
+import { useFollowupReminders } from "@/hooks/use-followup-reminders"
 import { getUser } from "@/lib/auth"
 
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon; adminOnly?: boolean }[] = [
@@ -38,6 +40,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const user = getUser()
+  useFollowupReminders()
 
   useEffect(() => {
     setSidebarOpen(false)
@@ -121,6 +124,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <main className="flex-1 overflow-y-auto p-6">{children}</main>
         </div>
       </div>
+      <Toaster position="top-right" richColors closeButton />
     </AuthGuard>
   )
 }
