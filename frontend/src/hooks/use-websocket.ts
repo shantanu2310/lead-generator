@@ -32,6 +32,9 @@ export function useWebSocket() {
             const parsed: WSEvent = JSON.parse(msg.data)
             const handlers = handlersRef.current.get(parsed.event) || []
             handlers.forEach((fn) => fn(parsed.data))
+            if (parsed.event === "pipeline:changed") {
+              window.dispatchEvent(new Event("pipeline:changed"))
+            }
           } catch { /* ignore parse errors */ }
         }
 

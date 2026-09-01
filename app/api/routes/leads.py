@@ -42,6 +42,7 @@ from app.models.lead import Contact, Lead
 from app.models.pipeline import Notification, TimelineEvent
 from app.models.user import User
 from app.pipeline.pipeline_manager import PipelineManager
+from app.websocket.manager import manager as ws_manager
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
@@ -587,6 +588,8 @@ async def assign_lead(
         assignee = await db.get(User, lead.assigned_user_id)
         assignee_name = assignee.name if assignee else None
 
+    await ws_manager.broadcast("pipeline:changed", {"lead_id": lead.id, "event": "assigned"})
+
     return LeadDetailResponse(
         id=lead.id,
         search_id=lead.search_id,
@@ -711,6 +714,7 @@ async def bulk_assign_leads(
         ))
 
     await db.commit()
+    await ws_manager.broadcast("pipeline:changed", {"event": "bulk_assign", "count": assigned})
 
     skipped = len(body.lead_ids) - assigned
     return BulkAssignResponse(total=len(body.lead_ids), assigned=assigned, skipped=skipped)
@@ -736,6 +740,7 @@ async def bulk_move_stage(
         update(Lead).where(Lead.id.in_(lead_ids)).values(pipeline_stage=body.stage)
     )
     await db.commit()
+    await ws_manager.broadcast("pipeline:changed", {"event": "bulk_stage", "count": len(leads), "stage": body.stage})
     return BulkActionResponse(total=len(body.lead_ids), affected=len(leads))
 
 
@@ -757,6 +762,7 @@ async def bulk_delete_leads(
     lead_ids = [l.id for l in leads]
     await db.execute(delete(Lead).where(Lead.id.in_(lead_ids)))
     await db.commit()
+    await ws_manager.broadcast("pipeline:changed", {"event": "bulk_delete", "count": len(leads)})
     return BulkActionResponse(total=len(body.lead_ids), affected=len(leads))
 
 
@@ -781,6 +787,7 @@ async def delete_lead(
     )
     await db.delete(lead)
     await db.commit()
+    await ws_manager.broadcast("pipeline:changed", {"lead_id": lead_id, "event": "deleted"})
     return Response(status_code=204)
 
 
@@ -1002,6 +1009,9 @@ async def update_lead(
         ],
     )
 
+    if update_values:
+        await ws_manager.broadcast("pipeline:changed", {"lead_id": lead_id, "event": "updated"})
+
 
 @router.patch("/leads/{lead_id}/stage", response_model=StageMoveResponse)
 async def move_lead_stage(
@@ -1019,6 +1029,8 @@ async def move_lead_stage(
         to_stage=move_data.stage,
         reason=move_data.reason,
     )
+
+    await ws_manager.broadcast("pipeline:changed", {"lead_id": lead.id, "event": "stage_moved", "stage": move_data.stage})
 
     return StageMoveResponse(
         id=lead.id,

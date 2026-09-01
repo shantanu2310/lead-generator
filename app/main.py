@@ -38,6 +38,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
             "ALTER TABLE leads ADD COLUMN department_id VARCHAR(36)",
             "ALTER TABLE searches ADD COLUMN department_id VARCHAR(36)",
             "ALTER TABLE leads ADD COLUMN notes TEXT",
+            "CREATE TABLE IF NOT EXISTS password_reset_tokens (id VARCHAR(36) PRIMARY KEY, user_id VARCHAR(36) NOT NULL, token_hash VARCHAR(128) NOT NULL UNIQUE, expires_at TIMESTAMP NOT NULL, used BOOLEAN DEFAULT FALSE, created_at TIMESTAMP NOT NULL)",
         ]
         for stmt in migration_statements:
             try:

@@ -32,7 +32,7 @@ export function PipelineFilters({
   const [departments, setDepartments] = useState<Department[]>([])
 
   useEffect(() => {
-    api.listDepartments().then((depts) => setDepartments(depts || [])).catch(() => {})
+    api.listDepartments().then((depts) => setDepartments(depts || [])).catch(() => setDepartments([]))
   }, [])
 
   function update(key: keyof Filters, value: string) {

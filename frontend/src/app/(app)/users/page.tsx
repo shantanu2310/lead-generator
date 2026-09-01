@@ -403,6 +403,15 @@ const body: any = { name: editForm.name, email: editForm.email, is_admin: editFo
                         </td>
                       </tr>
                     ))}
+                    {users.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-5 py-10 text-center">
+                          <ShieldCheck className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                          <p className="text-sm text-slate-500">No team members yet</p>
+                          <p className="text-xs text-slate-400 mt-1">Invite your first team member to get started</p>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               )}

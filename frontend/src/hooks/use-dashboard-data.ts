@@ -38,21 +38,21 @@ export type DashboardData = {
   priority_leads: PriorityLead[]
 }
 
-export function useDashboardData() {
+export function useDashboardData(dateRange?: { start_date?: string; end_date?: string }) {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
 
   const fetch = useCallback(async () => {
     try {
       setLoading(true)
-      const result = await api.getPipelineDashboard()
+      const result = await api.getPipelineDashboard(dateRange)
       setData(result)
     } catch (err) {
       console.error("Failed to fetch dashboard data", err)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [dateRange?.start_date, dateRange?.end_date])
 
   useEffect(() => {
     fetch()

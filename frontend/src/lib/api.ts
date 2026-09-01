@@ -89,6 +89,12 @@ export const api = {
   updateMe: (body: { name?: string; password?: string; avatar_url?: string | null }) =>
     request<any>("PATCH", "/auth/me", body),
 
+  forgotPassword: (email: string) =>
+    request<any>("POST", "/auth/forgot-password", { email }),
+
+  resetPassword: (token: string, password: string) =>
+    request<any>("POST", "/auth/reset-password", { token, password }),
+
   listUsers: () => request<any[]>("GET", "/auth/users"),
 
   setUserActive: (id: string, isActive: boolean) =>
@@ -187,8 +193,10 @@ export const api = {
   getPipelineInsights: (limit?: number) =>
     request<any[]>("GET", `/pipeline/insights${limit ? `?limit=${limit}` : ""}`),
 
-  getPipelineDashboard: () =>
-    request<any>("GET", "/pipeline/dashboard"),
+  getPipelineDashboard: (params?: { start_date?: string; end_date?: string }) => {
+    const qs = params ? "?" + new URLSearchParams(params).toString() : ""
+    return request<any>("GET", `/pipeline/dashboard${qs}`)
+  },
 
   getTeamLeads: (perUserLimit?: number) =>
     request<any>("GET", `/pipeline/team-leads${perUserLimit ? `?per_user_limit=${perUserLimit}` : ""}`),

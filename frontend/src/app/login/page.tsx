@@ -64,9 +64,14 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label htmlFor="password" className="mb-1.5 block text-xs font-medium text-slate-600">
-              Password
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="password" className="text-xs font-medium text-slate-600">
+                Password
+              </label>
+              <Link href="/forgot-password" className="text-xs font-medium text-[#41808B] hover:text-[#F46036] transition-colors">
+                Forgot password?
+              </Link>
+            </div>
             <input
               id="password"
               type="password"
@@ -97,7 +102,7 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-sm font-medium text-slate-600">
           New to LeadPilot?{" "}
-          <Link href="/#signup" className="font-semibold text-[#41808B] transition-colors hover:text-[#F46036]">
+          <Link href="/register" className="font-semibold text-[#41808B] transition-colors hover:text-[#F46036]">
             Create your workspace
           </Link>
         </p>
