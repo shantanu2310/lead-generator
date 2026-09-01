@@ -342,25 +342,10 @@ def _priority_reason(
 
 @router.get("/pipeline/dashboard", response_model=DashboardResponse)
 async def get_pipeline_dashboard(
-    start_date: str | None = None,
-    end_date: str | None = None,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_admin),
 ) -> DashboardResponse:
     conditions = [Lead.company_id == user.company_id]
-
-    if start_date:
-        try:
-            sd = datetime.fromisoformat(start_date).replace(tzinfo=None)
-            conditions.append(Lead.created_at >= sd)
-        except ValueError:
-            pass
-    if end_date:
-        try:
-            ed = datetime.fromisoformat(end_date).replace(tzinfo=None)
-            conditions.append(Lead.created_at <= ed)
-        except ValueError:
-            pass
 
     total = await db.scalar(select(func.count(Lead.id)).where(*conditions)) or 0
     qualified = await db.scalar(

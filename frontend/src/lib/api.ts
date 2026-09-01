@@ -193,10 +193,8 @@ export const api = {
   getPipelineInsights: (limit?: number) =>
     request<any[]>("GET", `/pipeline/insights${limit ? `?limit=${limit}` : ""}`),
 
-  getPipelineDashboard: (params?: { start_date?: string; end_date?: string }) => {
-    const qs = params ? "?" + new URLSearchParams(params).toString() : ""
-    return request<any>("GET", `/pipeline/dashboard${qs}`)
-  },
+  getPipelineDashboard: () =>
+    request<any>("GET", "/pipeline/dashboard"),
 
   getTeamLeads: (perUserLimit?: number) =>
     request<any>("GET", `/pipeline/team-leads${perUserLimit ? `?per_user_limit=${perUserLimit}` : ""}`),
