@@ -758,9 +758,9 @@ function LeadDetailPane({
 
         <section>
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
-            About this lead
+            Details
           </h3>
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1">
             <InfoLine label="Industry" value={lead.industry} />
             <InfoLine label="Location" value={[lead.city, lead.state, lead.country].filter(Boolean).join(", ")} />
             <InfoLine
@@ -953,9 +953,9 @@ function InfoLine({
   external?: boolean
 }) {
   return (
-    <div className="py-1.5 min-w-0">
-      <dt className="text-[11px] text-slate-400">{label}</dt>
-      <dd className="text-sm text-slate-900 break-words">
+    <div className="flex gap-1.5 py-0.5 min-w-0">
+      <dt className="text-sm font-semibold text-slate-800 shrink-0">{label} :</dt>
+      <dd className="text-sm text-slate-700 min-w-0 break-words">
         {value ? (
           href ? (
             <a

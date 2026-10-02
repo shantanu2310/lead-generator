@@ -385,8 +385,8 @@ export default function LeadDetailPage() {
       </div>
 
       <Card>
-        <h3 className="font-semibold text-slate-900 mb-1">About this lead</h3>
-        <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4">
+        <h3 className="font-semibold text-slate-900 mb-1">Details</h3>
+        <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-1">
           <InfoLine label="Industry" value={lead.industry} />
           <InfoLine label="Location" value={lead.address || [lead.city, lead.state, lead.country].filter(Boolean).join(", ")} />
           <InfoLine label="Employees" value={lead.employee_count ? formatNumber(lead.employee_count) : null} />
@@ -873,9 +873,9 @@ function InfoLine({
   badgeTone?: "green" | "yellow"
 }) {
   return (
-    <div className="py-1.5 min-w-0">
-      <dt className="text-[11px] text-slate-400">{label}</dt>
-      <dd className="text-sm text-slate-900 break-words">
+    <div className="flex gap-1.5 py-0.5 min-w-0">
+      <dt className="text-sm font-semibold text-slate-800 shrink-0">{label} :</dt>
+      <dd className="text-sm text-slate-700 min-w-0 break-words">
         {value ? (
           <>
             {href ? (
