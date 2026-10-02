@@ -757,9 +757,6 @@ function LeadDetailPane({
         </div>
 
         <section>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
-            Details
-          </h3>
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1">
             <InfoLine label="Industry" value={lead.industry} />
             <InfoLine label="Location" value={[lead.city, lead.state, lead.country].filter(Boolean).join(", ")} />
