@@ -403,7 +403,9 @@ function LeadRow({ lead, selected, onSelect, onQuickContact }: { lead: TeamLead;
   const hasPhone = !!lead.phone
   const hasEmail = !!lead.email
   return (
-    <div className={`w-full flex items-center gap-3 px-4 py-3 border-l-2 transition-colors ${
+    <div
+      onClick={onSelect}
+      className={`w-full flex items-center gap-3 px-4 py-3 border-l-2 transition-colors cursor-pointer ${
       selected
         ? "bg-[#57A3AF]/10 border-[#41808B]"
         : "border-transparent hover:bg-slate-50"
