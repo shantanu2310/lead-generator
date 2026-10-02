@@ -757,61 +757,33 @@ function LeadDetailPane({
         </div>
 
         <section>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
             About this lead
           </h3>
-          <p className="text-sm text-slate-700 leading-relaxed">
-            {(() => {
-              const parts: React.ReactNode[] = []
-              const missing: string[] = []
-              const location = [lead.city, lead.state, lead.country].filter(Boolean).join(", ")
-              if (lead.industry && location) {
-                parts.push(<span key="what">{lead.business_name} is a {lead.industry} business based in {location}. </span>)
-              } else if (lead.industry) {
-                parts.push(<span key="what">{lead.business_name} is in the {lead.industry} industry. </span>)
-              } else if (location) {
-                parts.push(<span key="what">{lead.business_name} is based in {location}. </span>)
-              }
-              if (!lead.industry) missing.push("industry")
-              if (!location) missing.push("location")
-              if (lead.email && lead.phone) {
-                parts.push(<span key="reach">Reach them at <a href={`mailto:${lead.email}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.email}</a> or <a href={`tel:${lead.phone}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.phone}</a>. </span>)
-              } else if (lead.email) {
-                parts.push(<span key="reach">Reach them at <a href={`mailto:${lead.email}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.email}</a>. </span>)
-                missing.push("phone")
-              } else if (lead.phone) {
-                parts.push(<span key="reach">Reach them at <a href={`tel:${lead.phone}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.phone}</a>. </span>)
-                missing.push("email")
-              } else {
-                missing.push("email", "phone")
-                if (lead.website) {
-                  parts.push(<span key="reach">Website: <a href={lead.website} target="_blank" rel="noreferrer" className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.website.replace("https://", "").replace("http://", "")}</a>. </span>)
-                } else {
-                  missing.push("website")
-                }
-              }
-              if (lead.assigned_user_name) {
-                parts.push(<span key="assigned">Currently assigned to {lead.assigned_user_name}. </span>)
-              } else {
-                missing.push("assignee")
-              }
-              if (lead.next_followup_date) {
-                parts.push(<span key="followup">Next follow-up on {formatDate(lead.next_followup_date)}{lead.last_activity_at ? ` — last activity ${formatRelativeTime(lead.last_activity_at)}` : ""}. </span>)
-              } else {
-                missing.push("follow-up")
-                if (lead.last_activity_at) {
-                  parts.push(<span key="followup">Last activity {formatRelativeTime(lead.last_activity_at)}. </span>)
-                }
-              }
-              if (parts.length === 0) {
-                return <span className="text-slate-400">No details added for this lead yet.</span>
-              }
-              if (missing.length > 0) {
-                parts.push(<span key="missing" className="block mt-1.5 text-xs text-slate-400">Not provided: {missing.join(" · ")}</span>)
-              }
-              return parts
-            })()}
-          </p>
+          <dl className="divide-y divide-slate-100">
+            <InfoLine label="Industry" value={lead.industry} />
+            <InfoLine label="Location" value={[lead.city, lead.state, lead.country].filter(Boolean).join(", ")} />
+            <InfoLine
+              label="Email"
+              value={lead.email}
+              href={lead.email ? `mailto:${lead.email}` : undefined}
+            />
+            <InfoLine
+              label="Phone"
+              value={lead.phone}
+              href={lead.phone ? `tel:${lead.phone}` : undefined}
+            />
+            <InfoLine
+              label="Website"
+              value={lead.website ? lead.website.replace("https://", "").replace("http://", "") : null}
+              href={lead.website || undefined}
+              external
+            />
+            <InfoLine label="Assigned to" value={lead.assigned_user_name} />
+            <InfoLine label="Next follow-up" value={lead.next_followup_date ? formatDate(lead.next_followup_date) : null} />
+            <InfoLine label="Last activity" value={lead.last_activity_at ? formatRelativeTime(lead.last_activity_at) : null} />
+            <InfoLine label="Created" value={lead.created_at ? formatDate(lead.created_at) : null} />
+          </dl>
         </section>
 
         <section>
@@ -965,6 +937,42 @@ function LeadDetailPane({
           )}
         </section>
       </div>
+    </div>
+  )
+}
+
+function InfoLine({
+  label,
+  value,
+  href,
+  external,
+}: {
+  label: string
+  value: string | null | undefined
+  href?: string
+  external?: boolean
+}) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-2">
+      <dt className="text-xs text-slate-500 shrink-0">{label}</dt>
+      <dd className="text-sm text-slate-900 text-right min-w-0 break-words">
+        {value ? (
+          href ? (
+            <a
+              href={href}
+              target={external ? "_blank" : undefined}
+              rel={external ? "noreferrer" : undefined}
+              className="text-[#41808B] hover:text-[#F46036] transition-colors"
+            >
+              {value}
+            </a>
+          ) : (
+            value
+          )
+        ) : (
+          <span className="text-slate-300">—</span>
+        )}
+      </dd>
     </div>
   )
 }
