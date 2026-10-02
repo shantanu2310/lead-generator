@@ -763,6 +763,7 @@ function LeadDetailPane({
           <p className="text-sm text-slate-700 leading-relaxed">
             {(() => {
               const parts: React.ReactNode[] = []
+              const missing: string[] = []
               const location = [lead.city, lead.state, lead.country].filter(Boolean).join(", ")
               if (lead.industry && location) {
                 parts.push(<span key="what">{lead.business_name} is a {lead.industry} business based in {location}. </span>)
@@ -771,25 +772,42 @@ function LeadDetailPane({
               } else if (location) {
                 parts.push(<span key="what">{lead.business_name} is based in {location}. </span>)
               }
+              if (!lead.industry) missing.push("industry")
+              if (!location) missing.push("location")
               if (lead.email && lead.phone) {
                 parts.push(<span key="reach">Reach them at <a href={`mailto:${lead.email}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.email}</a> or <a href={`tel:${lead.phone}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.phone}</a>. </span>)
               } else if (lead.email) {
                 parts.push(<span key="reach">Reach them at <a href={`mailto:${lead.email}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.email}</a>. </span>)
+                missing.push("phone")
               } else if (lead.phone) {
                 parts.push(<span key="reach">Reach them at <a href={`tel:${lead.phone}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.phone}</a>. </span>)
-              } else if (lead.website) {
-                parts.push(<span key="reach">Website: <a href={lead.website} target="_blank" rel="noreferrer" className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.website.replace("https://", "").replace("http://", "")}</a>. </span>)
+                missing.push("email")
+              } else {
+                missing.push("email", "phone")
+                if (lead.website) {
+                  parts.push(<span key="reach">Website: <a href={lead.website} target="_blank" rel="noreferrer" className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.website.replace("https://", "").replace("http://", "")}</a>. </span>)
+                } else {
+                  missing.push("website")
+                }
               }
               if (lead.assigned_user_name) {
                 parts.push(<span key="assigned">Currently assigned to {lead.assigned_user_name}. </span>)
+              } else {
+                missing.push("assignee")
               }
               if (lead.next_followup_date) {
                 parts.push(<span key="followup">Next follow-up on {formatDate(lead.next_followup_date)}{lead.last_activity_at ? ` — last activity ${formatRelativeTime(lead.last_activity_at)}` : ""}. </span>)
-              } else if (lead.last_activity_at) {
-                parts.push(<span key="followup">Last activity {formatRelativeTime(lead.last_activity_at)}. </span>)
+              } else {
+                missing.push("follow-up")
+                if (lead.last_activity_at) {
+                  parts.push(<span key="followup">Last activity {formatRelativeTime(lead.last_activity_at)}. </span>)
+                }
               }
               if (parts.length === 0) {
                 return <span className="text-slate-400">No details added for this lead yet.</span>
+              }
+              if (missing.length > 0) {
+                parts.push(<span key="missing" className="block mt-1.5 text-xs text-slate-400">Not provided: {missing.join(" · ")}</span>)
               }
               return parts
             })()}

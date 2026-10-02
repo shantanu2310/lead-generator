@@ -389,10 +389,13 @@ export default function LeadDetailPage() {
         <p className="text-sm text-slate-700 leading-relaxed">
           {(() => {
             const parts: React.ReactNode[] = []
+            const missing: string[] = []
             const location = lead.address || [lead.city, lead.state, lead.country].filter(Boolean).join(", ")
             const bits: string[] = []
             if (lead.industry) bits.push(`a ${lead.industry} business`)
             if (location) bits.push(`based in ${location}`)
+            if (!lead.industry) missing.push("industry")
+            if (!location) missing.push("location")
             if (bits.length > 0) {
               parts.push(<span key="what">{lead.business_name} is {bits.join(" ")}. </span>)
             }
@@ -400,24 +403,37 @@ export default function LeadDetailPage() {
               parts.push(<span key="emp">Team of {formatNumber(lead.employee_count)}{lead.revenue ? ` with ${lead.revenue} revenue` : ""}. </span>)
             } else if (lead.revenue) {
               parts.push(<span key="emp">Revenue: {lead.revenue}. </span>)
+            } else {
+              missing.push("employees", "revenue")
             }
             if (lead.email && lead.phone) {
               parts.push(<span key="reach">Reach them at <a href={`mailto:${lead.email}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.email}</a>{lead.email_verified ? <span className="text-xs text-green-600"> (verified)</span> : <span className="text-xs text-yellow-600"> (pending)</span>} or <a href={`tel:${lead.phone}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.phone}</a>. </span>)
             } else if (lead.email) {
               parts.push(<span key="reach">Reach them at <a href={`mailto:${lead.email}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.email}</a>{lead.email_verified ? <span className="text-xs text-green-600"> (verified)</span> : <span className="text-xs text-yellow-600"> (pending)</span>}. </span>)
+              missing.push("phone")
             } else if (lead.phone) {
               parts.push(<span key="reach">Reach them at <a href={`tel:${lead.phone}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.phone}</a>. </span>)
+              missing.push("email")
+            } else {
+              missing.push("email", "phone")
             }
             if (lead.website) {
               parts.push(<span key="web">Website: <a href={lead.website} target="_blank" rel="noreferrer" className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.website.replace("https://", "").replace("http://", "")}</a>. </span>)
+            } else {
+              missing.push("website")
             }
             if (lead.deal_value) {
               parts.push(<span key="deal">Deal value ${formatNumber(lead.deal_value)}{lead.priority ? ` · Priority: ${lead.priority}` : ""}. </span>)
             } else if (lead.priority) {
               parts.push(<span key="deal">Priority: {lead.priority}. </span>)
+            } else {
+              missing.push("deal value")
             }
             if (parts.length === 0) {
               return <span className="text-slate-400">No details added for this lead yet.</span>
+            }
+            if (missing.length > 0) {
+              parts.push(<span key="missing" className="block mt-1.5 text-xs text-slate-400">Not provided: {missing.join(" · ")}</span>)
             }
             return parts
           })()}
