@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Mail, Phone, Globe, MapPin, Map, Target, TrendingUp, Building2, Users, UserCheck, UserPlus, UserX, Loader2, PhoneCall, CalendarClock, Pencil, Trash2, Plus, StickyNote, X } from "lucide-react"
+import { ArrowLeft, MapPin, Map, Building2, UserCheck, UserPlus, UserX, Loader2, PhoneCall, CalendarClock, Pencil, Trash2, Plus, StickyNote, X } from "lucide-react"
 import { api } from "@/lib/api"
 import { getUser } from "@/lib/auth"
 import { CONTACT_CHANNELS, CONTACT_OUTCOMES, outcomeStyle, outcomeTargetStage, PIPELINE_STAGES, STAGE_LABELS, CALL_ATTEMPT_OUTCOMES } from "@/lib/constants"
@@ -384,58 +384,45 @@ export default function LeadDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <div className="flex items-start gap-3">
-            <Globe className="w-5 h-5 text-[#41808B] mt-0.5" />
-            <div>
-              <p className="text-xs text-slate-500 mb-1">Website</p>
-              <p className="text-sm text-slate-900 truncate max-w-[200px]">
-                {lead.website ? (
-                  <a href={lead.website} target="_blank" className="hover:text-[#F46036] transition-colors">
-                    {lead.website.replace("https://", "").replace("http://", "")}
-                  </a>
-                ) : "—"}
-              </p>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-start gap-3">
-            <Mail className="w-5 h-5 text-green-600 mt-0.5" />
-            <div>
-              <p className="text-xs text-slate-500 mb-1">Email</p>
-              <p className={`text-sm ${lead.email ? "text-slate-900" : "text-slate-500"}`}>
-                {lead.email || "—"}
-              </p>
-              {lead.email && (
-                <span className={`text-xs ${lead.email_verified ? "text-green-600" : "text-yellow-600"}`}>
-                  {lead.email_verified ? "Verified" : "Pending"}
-                </span>
-              )}
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-start gap-3">
-            <Phone className="w-5 h-5 text-violet-600 mt-0.5" />
-            <div>
-              <p className="text-xs text-slate-500 mb-1">Phone</p>
-              {lead.phone ? (
-                <a
-                  href={`tel:${lead.phone}`}
-                  className="inline-flex items-center gap-2 text-sm text-slate-900 hover:text-[#F46036] transition-colors"
-                >
-                  <PhoneCall className="w-3.5 h-3.5" />
-                  {lead.phone}
-                </a>
-              ) : (
-                <p className="text-sm text-slate-900">—</p>
-              )}
-            </div>
-          </div>
-        </Card>
-      </div>
+      <Card>
+        <h3 className="font-semibold text-slate-900 mb-3">About this lead</h3>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          {(() => {
+            const parts: React.ReactNode[] = []
+            const location = lead.address || [lead.city, lead.state, lead.country].filter(Boolean).join(", ")
+            const bits: string[] = []
+            if (lead.industry) bits.push(`a ${lead.industry} business`)
+            if (location) bits.push(`based in ${location}`)
+            if (bits.length > 0) {
+              parts.push(<span key="what">{lead.business_name} is {bits.join(" ")}. </span>)
+            }
+            if (lead.employee_count) {
+              parts.push(<span key="emp">Team of {formatNumber(lead.employee_count)}{lead.revenue ? ` with ${lead.revenue} revenue` : ""}. </span>)
+            } else if (lead.revenue) {
+              parts.push(<span key="emp">Revenue: {lead.revenue}. </span>)
+            }
+            if (lead.email && lead.phone) {
+              parts.push(<span key="reach">Reach them at <a href={`mailto:${lead.email}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.email}</a>{lead.email_verified ? <span className="text-xs text-green-600"> (verified)</span> : <span className="text-xs text-yellow-600"> (pending)</span>} or <a href={`tel:${lead.phone}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.phone}</a>. </span>)
+            } else if (lead.email) {
+              parts.push(<span key="reach">Reach them at <a href={`mailto:${lead.email}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.email}</a>{lead.email_verified ? <span className="text-xs text-green-600"> (verified)</span> : <span className="text-xs text-yellow-600"> (pending)</span>}. </span>)
+            } else if (lead.phone) {
+              parts.push(<span key="reach">Reach them at <a href={`tel:${lead.phone}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.phone}</a>. </span>)
+            }
+            if (lead.website) {
+              parts.push(<span key="web">Website: <a href={lead.website} target="_blank" rel="noreferrer" className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.website.replace("https://", "").replace("http://", "")}</a>. </span>)
+            }
+            if (lead.deal_value) {
+              parts.push(<span key="deal">Deal value ${formatNumber(lead.deal_value)}{lead.priority ? ` · Priority: ${lead.priority}` : ""}. </span>)
+            } else if (lead.priority) {
+              parts.push(<span key="deal">Priority: {lead.priority}. </span>)
+            }
+            if (parts.length === 0) {
+              return <span className="text-slate-400">No details added for this lead yet.</span>
+            }
+            return parts
+          })()}
+        </p>
+      </Card>
 
       <Card>
         <div className="flex items-center justify-between mb-4">
@@ -654,18 +641,6 @@ export default function LeadDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
-          <Card>
-            <h3 className="font-semibold text-slate-900 mb-4">Company Details</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <DetailRow icon={Building2} label="Industry" value={lead.industry} />
-              <DetailRow icon={Users} label="Employees" value={lead.employee_count ? formatNumber(lead.employee_count) : null} />
-              <DetailRow icon={TrendingUp} label="Revenue" value={lead.revenue} />
-              <DetailRow icon={MapPin} label="Location" value={lead.address || [lead.city, lead.state, lead.country].filter(Boolean).join(", ") || null} />
-              <DetailRow icon={Target} label="Deal Value" value={lead.deal_value ? `$${formatNumber(lead.deal_value)}` : null} />
-              <DetailRow icon={Target} label="Priority" value={lead.priority} />
-            </div>
-          </Card>
-
           <LocationMap lead={lead} />
 
           <Card>
@@ -897,18 +872,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <label className="block text-xs text-slate-600 mb-1.5">{label}</label>
       {children}
-    </div>
-  )
-}
-
-function DetailRow({ icon: Icon, label, value }: { icon: any; label: string; value: string | null }) {
-  return (
-    <div className="flex items-center gap-2">
-      <Icon className="w-4 h-4 text-slate-400" />
-      <div>
-        <p className="text-xs text-slate-500">{label}</p>
-        <p className="text-sm text-slate-900">{value || "—"}</p>
-      </div>
     </div>
   )
 }

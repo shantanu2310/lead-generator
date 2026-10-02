@@ -5,11 +5,9 @@ import {
   ArrowLeft,
   ArrowUpRight,
   Building2,
-  Calendar,
   CalendarClock,
   ChevronDown,
   ChevronRight,
-  Clock,
   Download,
   Globe,
   Inbox,
@@ -758,16 +756,45 @@ function LeadDetailPane({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <InfoRow icon={Mail} label="Email" value={lead.email} href={lead.email ? `mailto:${lead.email}` : undefined} />
-          <InfoRow icon={Phone} label="Phone" value={lead.phone} href={lead.phone ? `tel:${lead.phone}` : undefined} />
-          <InfoRow icon={MapPin} label="Location" value={[lead.city, lead.state, lead.country].filter(Boolean).join(", ") || null} />
-          <InfoRow icon={Building2} label="Industry" value={lead.industry} />
-          <InfoRow icon={UserRound} label="Assigned to" value={lead.assigned_user_name} />
-          <InfoRow icon={Calendar} label="Next follow-up" value={lead.next_followup_date ? formatDate(lead.next_followup_date) : null} />
-          <InfoRow icon={Clock} label="Last activity" value={lead.last_activity_at ? formatRelativeTime(lead.last_activity_at) : null} />
-          <InfoRow icon={Calendar} label="Created" value={lead.created_at ? formatDate(lead.created_at) : null} />
-        </div>
+        <section>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
+            About this lead
+          </h3>
+          <p className="text-sm text-slate-700 leading-relaxed">
+            {(() => {
+              const parts: React.ReactNode[] = []
+              const location = [lead.city, lead.state, lead.country].filter(Boolean).join(", ")
+              if (lead.industry && location) {
+                parts.push(<span key="what">{lead.business_name} is a {lead.industry} business based in {location}. </span>)
+              } else if (lead.industry) {
+                parts.push(<span key="what">{lead.business_name} is in the {lead.industry} industry. </span>)
+              } else if (location) {
+                parts.push(<span key="what">{lead.business_name} is based in {location}. </span>)
+              }
+              if (lead.email && lead.phone) {
+                parts.push(<span key="reach">Reach them at <a href={`mailto:${lead.email}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.email}</a> or <a href={`tel:${lead.phone}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.phone}</a>. </span>)
+              } else if (lead.email) {
+                parts.push(<span key="reach">Reach them at <a href={`mailto:${lead.email}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.email}</a>. </span>)
+              } else if (lead.phone) {
+                parts.push(<span key="reach">Reach them at <a href={`tel:${lead.phone}`} className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.phone}</a>. </span>)
+              } else if (lead.website) {
+                parts.push(<span key="reach">Website: <a href={lead.website} target="_blank" rel="noreferrer" className="text-[#41808B] hover:text-[#F46036] transition-colors font-medium">{lead.website.replace("https://", "").replace("http://", "")}</a>. </span>)
+              }
+              if (lead.assigned_user_name) {
+                parts.push(<span key="assigned">Currently assigned to {lead.assigned_user_name}. </span>)
+              }
+              if (lead.next_followup_date) {
+                parts.push(<span key="followup">Next follow-up on {formatDate(lead.next_followup_date)}{lead.last_activity_at ? ` — last activity ${formatRelativeTime(lead.last_activity_at)}` : ""}. </span>)
+              } else if (lead.last_activity_at) {
+                parts.push(<span key="followup">Last activity {formatRelativeTime(lead.last_activity_at)}. </span>)
+              }
+              if (parts.length === 0) {
+                return <span className="text-slate-400">No details added for this lead yet.</span>
+              }
+              return parts
+            })()}
+          </p>
+        </section>
 
         <section>
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2 flex items-center gap-1.5">
@@ -919,38 +946,6 @@ function LeadDetailPane({
             </div>
           )}
         </section>
-      </div>
-    </div>
-  )
-}
-
-function InfoRow({
-  icon: Icon,
-  label,
-  value,
-  href,
-}: {
-  icon: typeof Mail
-  label: string
-  value: string | null | undefined
-  href?: string
-}) {
-  return (
-    <div className="flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50/60 px-3.5 py-2.5">
-      <Icon className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
-      <div className="min-w-0">
-        <p className="text-[11px] text-slate-400">{label}</p>
-        {value ? (
-          href ? (
-            <a href={href} className="text-sm text-slate-900 hover:text-[#F46036] transition-colors truncate block">
-              {value}
-            </a>
-          ) : (
-            <p className="text-sm text-slate-900 truncate">{value}</p>
-          )
-        ) : (
-          <p className="text-sm text-slate-300">—</p>
-        )}
       </div>
     </div>
   )
