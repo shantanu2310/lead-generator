@@ -71,6 +71,7 @@ def get_orchestrator():
     discovery_service = DiscoveryService({
         "google_places": google_places,
         "brave_search": brave_search,
+        "web_search": brave_search,
     })
 
     crawl4ai = Crawl4AIProvider()

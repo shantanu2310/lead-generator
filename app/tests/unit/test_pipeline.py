@@ -187,6 +187,26 @@ class TestDeduplication:
 
 class TestDiscoveryService:
     @pytest.mark.asyncio
+    async def test_web_search_alias_uses_brave_provider(self, monkeypatch):
+        from app.dependencies import get_orchestrator
+
+        orchestrator = get_orchestrator()
+        try:
+            providers = orchestrator.discovery_service.providers
+            assert providers["web_search"] is providers["brave_search"]
+
+            async def fake_search(plan, latitude=None, longitude=None):
+                return [CandidateLead(name="Recruitment firm", source="brave_search")]
+
+            monkeypatch.setattr(providers["brave_search"], "search", fake_search)
+            results = await orchestrator.discovery_service.discover(SearchPlan(
+                primary_source="web_search", candidate_target=1, search_queries=["HR companies"]
+            ))
+            assert [result.name for result in results] == ["Recruitment firm"]
+        finally:
+            await providers["brave_search"].close()
+            await providers["google_places"].close()
+    @pytest.mark.asyncio
     async def test_discover_with_primary_provider(self):
         class MockProvider:
             async def search(self, plan, latitude=None, longitude=None):

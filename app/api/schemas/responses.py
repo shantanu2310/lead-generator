@@ -25,6 +25,7 @@ class LeadResponse(BaseModel):
 
 
 class LeadSearchResponse(BaseModel):
+    search_id: str | None = None
     query: str
     candidates_checked: int
     qualified_leads_found: int
@@ -103,6 +104,7 @@ class LeadListItemResponse(BaseModel):
     id: str
     search_id: str | None = None
     business_name: str
+    contact_name: str | None = None
     website: str | None = None
     email: str | None = None
     phone: str | None = None
@@ -158,6 +160,8 @@ class SearchResponse(BaseModel):
     leads_returned: int = 0
     lead_count: int = 0
     department_id: str | None = None
+    department_name: str | None = None
+    max_leads: int = 15
     created_at: datetime
     completed_at: datetime | None = None
 

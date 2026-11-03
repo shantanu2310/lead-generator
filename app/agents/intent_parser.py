@@ -48,6 +48,8 @@ Rules:
 - entity_type: "local_business" for physical locations,
   "company" for online/general businesses, "person" for individuals
 - category: the specific business type (e.g. "florist", "dentist")
+- For HR companies, recruitment agencies, staffing firms, and HR consultancies,
+  identify the requested business service as the category, not an individual job title.
 - location: explicit location name if mentioned, otherwise null
 - location_mode: "explicit" if location is in query,
   "user_location" if "near me" or similar, "none" if no location

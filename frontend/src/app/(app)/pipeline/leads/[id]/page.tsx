@@ -817,7 +817,7 @@ export default function LeadDetailPage() {
                   <option value="high">High</option>
                 </select>
               </Field>
-              <Field label="Department">
+              <Field label="Product">
                 <select value={editForm.department_id} onChange={(e) => setEditForm({ ...editForm, department_id: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036] transition-colors">
                   <option value="">None</option>
                   {departments.map((d: any) => (

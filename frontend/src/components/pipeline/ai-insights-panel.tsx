@@ -51,23 +51,21 @@ function kindOf(title: string, message: string | null): InsightKind {
   return "info"
 }
 
-export function AIInsightsPanel() {
+export function AIInsightsPanel({ productId = "" }: { productId?: string }) {
   const [insights, setInsights] = useState<InsightItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await api.getPipelineInsights(30)
+  const load = useCallback(() => {
+    return api.getPipelineInsights(30, productId).then((result) => {
       setInsights(result)
-    } catch (err: any) {
-      setError(err.message || "Failed to load insights")
-    } finally {
+      setError(null)
+    }).catch((err: unknown) => {
+      setError(err instanceof Error ? err.message : "Failed to load insights")
+    }).finally(() => {
       setLoading(false)
-    }
-  }, [])
+    })
+  }, [productId])
 
   useEffect(() => {
     load()
@@ -81,7 +79,7 @@ export function AIInsightsPanel() {
           <h3 className="font-semibold text-lg text-slate-900">AI Insights</h3>
         </div>
         <button
-          onClick={load}
+          onClick={() => { setLoading(true); void load() }}
           disabled={loading}
           className="flex items-center gap-1 text-xs text-slate-500 hover:text-[#F46036] transition-colors"
         >
@@ -96,7 +94,7 @@ export function AIInsightsPanel() {
           <p className="text-sm text-red-600">{error}</p>
         ) : insights.length === 0 ? (
           <p className="text-sm text-slate-500">
-            No insights yet. They're generated automatically as leads sit too long in a stage or go
+            No insights yet. They&apos;re generated automatically as leads sit too long in a stage or go
             inactive.
           </p>
         ) : (

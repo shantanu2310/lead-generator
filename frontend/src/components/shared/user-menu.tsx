@@ -1,6 +1,7 @@
 "use client"
 
-import { LogOut } from "lucide-react"
+import { LogOut, Settings } from "lucide-react"
+import Link from "next/link"
 import { useEffect, useState } from "react"
 import { getUser, logout, type AuthUser } from "@/lib/auth"
 import { Avatar } from "@/components/shared/avatar"
@@ -23,6 +24,9 @@ export function UserMenu() {
 
   return (
     <div className="p-4 border-t border-white/10">
+      <Link href="/settings" className="flex items-center gap-2 mb-3 text-sm text-teal-50 hover:text-white">
+        <Settings className="w-4 h-4" /> Settings
+      </Link>
       <div className="flex items-center gap-3">
         <Avatar name={user.name} src={user.avatar_url} className="w-9 h-9" />
         <div className="flex-1 min-w-0">

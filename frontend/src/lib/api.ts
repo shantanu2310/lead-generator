@@ -38,10 +38,12 @@ async function request<T>(
 
   let res: Response | null = null
   let networkError: any = null
-  for (let attempt = 0; attempt <= NETWORK_RETRIES; attempt++) {
+  // Retrying a generation request can create duplicate history records and leads.
+  const retries = method === "POST" && path === "/leads/search" ? 0 : NETWORK_RETRIES
+  for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const r = await fetch(url, options)
-      if (RETRYABLE_STATUS.includes(r.status) && attempt < NETWORK_RETRIES) {
+      if (RETRYABLE_STATUS.includes(r.status) && attempt < retries) {
         r.body?.cancel()
         await sleep(NETWORK_RETRY_DELAYS[attempt] ?? 5000)
         continue
@@ -50,7 +52,7 @@ async function request<T>(
       break
     } catch (err: any) {
       networkError = err
-      if (attempt < NETWORK_RETRIES) {
+      if (attempt < retries) {
         await sleep(NETWORK_RETRY_DELAYS[attempt] ?? 5000)
       }
     }
@@ -74,6 +76,7 @@ async function request<T>(
     const reason = errBody.error?.message || errBody.detail || res.statusText
     throw new ApiError(`${reason} — ${method} ${url}`, res.status)
   }
+  if (res.status === 204) return undefined as T
   return res.json()
 }
 
@@ -190,11 +193,15 @@ export const api = {
   getPipelineAnalytics: (searchId?: string) =>
     request<any>("GET", `/pipeline/analytics${searchId ? `?search_id=${encodeURIComponent(searchId)}` : ""}`),
 
-  getPipelineInsights: (limit?: number) =>
-    request<any[]>("GET", `/pipeline/insights${limit ? `?limit=${limit}` : ""}`),
+  getPipelineInsights: (limit?: number, departmentId?: string) => {
+    const params = new URLSearchParams()
+    if (limit) params.set("limit", String(limit))
+    if (departmentId) params.set("department_id", departmentId)
+    return request<any[]>("GET", `/pipeline/insights${params.size ? `?${params}` : ""}`)
+  },
 
-  getPipelineDashboard: () =>
-    request<any>("GET", "/pipeline/dashboard"),
+  getPipelineDashboard: (departmentId?: string) =>
+    request<any>("GET", `/pipeline/dashboard${departmentId ? `?department_id=${encodeURIComponent(departmentId)}` : ""}`),
 
   getTeamLeads: (perUserLimit?: number) =>
     request<any>("GET", `/pipeline/team-leads${perUserLimit ? `?per_user_limit=${perUserLimit}` : ""}`),

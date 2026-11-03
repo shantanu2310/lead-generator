@@ -102,14 +102,16 @@ async def search_leads(
     user: User = Depends(get_current_admin),
     pipeline_manager: PipelineManager = Depends(get_pipeline_manager),
 ) -> LeadSearchResponse:
-    department = await db.get(Department, request.department_id)
+    department = await db.scalar(select(Department).where(
+        Department.id == request.department_id, Department.company_id == user.company_id
+    ).with_for_update())
     if not department or department.company_id != user.company_id:
         raise HTTPException(
             status_code=400,
-            detail="Select a valid department. Create one in Settings before searching.",
+            detail="Select a valid product. Create one in Settings before searching.",
         )
 
-    saved_leads = await pipeline_manager.run_search(
+    search, saved_leads = await pipeline_manager.run_search(
         db=db,
         company_id=user.company_id,
         query=request.query,
@@ -141,9 +143,10 @@ async def search_leads(
         ))
 
     return LeadSearchResponse(
+        search_id=search.id,
         query=request.query,
-        candidates_checked=len(saved_leads),
-        qualified_leads_found=len(saved_leads),
+        candidates_checked=search.candidates_discovered,
+        qualified_leads_found=search.leads_qualified,
         requested_max_leads=request.max_leads,
         leads=leads,
     )
@@ -224,6 +227,15 @@ async def list_leads(
     dept_names = await _department_names(
         db, user.company_id, [lead.department_id or "" for lead in leads]
     )
+    contact_names: dict[str, str] = {}
+    if leads:
+        contact_rows = await db.execute(
+            select(Contact.lead_id, Contact.name)
+            .where(Contact.company_id == user.company_id, Contact.lead_id.in_([lead.id for lead in leads]))
+            .order_by(Contact.is_primary.desc(), Contact.created_at.asc())
+        )
+        for lead_id, name in contact_rows:
+            contact_names.setdefault(lead_id, name)
 
     return PaginatedResponse(
         items=[
@@ -231,6 +243,7 @@ async def list_leads(
                 id=lead.id,
                 search_id=lead.search_id,
                 business_name=lead.business_name,
+                contact_name=contact_names.get(lead.id),
                 website=lead.website,
                 email=lead.email,
                 phone=lead.phone,
@@ -331,7 +344,7 @@ async def export_leads_csv(
     writer.writerow([
         "business_name", "website", "email", "phone", "address", "industry",
         "employee_count", "revenue", "country", "state", "city", "deal_value",
-        "pipeline_stage", "department", "lead_score", "priority", "email_status",
+        "pipeline_stage", "product", "lead_score", "priority", "email_status",
         "meeting_status", "assigned_to", "next_followup_date", "last_activity_at",
         "created_at",
     ])
@@ -931,10 +944,12 @@ async def update_lead(
         update_values["next_followup_date"] = _to_naive_utc(update_values["next_followup_date"])
     if "department_id" in update_values:
         if not user.is_admin:
-            raise HTTPException(status_code=403, detail="Admin access required to change department")
-        target_dept = await db.get(Department, update_values["department_id"])
+            raise HTTPException(status_code=403, detail="Admin access required to change product")
+        target_dept = await db.scalar(select(Department).where(
+            Department.id == update_values["department_id"], Department.company_id == user.company_id
+        ).with_for_update())
         if not target_dept or target_dept.company_id != user.company_id:
-            raise HTTPException(status_code=400, detail="Invalid department")
+            raise HTTPException(status_code=400, detail="Invalid product")
     if update_values:
         await db.execute(
             update(Lead).where(

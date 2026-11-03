@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { api } from "@/lib/api"
 
 export type DashboardKpis = {
@@ -38,32 +38,35 @@ export type DashboardData = {
   priority_leads: PriorityLead[]
 }
 
-export function useDashboardData() {
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
+export function useDashboardData(productId = "") {
+  const [snapshot, setSnapshot] = useState<{ productId: string; data: DashboardData | null; error: string | null } | null>(null)
+  const requestId = useRef(0)
 
-  const fetch = useCallback(async () => {
-    try {
-      setLoading(true)
-      const result = await api.getPipelineDashboard()
-      setData(result)
-    } catch (err) {
-      console.error("Failed to fetch dashboard data", err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const fetch = useCallback(() => {
+    const id = ++requestId.current
+    return api.getPipelineDashboard(productId).then((result) => {
+      if (id === requestId.current) setSnapshot({ productId, data: result, error: null })
+    }).catch(() => {
+      if (id === requestId.current) {
+        setSnapshot({ productId, data: null, error: "Failed to load dashboard data. Please try again." })
+      }
+    })
+  }, [productId])
 
   useEffect(() => {
+    const counter = requestId
     fetch()
     const interval = setInterval(fetch, 30000)
     const onChanged = () => fetch()
     window.addEventListener("pipeline:changed", onChanged)
     return () => {
+      counter.current++
       clearInterval(interval)
       window.removeEventListener("pipeline:changed", onChanged)
     }
   }, [fetch])
 
-  return { data, loading, refetch: fetch }
+  const data = snapshot?.productId === productId ? snapshot.data : null
+  const error = snapshot?.productId === productId ? snapshot.error : null
+  return { data, loading: !snapshot || snapshot.productId !== productId, error, refetch: fetch }
 }

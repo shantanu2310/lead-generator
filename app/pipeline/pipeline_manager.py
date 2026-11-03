@@ -1,6 +1,7 @@
 from app.core.constants import PipelineStage, TimelineEventType
 from app.core.logging import get_logger
-from app.models.lead import Contact, Lead
+from app.database.base import utcnow
+from app.models.lead import Lead
 from app.models.pipeline import Notification, PipelineLog, TimelineEvent
 from app.models.search import Search
 from app.pipeline.orchestrator import PipelineOrchestrator
@@ -24,31 +25,44 @@ class PipelineManager:
         longitude: float | None = None,
         max_leads: int = 15,
         department_id: str | None = None,
-    ) -> list[Lead]:
+    ) -> tuple[Search, list[Lead]]:
         logger.info("pipeline_manager_started", query=query, max_leads=max_leads)
 
-        result = await self.orchestrator.run(
-            query=query,
-            latitude=latitude,
-            longitude=longitude,
-            max_leads=max_leads,
-        )
-
         search = Search(
-            company_id=company_id,
-            query=result.query,
-            latitude=latitude,
-            longitude=longitude,
-            max_leads=result.requested_max_leads,
-            status="completed",
-            candidates_discovered=result.candidates_checked,
-            candidates_after_dedup=result.candidates_checked,
-            leads_qualified=result.qualified_leads_found,
-            leads_returned=len(result.leads),
-            department_id=department_id,
+            company_id=company_id, query=query, latitude=latitude, longitude=longitude,
+            max_leads=max_leads, department_id=department_id, status="running",
         )
         db.add(search)
-        await db.flush()
+        # Persist before discovery so failed and in-progress requests appear in history.
+        await db.commit()
+        search_id = search.id
+        try:
+            saved_leads = await self._finish_search(db, search)
+            search.status = "completed"
+            search.completed_at = utcnow()
+            await db.commit()
+            return search, saved_leads
+        except Exception:
+            await db.rollback()
+            failed = await db.get(Search, search_id)
+            if failed:
+                failed.status = "failed"
+                failed.completed_at = utcnow()
+                await db.commit()
+            raise
+
+    async def _finish_search(self, db, search: Search) -> list[Lead]:
+        result = await self.orchestrator.run(
+            query=search.query,
+            latitude=search.latitude,
+            longitude=search.longitude,
+            max_leads=search.max_leads,
+        )
+        search.candidates_discovered = result.candidates_checked
+        search.candidates_after_dedup = result.candidates_checked
+        search.leads_qualified = result.qualified_leads_found
+        search.leads_returned = len(result.leads)
+        company_id, query, department_id = search.company_id, search.query, search.department_id
 
         saved_leads: list[Lead] = []
         for lead_data in result.leads:

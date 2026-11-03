@@ -2,10 +2,10 @@
 
 import { PriorityLeads } from "@/components/dashboard/priority-leads"
 import { SalesFunnel } from "@/components/dashboard/sales-funnel"
-import { LeadSearchForm } from "@/components/pipeline/lead-search-form"
 import { AIInsightsPanel } from "@/components/pipeline/ai-insights-panel"
 import { StatCards } from "@/components/dashboard/stat-cards"
 import { useDashboardData } from "@/hooks/use-dashboard-data"
+import { useProducts } from "@/hooks/use-products"
 
 function buildStatCards(k: { total_leads: number; qualified: number; qualified_percent: number; verified_email: number; verified_email_percent: number; hot_leads: number }) {
   return [
@@ -17,17 +17,18 @@ function buildStatCards(k: { total_leads: number; qualified: number; qualified_p
 }
 
 export default function DashboardPage() {
-  const { data, loading, refetch } = useDashboardData()
+  const { selectedProductId } = useProducts()
+  const { data, loading, error, refetch } = useDashboardData(selectedProductId)
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <LeadSearchForm onComplete={refetch} />
-      <StatCards data={data ? buildStatCards(data.kpis) : undefined} />
+      {error && <div className="text-sm text-red-700">{error} <button onClick={refetch} className="underline">Retry</button></div>}
+      {data ? <StatCards data={buildStatCards(data.kpis)} /> : <div className="text-sm text-slate-500">{loading ? "Loading dashboard…" : "No dashboard data available."}</div>}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <SalesFunnel data={data?.funnel} loading={loading} />
         </div>
-        <AIInsightsPanel />
+        <AIInsightsPanel key={selectedProductId} productId={selectedProductId} />
       </div>
       <PriorityLeads data={data?.priority_leads} loading={loading} />
     </div>

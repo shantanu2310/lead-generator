@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.schemas.responses import PaginatedResponse, SearchResponse
 from app.database.base import utcnow
 from app.dependencies import get_current_admin, get_current_user, get_db
+from app.models.department import Department
 from app.models.lead import Lead
 from app.models.search import Search
 from app.models.user import User
@@ -41,6 +42,10 @@ async def list_searches(
     )
     searches = result.scalars().all()
 
+    departments = dict((await db.execute(
+        select(Department.id, Department.name).where(Department.company_id == user.company_id)
+    )).all())
+
     lead_counts: dict[str, int] = {}
     if searches:
         counts = await db.execute(
@@ -64,6 +69,8 @@ async def list_searches(
             leads_returned=s.leads_returned,
             lead_count=lead_counts.get(s.id, 0),
             department_id=s.department_id,
+            department_name=departments.get(s.department_id),
+            max_leads=s.max_leads,
             created_at=s.created_at,
             completed_at=s.completed_at,
         )
@@ -104,6 +111,10 @@ async def restore_search(
         raise HTTPException(status_code=404, detail="Search not found")
     search.archived_at = None
     await db.commit()
+    department = await db.get(Department, search.department_id) if search.department_id else None
+    lead_count = await db.scalar(select(func.count(Lead.id)).where(
+        Lead.search_id == search.id, Lead.company_id == user.company_id
+    )) or 0
     return SearchResponse(
         id=search.id,
         query=search.query,
@@ -112,8 +123,12 @@ async def restore_search(
         candidates_after_dedup=search.candidates_after_dedup,
         leads_qualified=search.leads_qualified,
         leads_returned=search.leads_returned,
-        lead_count=0,
+        lead_count=lead_count,
         department_id=search.department_id,
+        department_name=(
+            department.name if department and department.company_id == user.company_id else None
+        ),
+        max_leads=search.max_leads,
         created_at=search.created_at,
         completed_at=search.completed_at,
     )

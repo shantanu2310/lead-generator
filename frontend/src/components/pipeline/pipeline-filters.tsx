@@ -68,7 +68,7 @@ export function PipelineFilters({
         onChange={(e) => update("department_id", e.target.value)}
         className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#F46036]"
       >
-        <option value="">All Departments</option>
+        <option value="">All Products</option>
         {departments.map((d) => (
           <option key={d.id} value={d.id}>{d.name}</option>
         ))}

@@ -5,6 +5,7 @@ import { KeyRound, Save, CheckCircle2, XCircle, Loader2, Database, Server, UserR
 import { AvatarPicker } from "@/components/shared/avatar"
 import { api } from "@/lib/api"
 import { getToken, getUser, setAuth } from "@/lib/auth"
+import { ProductsManager } from "@/components/products-manager"
 
 type Provider = {
   key: string
@@ -226,6 +227,8 @@ useEffect(() => {
                 </div>
               </div>
             </div>
+
+            {user?.is_admin && <ProductsManager />}
 
             {user?.is_admin && (
             <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">

@@ -43,6 +43,8 @@ Available sources:
 Rules:
 - For local_business entity_type: prefer google_places as primary
 - For company entity_type: prefer web_search as primary
+- For HR consultancies, recruitment agencies, and staffing firms, search for companies
+  providing the requested service and include location when supplied.
 - candidate_target: always 50-60 to ensure enough candidates
 - requires_location: true when entity_type is local_business
 - requires_website_analysis: true when we need to verify business identity

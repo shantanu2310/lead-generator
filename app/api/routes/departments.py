@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies import get_current_admin, get_current_user, get_db
 from app.models.department import Department
 from app.models.lead import Lead
+from app.models.search import Search
 from app.models.user import User
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -62,6 +63,8 @@ async def create_department(
     user: User = Depends(get_current_admin),
 ) -> DepartmentResponse:
     name = body.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Enter a product name")
     existing = await db.scalar(
         select(Department).where(
             Department.company_id == user.company_id,
@@ -69,7 +72,7 @@ async def create_department(
         )
     )
     if existing:
-        raise HTTPException(status_code=400, detail="A department with this name already exists")
+        raise HTTPException(status_code=400, detail="A product with this name already exists")
 
     department = Department(company_id=user.company_id, name=name)
     db.add(department)
@@ -87,9 +90,11 @@ async def rename_department(
 ) -> DepartmentResponse:
     department = await db.get(Department, department_id)
     if not department or department.company_id != user.company_id:
-        raise HTTPException(status_code=404, detail="Department not found")
+        raise HTTPException(status_code=404, detail="Product not found")
 
     name = body.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Enter a product name")
     duplicate = await db.scalar(
         select(Department).where(
             Department.company_id == user.company_id,
@@ -98,7 +103,7 @@ async def rename_department(
         )
     )
     if duplicate:
-        raise HTTPException(status_code=400, detail="A department with this name already exists")
+        raise HTTPException(status_code=400, detail="A product with this name already exists")
 
     department.name = name
     await db.commit()
@@ -111,8 +116,21 @@ async def delete_department(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_admin),
 ) -> None:
-    department = await db.get(Department, department_id)
+    department = await db.scalar(select(Department).where(
+        Department.id == department_id, Department.company_id == user.company_id
+    ).with_for_update())
     if not department or department.company_id != user.company_id:
-        raise HTTPException(status_code=404, detail="Department not found")
+        raise HTTPException(status_code=404, detail="Product not found")
+    lead_count = await db.scalar(select(func.count(Lead.id)).where(
+        Lead.company_id == user.company_id, Lead.department_id == department_id
+    )) or 0
+    search_count = await db.scalar(select(func.count(Search.id)).where(
+        Search.company_id == user.company_id, Search.department_id == department_id
+    )) or 0
+    if lead_count or search_count:
+        raise HTTPException(
+            status_code=409,
+            detail="This product is linked to leads or search history and cannot be deleted.",
+        )
     await db.delete(department)
     await db.commit()

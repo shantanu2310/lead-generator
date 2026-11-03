@@ -247,19 +247,20 @@ async def get_pipeline_analytics(
 @router.get("/pipeline/insights", response_model=list[InsightResponse])
 async def get_pipeline_insights(
     limit: int = 20,
+    department_id: str | None = None,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_admin),
 ) -> list[InsightResponse]:
     cap = max(1, min(limit, 100))
-    result = await db.execute(
-        select(Notification)
-        .where(
-            Notification.company_id == user.company_id,
-            Notification.notification_type == NotificationType.AI_INSIGHT.value,
-        )
-        .order_by(Notification.created_at.desc())
-        .limit(cap)
+    stmt = select(Notification).where(
+        Notification.company_id == user.company_id,
+        Notification.notification_type == NotificationType.AI_INSIGHT.value,
     )
+    if department_id:
+        stmt = stmt.join(Lead, Lead.id == Notification.lead_id).where(
+            Lead.company_id == user.company_id, Lead.department_id == department_id
+        )
+    result = await db.execute(stmt.order_by(Notification.created_at.desc()).limit(cap))
     notifications = result.scalars().all()
     return [
         InsightResponse(
@@ -342,10 +343,13 @@ def _priority_reason(
 
 @router.get("/pipeline/dashboard", response_model=DashboardResponse)
 async def get_pipeline_dashboard(
+    department_id: str | None = None,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_admin),
 ) -> DashboardResponse:
     conditions = [Lead.company_id == user.company_id]
+    if department_id:
+        conditions.append(Lead.department_id == department_id)
 
     total = await db.scalar(select(func.count(Lead.id)).where(*conditions)) or 0
     qualified = await db.scalar(
@@ -366,19 +370,26 @@ async def get_pipeline_dashboard(
     ) or 0
 
     decision_maker = await db.scalar(
-        select(func.count(func.distinct(Contact.lead_id))).where(
-            Contact.company_id == user.company_id
+        select(func.count(func.distinct(Contact.lead_id))).join(
+            Lead, Lead.id == Contact.lead_id
+        ).where(
+            Contact.company_id == user.company_id, *conditions
         )
     ) or 0
     contacted = await db.scalar(
-        select(func.count(func.distinct(ContactActivity.lead_id))).where(
-            ContactActivity.company_id == user.company_id
+        select(func.count(func.distinct(ContactActivity.lead_id))).join(
+            Lead, Lead.id == ContactActivity.lead_id
+        ).where(
+            ContactActivity.company_id == user.company_id, *conditions
         )
     ) or 0
     replied = await db.scalar(
-        select(func.count(func.distinct(ContactActivity.lead_id))).where(
+        select(func.count(func.distinct(ContactActivity.lead_id))).join(
+            Lead, Lead.id == ContactActivity.lead_id
+        ).where(
             ContactActivity.company_id == user.company_id,
             ContactActivity.outcome.in_(POSITIVE_OUTCOMES),
+            *conditions,
         )
     ) or 0
     outreach_ready = await db.scalar(
