@@ -47,8 +47,8 @@ export function LeadSearchForm({
   }
 
   return (
-    <form onSubmit={run} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] items-end gap-3">
-      <div className="min-w-0 sm:col-span-2 lg:col-span-1">
+    <form onSubmit={run} className="grid grid-cols-1 sm:grid-cols-2 items-end gap-3">
+      <div className="min-w-0 sm:col-span-2">
         <label htmlFor="lead-query" className="block text-xs font-medium text-slate-600 mb-1.5">Search</label>
         <input id="lead-query" value={query} onChange={(e) => setQuery(e.target.value)} disabled={loading}
           placeholder="e.g. recruitment agencies in Amsterdam"
@@ -70,7 +70,7 @@ export function LeadSearchForm({
           </select>
         </div>
       <button type="submit" disabled={loading || !productId}
-        className="flex items-center justify-center gap-2 px-5 py-2 bg-[#F46036] hover:bg-[#D94A22] disabled:opacity-40 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
+        className="sm:col-span-2 flex items-center justify-center gap-2 px-5 py-2 bg-[#F46036] hover:bg-[#D94A22] disabled:opacity-40 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
         {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating leads…</> : <><Sparkles className="w-4 h-4" /> Generate Leads</>}
       </button>
       {!products.length && <p className="col-span-full text-sm text-slate-500">{productsLoading ? "Loading products…" : productsError || <>Add a product in <Link className="text-[#41808B] underline" href="/settings#products">Settings</Link> to start generating leads.</>}</p>}

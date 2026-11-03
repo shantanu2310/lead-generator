@@ -156,7 +156,7 @@ export default function LeadGeneratorPage() {
     <div className="max-w-[1600px] mx-auto h-[calc(100dvh-8rem)] min-h-[480px] flex flex-col gap-4">
       {message && <div role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{message}</div>}
       {historyError && <div role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{historyError} <button onClick={() => void loadHistory()} className="underline">Retry</button></div>}
-      <div className="grid grid-rows-2 flex-1 min-h-0 gap-5">
+      <div className="grid grid-rows-2 lg:grid-rows-1 lg:grid-cols-2 flex-1 min-h-0 gap-5">
         <div className="flex flex-col min-h-0 min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
           <div className="shrink-0 max-h-[65%] overflow-y-auto p-4 border-b border-slate-200">
             <h2 className="text-base font-semibold text-slate-900 mb-3">Generate Leads</h2>
