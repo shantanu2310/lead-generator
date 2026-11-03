@@ -79,9 +79,9 @@ export function ProductsManager() {
   }
 
   return (
-    <div id="products" className="space-y-6 scroll-mt-6">
+    <div id="products" className="min-w-0 lg:h-full lg:min-h-0 lg:overflow-y-auto scroll-mt-6 rounded-xl border border-slate-200 bg-white shadow-sm p-6">
             {msg && (
-              <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm ${
+              <div className={`mb-4 flex items-center gap-2 px-4 py-3 rounded-lg text-sm ${
                 msg.ok ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
               }`}>
                 {msg.ok ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
@@ -89,7 +89,6 @@ export function ProductsManager() {
               </div>
             )}
 
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
               <div className="flex items-center gap-2 mb-1">
                 <Building2 className="w-5 h-5 text-[#F46036]" />
                 <h2 className="font-semibold text-lg text-slate-900">Products</h2>
@@ -106,7 +105,7 @@ export function ProductsManager() {
                     if (e.key === "Enter") addDepartment()
                   }}
                   placeholder="New product name, e.g. Recruitment"
-                  className="flex-1 max-w-sm px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
+                  className="min-w-0 flex-1 max-w-sm px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
                 />
                 <button
                   onClick={addDepartment}
@@ -133,7 +132,7 @@ export function ProductsManager() {
                   {departments.map((d) => (
                     <div key={d.id} className="flex items-center justify-between gap-4 py-3">
                       {editingDeptId === d.id ? (
-                        <div className="flex items-center gap-2 flex-1 max-w-sm">
+                        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0 max-w-sm">
                           <input
                             value={editingDeptName}
                             onChange={(e) => setEditingDeptName(e.target.value)}
@@ -142,7 +141,7 @@ export function ProductsManager() {
                               if (e.key === "Escape") setEditingDeptId(null)
                             }}
                             autoFocus
-                            className="flex-1 px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#F46036]"
+                            className="min-w-0 flex-1 px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#F46036]"
                           />
                           <button
                             onClick={() => saveDepartmentRename(d)}
@@ -187,7 +186,6 @@ export function ProductsManager() {
                   ))}
                 </div>
               )}
-            </div>
           </div>
   )
 }

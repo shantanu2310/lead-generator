@@ -168,7 +168,7 @@ useEffect(() => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6">
             {msg && (
               <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm ${
                 msg.ok ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
@@ -178,7 +178,8 @@ useEffect(() => {
               </div>
             )}
 
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 lg:auto-rows-[32rem] gap-6">
+            <div className="min-w-0 lg:h-full lg:min-h-0 lg:overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm p-6">
               <div className="flex items-center gap-2 mb-1">
                 <UserRound className="w-5 h-5 text-[#F46036]" />
                 <h2 className="font-semibold text-lg text-slate-900">Profile</h2>
@@ -231,7 +232,7 @@ useEffect(() => {
             {user?.is_admin && <ProductsManager />}
 
             {user?.is_admin && (
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+            <div className="min-w-0 lg:h-full lg:min-h-0 lg:overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm p-6">
               <div className="flex items-center gap-2 mb-1">
                 <KeyRound className="w-5 h-5 text-[#F46036]" />
                 <h2 className="font-semibold text-lg text-slate-900">API Providers</h2>
@@ -245,7 +246,7 @@ useEffect(() => {
                   const editing = editingKey === p.key
                   const saving = savingKey === p.key
                   return (
-                    <div key={p.key} className="flex items-center justify-between gap-4 p-4 rounded-lg bg-slate-50 border border-slate-200">
+                    <div key={p.key} className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-lg bg-slate-50 border border-slate-200">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-medium text-slate-900">{p.name}</p>
@@ -265,13 +266,13 @@ useEffect(() => {
                       </div>
 
                       {editing ? (
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex flex-wrap items-center gap-2 min-w-0">
                           <input
                             type="password"
                             placeholder="Paste new API key"
                             value={keyValues[p.key] || ""}
                             onChange={(e) => setKeyValues((prev) => ({ ...prev, [p.key]: e.target.value }))}
-                            className="w-56 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
+                            className="w-full sm:w-56 min-w-0 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
                           />
                           <button
                             onClick={() => saveProvider(p)}
@@ -301,7 +302,7 @@ useEffect(() => {
                 })}
               </div>
 
-              <div className="flex items-center gap-3 mt-5 pt-5 border-t border-slate-200">
+              <div className="flex flex-wrap items-center gap-3 mt-5 pt-5 border-t border-slate-200">
                 <label className="text-sm text-slate-500">LLM Model</label>
                 <select
                   value={model}
@@ -324,7 +325,7 @@ useEffect(() => {
             )}
 
             {user?.is_admin && (
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+            <div className="min-w-0 lg:h-full lg:min-h-0 lg:overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm p-6">
               <h2 className="font-semibold text-lg text-slate-900 mb-1">Pipeline Defaults</h2>
               <p className="text-sm text-slate-500 mb-5">Defaults used for new lead searches and scoring.</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -350,6 +351,7 @@ useEffect(() => {
               </button>
             </div>
             )}
+            </div>
 
             {app && user?.is_admin && (
               <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">

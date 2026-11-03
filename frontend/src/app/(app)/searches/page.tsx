@@ -7,6 +7,9 @@ import { LeadSearchForm } from "@/components/pipeline/lead-search-form"
 import { api } from "@/lib/api"
 import { STAGE_LABELS } from "@/lib/constants"
 
+const LEADS_PAGE_SIZE = 50
+const MAX_GENERATED_LEADS = 15
+
 type SearchItem = {
   id: string
   query: string
@@ -90,7 +93,7 @@ export default function LeadGeneratorPage() {
   useEffect(() => {
     if (!selectedId) return
     let active = true
-    api.listLeads({ search_id: selectedId, page: String(leadPage), page_size: "50" })
+    api.listLeads({ search_id: selectedId, page: String(leadPage), page_size: String(LEADS_PAGE_SIZE) })
       .then((result) => {
         if (active) setLeadState({ key: leadKey, leads: result.items, pages: result.total_pages, error: null })
       })
@@ -117,10 +120,14 @@ export default function LeadGeneratorPage() {
       setMessage("This historical search has no available product. Start a new search and select a product.")
       return
     }
+    if (!Number.isInteger(item.max_leads) || item.max_leads < 1 || item.max_leads > MAX_GENERATED_LEADS) {
+      setMessage(`This search requested ${item.max_leads} leads, which is outside the supported range of 1–${MAX_GENERATED_LEADS}. Start a new search with a supported quantity.`)
+      return
+    }
     setRerunning(item.id)
     setMessage(null)
     try {
-      const result = await api.searchLeads({ query: item.query, max_leads: Math.min(item.max_leads || 15, 15), department_id: item.department_id })
+      const result = await api.searchLeads({ query: item.query, max_leads: item.max_leads, department_id: item.department_id })
       showNewSearch(result.search_id)
     } catch (err: unknown) {
       setMessage(err instanceof Error ? err.message : "Re-run failed.")
@@ -146,44 +153,44 @@ export default function LeadGeneratorPage() {
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-4">
+    <div className="max-w-[1600px] mx-auto h-[calc(100dvh-8rem)] min-h-[480px] flex flex-col gap-4">
       {message && <div role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{message}</div>}
       {historyError && <div role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{historyError} <button onClick={() => void loadHistory()} className="underline">Retry</button></div>}
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(340px,0.9fr)_minmax(0,1.4fr)] gap-5 items-start">
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-slate-200">
-            <h2 className="text-base font-semibold text-slate-900 mb-4">Generate Leads</h2>
+      <div className="grid grid-rows-2 flex-1 min-h-0 gap-5">
+        <div className="flex flex-col min-h-0 min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="shrink-0 max-h-[65%] overflow-y-auto p-4 border-b border-slate-200">
+            <h2 className="text-base font-semibold text-slate-900 mb-3">Generate Leads</h2>
             <LeadSearchForm
               onComplete={(result) => showNewSearch(result.search_id)}
               onGeneratingChange={(active) => { setGenerating(active); if (active) setMessage(null); else setRevision((v) => v + 1) }}
             />
           </div>
-          <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-200">
+          <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-200">
             <div><h2 className="font-semibold text-slate-900">Search History</h2><p className="text-xs text-slate-500">Select a search to view its leads.</p></div>
             <button onClick={() => { setArchived(!archived); setPage(1); setItems([]); setSelected(null) }}
               className="inline-flex items-center gap-1.5 text-xs text-[#41808B] hover:text-[#F46036]">
               <Archive className="w-4 h-4" /> {archived ? "Active searches" : "Archived"}
             </button>
           </div>
-          <div className="max-h-[560px] overflow-y-auto divide-y divide-slate-100">
+          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-slate-100">
             {loading && items.length === 0 ? <div className="p-6 text-sm text-slate-500">Loading history…</div> : historyError && items.length === 0 ? <div className="p-6 text-sm text-slate-500">Search history is unavailable.</div> : items.length === 0 ? (
               <div className="p-8 text-center text-sm text-slate-500"><Inbox className="w-8 h-8 mx-auto mb-2 text-slate-300" />{archived ? "No archived searches." : "No searches yet."}</div>
             ) : items.map((item) => (
-              <div key={item.id} className={`p-4 ${selected?.id === item.id ? "bg-[#57A3AF]/10" : "hover:bg-slate-50"}`}>
-                <button onClick={() => selectSearch(item)} className="w-full text-left">
+              <div key={item.id} className={`flex items-center gap-4 p-4 ${selected?.id === item.id ? "bg-[#57A3AF]/10" : "hover:bg-slate-50"}`}>
+                <button onClick={() => selectSearch(item)} className="flex-1 min-w-0 text-left">
                   <div className="flex items-start justify-between gap-3">
                     <span className="font-semibold text-sm text-slate-900 break-words">{item.query}</span>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs capitalize ${item.status === "failed" ? "bg-red-50 text-red-700" : item.status === "completed" ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>{item.status}</span>
+                    {item.status !== "completed" && <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs capitalize ${item.status === "failed" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"}`}>{item.status}</span>}
                   </div>
                   <p className="text-xs text-slate-600 mt-1.5">{item.department_name || "Unassigned product"} · {item.max_leads} requested · {item.leads_returned} generated</p>
                   <p className="text-xs text-slate-400 mt-1">{new Date(item.created_at).toLocaleString()}</p>
                 </button>
-                <div className="flex items-center gap-4 mt-2">
-                  {!archived && <button onClick={() => rerun(item)} disabled={!!rerunning || generating || item.status === "running"}
+                <div className="flex w-20 shrink-0 flex-col items-start gap-2">
+                  {!archived && <button onClick={() => rerun(item)} disabled={!!rerunning || generating || item.status === "running" || item.status === "pending"}
                     className="inline-flex items-center gap-1 text-xs text-[#41808B] hover:text-[#F46036] disabled:opacity-40">
                     {rerunning === item.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />} Re-run
                   </button>}
-                  <button onClick={() => changeArchive(item)} disabled={busy === item.id || item.status === "running"}
+                  <button onClick={() => changeArchive(item)} disabled={busy === item.id || item.status === "running" || item.status === "pending"}
                     className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-[#F46036] disabled:opacity-40">
                     {busy === item.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Archive className="w-3 h-3" />} {archived ? "Restore" : "Archive"}
                   </button>
@@ -191,39 +198,45 @@ export default function LeadGeneratorPage() {
               </div>
             ))}
           </div>
-          {totalPages > 1 && <div className="flex items-center justify-between px-5 py-3 border-t border-slate-200 text-xs text-slate-600">
+          {totalPages > 1 && <div className="shrink-0 flex items-center justify-between px-5 py-3 border-t border-slate-200 text-xs text-slate-600">
             <button disabled={page <= 1} onClick={() => setPage(page - 1)} className="disabled:opacity-40">Previous</button>
             <span>Page {page} of {totalPages}</span>
             <button disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="disabled:opacity-40">Next</button>
           </div>}
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden min-w-0">
-          <div className="p-5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
-            <div><h2 className="font-semibold text-slate-900">Generated Leads</h2>
-            <p className="text-sm text-slate-500 mt-1">{selected ? `${selected.query} · ${selected.department_name || "Unassigned product"}` : "Choose a search from the history to view its leads."}</p></div>
+        <div className="flex flex-col min-h-0 min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="shrink-0 p-5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0"><h2 className="font-semibold text-slate-900">Generated Leads</h2>
+            <p className="truncate text-sm text-slate-500 mt-1" title={selected ? `${selected.query} · ${selected.department_name || "Unassigned product"}` : undefined}>{selected ? `${selected.query} · ${selected.department_name || "Unassigned product"}` : "Choose a search from the history to view its leads."}</p></div>
             {selected && selected.lead_count > 0 && <Link className="text-sm text-[#41808B] hover:text-[#F46036]" href={`/pipeline?search_id=${encodeURIComponent(selected.id)}&q=${encodeURIComponent(selected.query)}`}>View in Pipeline</Link>}
           </div>
-          {!selected ? <div className="p-12 text-center text-sm text-slate-500"><Search className="w-9 h-9 mx-auto mb-3 text-slate-300" />No search selected.</div> :
-            leadsLoading ? <p className="p-6 text-sm text-slate-500">Loading leads…</p> :
-            leadError ? <p role="alert" className="p-6 text-sm text-red-700">{leadError}</p> :
-            leads.length === 0 ? <p className="p-8 text-sm text-slate-500">{selected.status === "running" || selected.status === "pending" ? "Generation is in progress. Leads will appear when it finishes." : "No saved leads for this search."}</p> : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr>{["Company", "Contact person", "Email", "Phone", "Website", "Product", "Status"].map((heading) => <th key={heading} className="px-4 py-3 font-semibold whitespace-nowrap">{heading}</th>)}</tr></thead>
-                  <tbody className="divide-y divide-slate-100">{leads.map((lead) => <tr key={lead.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-medium"><Link className="text-[#41808B] hover:text-[#F46036]" href={`/pipeline/leads/${lead.id}`}>{lead.business_name}</Link></td>
-                    <td className="px-4 py-3 text-slate-600">{lead.contact_name || "—"}</td>
-                    <td className="px-4 py-3 text-slate-600">{lead.email ? <a className="text-[#41808B]" href={`mailto:${lead.email}`}>{lead.email}</a> : "—"}</td>
-                    <td className="px-4 py-3 text-slate-600">{lead.phone ? <a className="text-[#41808B]" href={`tel:${lead.phone}`}>{lead.phone}</a> : "—"}</td>
-                    <td className="px-4 py-3 text-slate-600">{lead.website ? <a className="text-[#41808B]" href={lead.website.startsWith("http") ? lead.website : `https://${lead.website}`} target="_blank" rel="noreferrer">{lead.website.replace(/^https?:\/\//, "")}</a> : "—"}</td>
-                    <td className="px-4 py-3 text-slate-600">{lead.department_name || "Unassigned"}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-slate-600">{STAGE_LABELS[lead.pipeline_stage] || lead.pipeline_stage}</td>
-                  </tr>)}</tbody>
-                </table>
-              </div>
-            )}
-          {selected && leadPages > 1 && <div className="flex items-center justify-between px-5 py-3 border-t border-slate-200 text-xs text-slate-600">
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {!selected ? <div className="p-12 text-center text-sm text-slate-500"><Search className="w-9 h-9 mx-auto mb-3 text-slate-300" />No search selected.</div> :
+              leadsLoading ? <p className="p-6 text-sm text-slate-500">Loading leads…</p> :
+              leadError ? <p role="alert" className="p-6 text-sm text-red-700">{leadError}</p> :
+              leads.length === 0 ? <p className="p-8 text-sm text-slate-500">{selected.status === "running" || selected.status === "pending" ? "Generation is in progress. Leads will appear when it finishes." : "No saved leads for this search."}</p> : (
+                <ol start={(leadPage - 1) * LEADS_PAGE_SIZE + 1} className="divide-y divide-slate-100">
+                  {leads.map((lead, index) => (
+                    <li key={lead.id}>
+                      <Link href={`/pipeline/leads/${lead.id}`} className="group flex items-start gap-4 px-5 py-3 hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#41808B]">
+                        <span className="w-7 shrink-0 pt-0.5 text-sm font-semibold tabular-nums text-slate-500">{(leadPage - 1) * LEADS_PAGE_SIZE + index + 1}.</span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold text-slate-900 group-hover:text-[#F46036]" title={lead.business_name}>{lead.business_name}</span>
+                          <span className="mt-1 flex items-center gap-2 overflow-x-auto whitespace-nowrap text-xs text-slate-600">
+                            <span>Email: {lead.email || "—"}</span><span aria-hidden="true">·</span>
+                            <span>Phone: {lead.phone || "—"}</span><span aria-hidden="true">·</span>
+                            <span>Status: {STAGE_LABELS[lead.pipeline_stage] || lead.pipeline_stage}</span><span aria-hidden="true">·</span>
+                            <span>Website: {lead.website ? lead.website.replace(/^https?:\/\//, "") : "—"}</span>
+                          </span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+              )}
+          </div>
+          {selected && leadPages > 1 && <div className="shrink-0 flex items-center justify-between px-5 py-3 border-t border-slate-200 text-xs text-slate-600">
             <button disabled={leadPage <= 1} onClick={() => setLeadPage(leadPage - 1)} className="disabled:opacity-40">Previous</button>
             <span>Page {leadPage} of {leadPages}</span>
             <button disabled={leadPage >= leadPages} onClick={() => setLeadPage(leadPage + 1)} className="disabled:opacity-40">Next</button>

@@ -284,6 +284,32 @@ async def test_generation_history_and_selected_leads_through_api(db):
             leads = response.json()["items"]
             assert len(leads) == 1 and leads[0]["contact_name"] == "HR manager"
             assert leads[0]["department_name"] == "Recruiting"
+
+            rerun = await client.post(
+                "/api/v1/leads/search",
+                json={"query": "HR", "department_id": "product", "max_leads": 5},
+            )
+            assert rerun.status_code == 200
+            rerun_id = rerun.json()["search_id"]
+            assert rerun_id != search_id
+            history = (await client.get("/api/v1/searches")).json()["items"]
+            assert {record["id"] for record in history} == {search_id, rerun_id}
+            assert all(record["max_leads"] == 5 for record in history)
+            assert all(record["department_id"] == "product" for record in history)
+
+            assert (await client.delete(f"/api/v1/searches/{search_id}")).status_code == 204
+            active = (await client.get("/api/v1/searches")).json()["items"]
+            archived = (await client.get(
+                "/api/v1/searches", params={"archived": "true"}
+            )).json()["items"]
+            assert [record["id"] for record in active] == [rerun_id]
+            assert [record["id"] for record in archived] == [search_id]
+            archived_leads = (await client.get(
+                "/api/v1/leads", params={"search_id": search_id}
+            )).json()["items"]
+            assert [item["id"] for item in archived_leads] == [lead.id]
+            assert (await client.patch(f"/api/v1/searches/{search_id}/restore")).status_code == 200
+
             failed = await client.post(
                 "/api/v1/leads/search", json={"query": "fail", "department_id": "product"}
             )

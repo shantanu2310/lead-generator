@@ -47,15 +47,14 @@ export function LeadSearchForm({
   }
 
   return (
-    <form onSubmit={run} className="space-y-3">
-      <div>
+    <form onSubmit={run} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] items-end gap-3">
+      <div className="min-w-0 sm:col-span-2 lg:col-span-1">
         <label htmlFor="lead-query" className="block text-xs font-medium text-slate-600 mb-1.5">Search</label>
         <input id="lead-query" value={query} onChange={(e) => setQuery(e.target.value)} disabled={loading}
           placeholder="e.g. recruitment agencies in Amsterdam"
           className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036] disabled:opacity-50" />
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
+        <div className="min-w-0">
           <label htmlFor="lead-product" className="block text-xs font-medium text-slate-600 mb-1.5">Product</label>
           <select id="lead-product" value={productId} onChange={(e) => setProductId(e.target.value)} disabled={loading || !products.length}
             className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 disabled:opacity-50">
@@ -63,21 +62,20 @@ export function LeadSearchForm({
             {products.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}
           </select>
         </div>
-        <div>
+        <div className="min-w-0">
           <label htmlFor="lead-count" className="block text-xs font-medium text-slate-600 mb-1.5">Number of leads</label>
           <select id="lead-count" value={maxLeads} onChange={(e) => setMaxLeads(Number(e.target.value))} disabled={loading}
             className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 disabled:opacity-50">
             {[5, 10, 15].map((n) => <option key={n} value={n}>{n} leads</option>)}
           </select>
         </div>
-      </div>
-      {!products.length && <p className="text-sm text-slate-500">{productsLoading ? "Loading products…" : productsError || <>Add a product in <Link className="text-[#41808B] underline" href="/settings#products">Settings</Link> to start generating leads.</>}</p>}
       <button type="submit" disabled={loading || !productId}
-        className="flex items-center justify-center gap-2 px-5 py-2 bg-[#F46036] hover:bg-[#D94A22] disabled:opacity-40 text-white text-sm font-medium rounded-lg transition-colors">
+        className="flex items-center justify-center gap-2 px-5 py-2 bg-[#F46036] hover:bg-[#D94A22] disabled:opacity-40 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
         {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating leads…</> : <><Sparkles className="w-4 h-4" /> Generate Leads</>}
       </button>
-      {loading && <p role="status" className="text-xs text-slate-500">Searching and verifying companies. This may take a few minutes.</p>}
-      {message && <p role="status" className={`text-sm ${message.ok ? "text-green-700" : "text-red-700"}`}>{message.text}</p>}
+      {!products.length && <p className="col-span-full text-sm text-slate-500">{productsLoading ? "Loading products…" : productsError || <>Add a product in <Link className="text-[#41808B] underline" href="/settings#products">Settings</Link> to start generating leads.</>}</p>}
+      {loading && <p role="status" className="col-span-full text-xs text-slate-500">Searching and verifying companies. This may take a few minutes.</p>}
+      {message && <p role="status" className={`col-span-full text-sm ${message.ok ? "text-green-700" : "text-red-700"}`}>{message.text}</p>}
     </form>
   )
 }
