@@ -31,11 +31,19 @@ from app.api.schemas.responses import (
     LeadSearchResponse,
     LeadVerification,
     PaginatedResponse,
+    PersonEnrichResponse,
     StageMoveResponse,
     TimelineEventResponse,
 )
-from app.core.constants import NotificationType, OUTCOME_TO_STAGE, TimelineEventType
-from app.dependencies import get_current_admin, get_current_user, get_db, get_pipeline_manager
+from app.core.constants import OUTCOME_TO_STAGE, NotificationType, TimelineEventType
+from app.core.exceptions import ProviderAuthenticationError
+from app.dependencies import (
+    get_current_admin,
+    get_current_user,
+    get_db,
+    get_person_enrichment_service,
+    get_pipeline_manager,
+)
 from app.models.contact_activity import ContactActivity
 from app.models.department import Department
 from app.models.lead import Contact, Lead
@@ -1138,4 +1146,48 @@ async def create_lead_contact(
         phone=contact.phone,
         linkedin_url=contact.linkedin_url,
         is_primary=contact.is_primary,
+    )
+
+
+@router.post(
+    "/leads/{lead_id}/enrich-persons",
+    response_model=PersonEnrichResponse,
+)
+async def enrich_lead_persons(
+    lead_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    enrichment_service=Depends(get_person_enrichment_service),
+) -> PersonEnrichResponse:
+    """Find LinkedIn profiles / person contacts for this lead via graph8."""
+    try:
+        lead = await _load_lead_for_user(db, lead_id, user)
+        result = await enrichment_service.enrich_lead(db, lead)
+    except ProviderAuthenticationError:
+        raise HTTPException(
+            status_code=400,
+            detail="Graph8 API key is not configured. Add it in Settings -> Providers.",
+        )
+    finally:
+        await enrichment_service.close()
+
+    return PersonEnrichResponse(
+        matches_found=result.matches_found,
+        contacts_created=result.contacts_created,
+        contacts_skipped=result.contacts_skipped,
+        company_enriched=result.company_enriched,
+        company_fields_filled=result.company_fields_filled,
+        message=result.message,
+        contacts=[
+            ContactResponse(
+                id=c.id,
+                name=c.name,
+                job_title=c.job_title,
+                email=c.email,
+                phone=c.phone,
+                linkedin_url=c.linkedin_url,
+                is_primary=c.is_primary,
+            )
+            for c in result.contacts
+        ],
     )

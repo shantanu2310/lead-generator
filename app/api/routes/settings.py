@@ -15,6 +15,7 @@ PROVIDER_FIELDS = [
     ("google_places", "google_places_api_key", "Google Places"),
     ("brave_search", "brave_search_api_key", "Brave Search"),
     ("hunter", "hunter_api_key", "Hunter.io"),
+    ("graph8", "graph8_api_key", "Graph8"),
 ]
 
 PIPELINE_FIELDS = [

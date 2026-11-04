@@ -28,6 +28,7 @@ const PROVIDER_INPUT_KEY: Record<string, string> = {
   google_places: "google_places_api_key",
   brave_search: "brave_search_api_key",
   hunter: "hunter_api_key",
+  graph8: "graph8_api_key",
 }
 
 export default function SettingsPage() {

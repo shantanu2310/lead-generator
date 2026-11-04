@@ -63,6 +63,14 @@ const EMPTY_CONTACT_FORM = {
   is_primary: false,
 }
 
+function LinkedInIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+    </svg>
+  )
+}
+
 export default function LeadDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -85,6 +93,7 @@ export default function LeadDetailPage() {
   const [contactForm, setContactForm] = useState({ ...EMPTY_CONTACT_FORM })
   const [addingContact, setAddingContact] = useState(false)
   const [deletingContactId, setDeletingContactId] = useState<string | null>(null)
+  const [enriching, setEnriching] = useState(false)
   const [notes, setNotes] = useState("")
   const notesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const notesSavingRef = useRef(false)
@@ -297,6 +306,20 @@ export default function LeadDetailPage() {
       setMsg({ ok: false, text: err.message || "Failed to remove contact" })
     } finally {
       setDeletingContactId(null)
+    }
+  }
+
+  async function handleEnrichPersons() {
+    setEnriching(true)
+    setMsg(null)
+    try {
+      const result = await api.enrichLeadPersons(lead.id)
+      setLead(await api.getLead(lead.id))
+      setMsg({ ok: true, text: result.message || "Graph8 enrichment complete" })
+    } catch (err: any) {
+      setMsg({ ok: false, text: err.message || "Failed to find contacts" })
+    } finally {
+      setEnriching(false)
     }
   }
 
@@ -646,13 +669,24 @@ export default function LeadDetailPage() {
           <Card>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-slate-900">Contacts ({lead.contacts?.length || 0})</h3>
-              <button
-                onClick={() => setShowAddContact((s) => !s)}
-                className="flex items-center gap-1.5 text-xs text-[#41808B] hover:text-[#F46036] transition-colors"
-              >
-                {showAddContact ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                {showAddContact ? "Cancel" : "Add contact"}
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleEnrichPersons}
+                  disabled={enriching}
+                  title="Find LinkedIn profiles and person contacts via Graph8"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-white bg-[#F46036] hover:bg-[#D94A22] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {enriching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LinkedInIcon className="w-3.5 h-3.5" />}
+                  {enriching ? "Searching…" : "Find contacts"}
+                </button>
+                <button
+                  onClick={() => setShowAddContact((s) => !s)}
+                  className="flex items-center gap-1.5 text-xs text-[#41808B] hover:text-[#F46036] transition-colors"
+                >
+                  {showAddContact ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                  {showAddContact ? "Cancel" : "Add contact"}
+                </button>
+              </div>
             </div>
 
             {showAddContact && (
@@ -714,7 +748,9 @@ export default function LeadDetailPage() {
             )}
 
             {(lead.contacts || []).length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-6">No contacts yet</p>
+              <p className="text-sm text-slate-500 text-center py-6">
+                No contacts yet — click <span className="font-medium text-[#F46036]">Find contacts</span> to pull LinkedIn profiles from Graph8
+              </p>
             ) : (
               <div className="space-y-3">
                 {lead.contacts.map((contact: any) => (
@@ -735,6 +771,17 @@ export default function LeadDetailPage() {
                           </a>
                         )}
                       </div>
+                      {contact.linkedin_url && (
+                        <a
+                          href={contact.linkedin_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Open LinkedIn profile"
+                          className="text-[#0A66C2] hover:opacity-70 transition-opacity"
+                        >
+                          <LinkedInIcon className="w-4 h-4" />
+                        </a>
+                      )}
                       <button
                         onClick={() => handleDeleteContact(contact.id)}
                         disabled={deletingContactId === contact.id}

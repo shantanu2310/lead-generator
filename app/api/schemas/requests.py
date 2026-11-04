@@ -9,6 +9,7 @@ class ProviderSettingsUpdate(BaseModel):
     google_places_api_key: str | None = None
     brave_search_api_key: str | None = None
     hunter_api_key: str | None = None
+    graph8_api_key: str | None = None
 
 
 class PipelineSettingsUpdate(BaseModel):

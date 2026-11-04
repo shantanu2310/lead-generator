@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     # Hunter.io API
     hunter_api_key: str = ""
 
+    # Graph8 (LinkedIn / person enrichment)
+    graph8_api_key: str = ""
+    graph8_base_url: str = "https://be.graph8.com/api/v1"
+    graph8_max_contacts: int = 10
+
     # Sentry
     sentry_dsn: str = ""
 

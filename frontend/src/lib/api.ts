@@ -188,6 +188,9 @@ export const api = {
   createContact: (leadId: string, body: any) =>
     request<any>("POST", `/leads/${leadId}/contacts`, body),
 
+  enrichLeadPersons: (id: string) =>
+    request<any>("POST", `/leads/${id}/enrich-persons`),
+
   getPipelineStages: () => request<any[]>("GET", "/pipeline/stages"),
 
   getPipelineAnalytics: (searchId?: string) =>

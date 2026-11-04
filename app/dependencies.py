@@ -109,3 +109,10 @@ def get_automation_service():
     from app.services.automation_service import AutomationService
 
     return AutomationService(pipeline_manager=get_pipeline_manager())
+
+
+def get_person_enrichment_service():
+    from app.providers.graph8.provider import Graph8Provider
+    from app.services.person_enrichment_service import PersonEnrichmentService
+
+    return PersonEnrichmentService(provider=Graph8Provider())

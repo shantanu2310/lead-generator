@@ -43,6 +43,16 @@ class ContactResponse(BaseModel):
     is_primary: bool = False
 
 
+class PersonEnrichResponse(BaseModel):
+    matches_found: int = 0
+    contacts_created: int = 0
+    contacts_skipped: int = 0
+    company_enriched: bool = False
+    company_fields_filled: list[str] = []
+    message: str = ""
+    contacts: list[ContactResponse] = []
+
+
 class TimelineEventResponse(BaseModel):
     id: str
     event_type: str
