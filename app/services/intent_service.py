@@ -45,7 +45,9 @@ class IntentService:
             if latitude is None or longitude is None:
                 raise LocationRequiredError()
 
-    async def plan_search(self, intent: SearchIntent) -> SearchPlan:
+    async def plan_search(
+        self, intent: SearchIntent, mode: str = "company"
+    ) -> SearchPlan:
         intent_json = intent.model_dump_json()
         messages = [
             {"role": "system", "content": SEARCH_PLANNING_PROMPT},
@@ -60,8 +62,24 @@ class IntentService:
             logger.error("search_planning_failed", error=str(e))
             raise IntentParsingError(f"Search planning failed: {e}") from e
 
+        # Mode decides the source chain in code (never LLM-dependent):
+        # company -> Google Places first (graph8 fallback is added by discovery
+        # when Places returns 0); person -> graph8 people first, Places second.
+        update: dict = {
+            "category": intent.category,
+            "location": intent.location,
+            "job_title": intent.job_title,
+        }
+        if mode == "person":
+            update["primary_source"] = "graph8_people"
+            update["secondary_source"] = "google_places"
+        else:
+            update["primary_source"] = "google_places"
+        plan = plan.model_copy(update=update)
+
         logger.info(
             "search_planned",
+            mode=mode,
             primary_source=plan.primary_source,
             candidate_target=plan.candidate_target,
             requires_location=plan.requires_location,

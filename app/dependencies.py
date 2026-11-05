@@ -53,6 +53,10 @@ def get_orchestrator():
     from app.providers.brave.provider import BraveSearchProvider
     from app.providers.crawling.crawl4ai_provider import Crawl4AIProvider
     from app.providers.google_places.provider import GooglePlacesProvider
+    from app.providers.graph8.discovery import (
+        Graph8CompanyProvider,
+        Graph8PeopleProvider,
+    )
     from app.providers.hunter.provider import HunterProvider
     from app.providers.openai.client import get_llm_client
     from app.services.enrichment_service import EmailEnrichmentService
@@ -72,6 +76,8 @@ def get_orchestrator():
         "google_places": google_places,
         "brave_search": brave_search,
         "web_search": brave_search,
+        "graph8_companies": Graph8CompanyProvider(),
+        "graph8_people": Graph8PeopleProvider(),
     })
 
     crawl4ai = Crawl4AIProvider()

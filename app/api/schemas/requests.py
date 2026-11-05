@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -37,6 +38,10 @@ class LeadSearchRequest(BaseModel):
         None, ge=-180, le=180, description="Longitude for location-based search"
     )
     max_leads: int = Field(MAX_LEADS, ge=1, le=MAX_LEADS, description="Maximum leads to return")
+    mode: Literal["company", "person"] = Field(
+        "company",
+        description="company: Google Places first; person: Graph8 people search first",
+    )
 
 
 class HealthResponse(BaseModel):

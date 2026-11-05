@@ -34,6 +34,13 @@ class SearchIntent(BaseModel):
         default_factory=list,
         description="Contact fields user requires (email, phone, website)",
     )
+    job_title: str | None = Field(
+        None,
+        description=(
+            "Role/job title when the query targets people "
+            "(e.g. 'HR Manager' for 'HR managers')"
+        ),
+    )
     target_count: int = Field(
         default=15, ge=1, le=15, description="Number of leads requested"
     )
@@ -50,6 +57,10 @@ Rules:
 - category: the specific business type (e.g. "florist", "dentist")
 - For HR companies, recruitment agencies, staffing firms, and HR consultancies,
   identify the requested business service as the category, not an individual job title.
+- For queries about people by role (e.g. "HR managers", "CTOs", "office managers"),
+  set entity_type to "person", extract the singular role into job_title
+  (e.g. "HR Manager"), and set category to the business service those people
+  belong to or are hired through - for HR roles use "recruitment agency".
 - location: explicit location name if mentioned, otherwise null
 - location_mode: "explicit" if location is in query,
   "user_location" if "near me" or similar, "none" if no location
@@ -74,4 +85,9 @@ Query: "SaaS startups in Rotterdam"
 Query: "marketing agencies in London with email"
 → entity_type: "company", category: "marketing agency",
   location: "London", required_contact_fields: ["email"]
+
+Query: "HR managers in Amsterdam"
+→ entity_type: "person", job_title: "HR Manager",
+  category: "recruitment agency", location: "Amsterdam",
+  location_mode: "explicit"
 """

@@ -3,6 +3,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.providers.base.contact_provider import PersonRecord
+
 
 class CandidateLead(BaseModel):
     name: str
@@ -22,6 +24,7 @@ class CandidateLead(BaseModel):
     country: str | None = None
     category: str | None = None
     business_status: str = "unknown"
+    contact: PersonRecord | None = None
     discovered_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -34,6 +37,10 @@ class SearchPlan(BaseModel):
     requires_email_enrichment: bool = False
     requires_phone_enrichment: bool = False
     search_queries: list[str] = Field(default_factory=list)
+    # Structured intent copied in by IntentService (not chosen by the LLM).
+    category: str | None = None
+    location: str | None = None
+    job_title: str | None = None
 
 
 class BusinessDiscoveryProvider(ABC):

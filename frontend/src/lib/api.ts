@@ -109,8 +109,14 @@ export const api = {
   deleteUser: (id: string) =>
     request<any>("DELETE", `/auth/users/${id}`),
 
-  searchLeads: (body: { query: string; max_leads?: number; department_id: string }) =>
-    request<any>("POST", "/leads/search", body),
+  searchLeads: (body: {
+    query: string
+    max_leads?: number
+    department_id: string
+    mode?: "company" | "person"
+    latitude?: number
+    longitude?: number
+  }) => request<any>("POST", "/leads/search", body),
 
   listLeads: (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : ""

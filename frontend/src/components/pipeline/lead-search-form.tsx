@@ -8,6 +8,19 @@ import { useProducts } from "@/hooks/use-products"
 
 type SearchResult = { search_id: string | null; leads: unknown[] }
 
+type SearchMode = "company" | "person"
+
+async function getCoords(): Promise<{ latitude?: number; longitude?: number }> {
+  if (typeof navigator === "undefined" || !navigator.geolocation) return {}
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+      () => resolve({}),
+      { timeout: 8000, maximumAge: 60000 },
+    )
+  })
+}
+
 export function LeadSearchForm({
   onComplete,
   onGeneratingChange,
@@ -19,6 +32,7 @@ export function LeadSearchForm({
   const [query, setQuery] = useState("")
   const [maxLeads, setMaxLeads] = useState(5)
   const [chosenProductId, setProductId] = useState("")
+  const [mode, setMode] = useState<SearchMode>("company")
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
 
@@ -35,7 +49,14 @@ export function LeadSearchForm({
     onGeneratingChange?.(true)
     setMessage(null)
     try {
-      const result: SearchResult = await api.searchLeads({ query: trimmed, max_leads: maxLeads, department_id: productId })
+      const coords = await getCoords()
+      const result: SearchResult = await api.searchLeads({
+        query: trimmed,
+        max_leads: maxLeads,
+        department_id: productId,
+        mode,
+        ...coords,
+      })
       setMessage({ ok: true, text: `${result.leads.length} lead${result.leads.length === 1 ? "" : "s"} generated for “${trimmed}”.` })
       onComplete?.(result)
     } catch (err: unknown) {
@@ -49,9 +70,23 @@ export function LeadSearchForm({
   return (
     <form onSubmit={run} className="grid grid-cols-1 sm:grid-cols-2 items-end gap-3">
       <div className="min-w-0 sm:col-span-2">
-        <label htmlFor="lead-query" className="block text-xs font-medium text-slate-600 mb-1.5">Search</label>
+        <div className="flex items-center justify-between mb-1.5 gap-3">
+          <label htmlFor="lead-query" className="block text-xs font-medium text-slate-600">Search</label>
+          <div role="group" aria-label="Search mode" className="flex rounded-lg border border-slate-300 overflow-hidden text-xs font-medium shrink-0">
+            <button type="button" onClick={() => setMode("company")} disabled={loading}
+              aria-pressed={mode === "company"}
+              className={`px-3 py-1 transition-colors disabled:opacity-50 ${mode === "company" ? "bg-[#F46036] text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`}>
+              Company
+            </button>
+            <button type="button" onClick={() => setMode("person")} disabled={loading}
+              aria-pressed={mode === "person"}
+              className={`px-3 py-1 transition-colors disabled:opacity-50 ${mode === "person" ? "bg-[#F46036] text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`}>
+              Person
+            </button>
+          </div>
+        </div>
         <input id="lead-query" value={query} onChange={(e) => setQuery(e.target.value)} disabled={loading}
-          placeholder="e.g. recruitment agencies in Amsterdam"
+          placeholder={mode === "person" ? "e.g. HR managers in Amsterdam" : "e.g. recruitment agencies in Amsterdam"}
           className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036] disabled:opacity-50" />
       </div>
         <div className="min-w-0">

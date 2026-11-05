@@ -53,16 +53,24 @@ class GooglePlacesClient:
                 json=payload,
                 headers={
                     "X-Goog-Api-Key": self.api_key,
-                    "X-Goog-FieldMask": "places.id,places.displayName,places.location,places.formattedAddress,places.websiteUri,places.internationalPhoneNumber,places.nationalPhoneNumber,places.types,places.businessStatus",
+                    "X-Goog-FieldMask": "places.id,places.displayName,places.location,places.formattedAddress,places.websiteUri,places.internationalPhoneNumber,places.nationalPhoneNumber,places.types,places.primaryType,places.primaryTypeDisplayName,places.businessStatus,places.googleMapsUri",
                 },
             )
             response.raise_for_status()
             data = response.json()
             return data.get("places", [])
         except httpx.HTTPStatusError as e:
-            if e.response.status_code == 401:
-                raise ProviderAuthenticationError("google_places")
-            logger.error("google_places_search_failed", status=e.response.status_code)
+            # 401/403 (bad key or billing disabled on Places API New) must surface
+            # as an actionable error instead of a silent empty result.
+            if e.response.status_code in (401, 403):
+                raise ProviderAuthenticationError(
+                    "google_places - check API key and billing enabled"
+                )
+            logger.error(
+                "google_places_search_failed",
+                status=e.response.status_code,
+                body=e.response.text[:300],
+            )
             return []
         except httpx.RequestError as e:
             logger.error("google_places_request_failed", error=str(e))

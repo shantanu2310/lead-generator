@@ -5,6 +5,7 @@ from app.core.logging import get_logger
 from app.models.evidence import EvidenceCollection
 from app.pipeline.scoring import LeadScore
 from app.providers.base.business_provider import CandidateLead
+from app.providers.base.contact_provider import PersonRecord
 
 logger = get_logger()
 
@@ -20,6 +21,7 @@ class SelectedLead(BaseModel):
     confidence_score: int = Field(ge=0, le=100)
     relevance_reason: str | None = None
     verification: dict = Field(default_factory=dict)
+    contact: PersonRecord | None = None
 
 
 class SelectionResult(BaseModel):
@@ -100,4 +102,5 @@ class SelectionService:
                 "phone_cross_verified": score.signals.phone_cross_verified,
                 "location_match": score.signals.location_match,
             },
+            contact=candidate.contact,
         )

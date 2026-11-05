@@ -43,8 +43,9 @@ class PipelineOrchestrator:
         latitude: float | None = None,
         longitude: float | None = None,
         max_leads: int = 15,
+        mode: str = "company",
     ) -> SelectionResult:
-        logger.info("pipeline_started", query=query)
+        logger.info("pipeline_started", query=query, mode=mode)
 
         intent = await self.intent_service.parse_intent(query)
         logger.info(
@@ -53,10 +54,11 @@ class PipelineOrchestrator:
             category=intent.category,
             location_mode=intent.location_mode.value,
             location=intent.location,
+            job_title=intent.job_title,
         )
 
         self.intent_service.validate_location(intent, latitude, longitude)
-        plan = await self.intent_service.plan_search(intent)
+        plan = await self.intent_service.plan_search(intent, mode)
 
         logger.info(
             "plan_created",
@@ -90,6 +92,14 @@ class PipelineOrchestrator:
         candidates = normalize_candidates(candidates)
         candidates = deduplicate_candidates(candidates)
         logger.info("after_dedup", count=len(candidates))
+
+        # Person-mode candidates carry a job title as their category, so score
+        # against it; company mode scores against the business category.
+        score_category = (
+            intent.job_title
+            if mode == "person" and intent.job_title
+            else intent.category
+        )
 
         scored_candidates = []
         for candidate in candidates:
@@ -175,7 +185,7 @@ class PipelineOrchestrator:
             score = self.scoring_service.score_candidate(
                 candidate_name=candidate.name,
                 candidate_category=candidate.category,
-                intent_category=intent.category,
+                intent_category=score_category,
                 business_status=candidate.business_status,
                 cross_validation=cross_result,
                 evidence=evidence,
@@ -194,7 +204,7 @@ class PipelineOrchestrator:
                     signals=score.signals.model_dump(),
                 )
 
-            scored_candidates.append((candidate, score, evidence, intent.category))
+            scored_candidates.append((candidate, score, evidence, score_category))
 
         result = self.selection_service.select_leads(
             scored_candidates=scored_candidates,

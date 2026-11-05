@@ -127,6 +127,7 @@ async def search_leads(
         longitude=request.longitude,
         max_leads=request.max_leads,
         department_id=request.department_id,
+        mode=request.mode,
     )
 
     leads = []

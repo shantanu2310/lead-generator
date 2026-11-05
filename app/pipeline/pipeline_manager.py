@@ -1,7 +1,7 @@
 from app.core.constants import PipelineStage, TimelineEventType
 from app.core.logging import get_logger
 from app.database.base import utcnow
-from app.models.lead import Lead
+from app.models.lead import Contact, Lead
 from app.models.pipeline import Notification, PipelineLog, TimelineEvent
 from app.models.search import Search
 from app.pipeline.orchestrator import PipelineOrchestrator
@@ -25,8 +25,9 @@ class PipelineManager:
         longitude: float | None = None,
         max_leads: int = 15,
         department_id: str | None = None,
+        mode: str = "company",
     ) -> tuple[Search, list[Lead]]:
-        logger.info("pipeline_manager_started", query=query, max_leads=max_leads)
+        logger.info("pipeline_manager_started", query=query, max_leads=max_leads, mode=mode)
 
         search = Search(
             company_id=company_id, query=query, latitude=latitude, longitude=longitude,
@@ -37,7 +38,7 @@ class PipelineManager:
         await db.commit()
         search_id = search.id
         try:
-            saved_leads = await self._finish_search(db, search)
+            saved_leads = await self._finish_search(db, search, mode=mode)
             search.status = "completed"
             search.completed_at = utcnow()
             await db.commit()
@@ -51,12 +52,15 @@ class PipelineManager:
                 await db.commit()
             raise
 
-    async def _finish_search(self, db, search: Search) -> list[Lead]:
+    async def _finish_search(
+        self, db, search: Search, mode: str = "company"
+    ) -> list[Lead]:
         result = await self.orchestrator.run(
             query=search.query,
             latitude=search.latitude,
             longitude=search.longitude,
             max_leads=search.max_leads,
+            mode=mode,
         )
         search.candidates_discovered = result.candidates_checked
         search.candidates_after_dedup = result.candidates_checked
@@ -105,6 +109,28 @@ class PipelineManager:
                     db, lead.id, company_id, TimelineEventType.WEBSITE_VERIFIED,
                     f"Website verified: {lead_data.website}",
                 )
+
+            if lead_data.contact:
+                person = lead_data.contact
+                person_name = person.full_name or " ".join(
+                    p for p in (person.first_name, person.last_name) if p
+                ).strip()
+                if person_name:
+                    db.add(Contact(
+                        lead_id=lead.id,
+                        company_id=company_id,
+                        name=person_name,
+                        job_title=person.job_title,
+                        email=person.email,
+                        phone=person.phone,
+                        linkedin_url=person.linkedin_url,
+                        is_primary=True,
+                    ))
+                    await self._create_timeline_event(
+                        db, lead.id, company_id, TimelineEventType.CONTACT_FOUND,
+                        f"Contact found via search: {person_name}",
+                        metadata={"source": "graph8_people"},
+                    )
 
             if lead_data.email:
                 status = "verified" if lead.email_verified else "pending"

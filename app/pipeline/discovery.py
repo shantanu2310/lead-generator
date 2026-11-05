@@ -32,6 +32,22 @@ class DiscoveryService:
                 count=len(candidates),
             )
 
+        # Company mode: Google Places found nothing -> fall back to the graph8
+        # company index before the generic secondary source runs.
+        if plan.primary_source == "google_places" and not all_candidates:
+            fallback = self.providers.get("graph8_companies")
+            if fallback:
+                candidates = await fallback.search(
+                    plan=plan,
+                    latitude=None,
+                    longitude=None,
+                )
+                all_candidates.extend(candidates)
+                logger.info(
+                    "graph8_company_fallback",
+                    count=len(candidates),
+                )
+
         if plan.secondary_source and len(all_candidates) < plan.candidate_target:
             secondary_provider = self.providers.get(plan.secondary_source)
             if secondary_provider:

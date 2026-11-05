@@ -36,7 +36,17 @@ CATEGORY_MAP = {
     "hotel": "hotel",
     "auto repair": "car repair",
     "mechanic": "car repair",
+    "hr consultant": "recruitment agency",
+    "hr consultancy": "recruitment agency",
+    "recruitment agency": "recruitment agency",
+    "staffing agency": "recruitment agency",
+    "employment agency": "recruitment agency",
+    "recruiting": "recruitment agency",
+    "recruiter": "recruitment agency",
 }
+
+# Google boilerplate types that carry no business-category meaning.
+GENERIC_TYPES = {"point_of_interest", "establishment"}
 
 
 class GooglePlacesProvider(BusinessDiscoveryProvider):
@@ -47,10 +57,16 @@ class GooglePlacesProvider(BusinessDiscoveryProvider):
         await self.client.close()
 
     def _extract_category(self, categories: list[str]) -> str | None:
-        if not categories:
-            return None
-        primary = categories[0].lower()
-        return CATEGORY_MAP.get(primary, primary)
+        normalized = [
+            c.lower().replace("_", " ") for c in categories if c
+        ]
+        for category in normalized:
+            if category in CATEGORY_MAP:
+                return CATEGORY_MAP[category]
+        for category in normalized:
+            if category not in GENERIC_TYPES:
+                return category
+        return None
 
     def _parse_place(self, place: dict) -> CandidateLead:
         name = place.get("displayName", {}).get("text", "")
@@ -82,6 +98,8 @@ class GooglePlacesProvider(BusinessDiscoveryProvider):
             phone = place["nationalPhoneNumber"]
 
         categories = place.get("types", [])
+        if place.get("primaryType"):
+            categories = [place["primaryType"], *categories]
         category = self._extract_category(categories)
 
         business_status = "active"
@@ -105,6 +123,16 @@ class GooglePlacesProvider(BusinessDiscoveryProvider):
             business_status=business_status,
         )
 
+    def _build_queries(self, plan: SearchPlan) -> list[str]:
+        """Canonical "{category} in {location}" first so query wording never
+        depends solely on the LLM."""
+        queries = list(plan.search_queries)
+        if plan.category and plan.location:
+            canonical = f"{plan.category} in {plan.location}"
+            if canonical.lower() not in {q.lower() for q in queries}:
+                queries.insert(0, canonical)
+        return queries
+
     async def search(
         self,
         plan: SearchPlan,
@@ -113,8 +141,9 @@ class GooglePlacesProvider(BusinessDiscoveryProvider):
     ) -> list[CandidateLead]:
         candidates = []
         seen_ids = set()
+        queries = self._build_queries(plan)
 
-        for query in plan.search_queries:
+        for query in queries:
             places = await self.client.text_search(
                 query=query,
                 latitude=latitude if plan.requires_location else None,
@@ -137,7 +166,7 @@ class GooglePlacesProvider(BusinessDiscoveryProvider):
         logger.info(
             "google_places_search_complete",
             total_candidates=len(candidates),
-            queries_executed=len(plan.search_queries),
+            queries_executed=len(queries),
         )
         return candidates
 

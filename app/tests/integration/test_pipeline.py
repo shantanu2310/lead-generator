@@ -27,7 +27,7 @@ class MockIntentService:
     def validate_location(self, intent, latitude, longitude):
         pass
 
-    async def plan_search(self, intent):
+    async def plan_search(self, intent, mode="company"):
         return SearchPlan(
             primary_source="google_places",
             secondary_source="brave_search",
