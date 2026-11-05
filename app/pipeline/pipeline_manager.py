@@ -70,11 +70,27 @@ class PipelineManager:
 
         saved_leads: list[Lead] = []
         for lead_data in result.leads:
+            person = lead_data.contact
+            person_name = None
+            if person:
+                person_name = (
+                    person.full_name
+                    or " ".join(
+                        p for p in (person.first_name, person.last_name) if p
+                    ).strip()
+                ) or None
+            # Person mode: the lead is the person — headline becomes their
+            # name; the company survives only as the website domain.
+            display_name = (
+                person_name
+                if mode == "person" and person_name
+                else lead_data.business_name
+            )
             lead = Lead(
                 search_id=search.id,
                 company_id=company_id,
-                business_name=lead_data.business_name,
-                normalized_name=lead_data.business_name.lower().strip(),
+                business_name=display_name,
+                normalized_name=display_name.lower().strip(),
                 website=lead_data.website,
                 email=lead_data.email,
                 phone=lead_data.phone,
@@ -110,27 +126,22 @@ class PipelineManager:
                     f"Website verified: {lead_data.website}",
                 )
 
-            if lead_data.contact:
-                person = lead_data.contact
-                person_name = person.full_name or " ".join(
-                    p for p in (person.first_name, person.last_name) if p
-                ).strip()
-                if person_name:
-                    db.add(Contact(
-                        lead_id=lead.id,
-                        company_id=company_id,
-                        name=person_name,
-                        job_title=person.job_title,
-                        email=person.email,
-                        phone=person.phone,
-                        linkedin_url=person.linkedin_url,
-                        is_primary=True,
-                    ))
-                    await self._create_timeline_event(
-                        db, lead.id, company_id, TimelineEventType.CONTACT_FOUND,
-                        f"Contact found via search: {person_name}",
-                        metadata={"source": "graph8_people"},
-                    )
+            if person and person_name:
+                db.add(Contact(
+                    lead_id=lead.id,
+                    company_id=company_id,
+                    name=person_name,
+                    job_title=person.job_title,
+                    email=person.email,
+                    phone=person.phone,
+                    linkedin_url=person.linkedin_url,
+                    is_primary=True,
+                ))
+                await self._create_timeline_event(
+                    db, lead.id, company_id, TimelineEventType.CONTACT_FOUND,
+                    f"Contact found via search: {person_name}",
+                    metadata={"source": "graph8_people"},
+                )
 
             if lead_data.email:
                 status = "verified" if lead.email_verified else "pending"

@@ -386,7 +386,8 @@ async def test_plan_search_mode_forcing():
     assert company_plan.primary_source == "google_places"
     assert default_plan.primary_source == "google_places"
     assert person_plan.primary_source == "graph8_people"
-    assert person_plan.secondary_source == "google_places"
+    # Strict person mode: no secondary source, Places can never mix in.
+    assert person_plan.secondary_source is None
 
     # Structured intent copied onto the plan for the providers.
     for plan in (company_plan, person_plan):
@@ -513,6 +514,8 @@ async def test_pipeline_contact_creation():
             leads = await manager._finish_search(db, search, mode="person")
             assert orchestrator.kwargs["mode"] == "person", "mode must reach orchestrator"
             assert len(leads) == 1
+            # Person mode: headline is the person, not the company.
+            assert leads[0].business_name == "Cor Van Mer"
             await db.commit()
 
         async with factory() as db:

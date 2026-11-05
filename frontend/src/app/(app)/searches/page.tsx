@@ -233,17 +233,15 @@ export default function LeadGeneratorPage() {
                           </span>
                           {lead.contact_name && (
                             <span className="mt-1 flex items-center gap-2 overflow-x-auto whitespace-nowrap text-xs text-slate-700">
-                              <span className="font-medium">Contact: {lead.contact_name}</span>
-                              {lead.contact_job_title && <span aria-hidden="true">·</span>}
+                              {lead.contact_name !== lead.business_name && (
+                                <span className="font-medium">Contact: {lead.contact_name}</span>
+                              )}
                               {lead.contact_job_title && <span>{lead.contact_job_title}</span>}
                               {lead.contact_linkedin_url && (
-                                <>
-                                  <span aria-hidden="true">·</span>
-                                  <a href={lead.contact_linkedin_url} target="_blank" rel="noopener noreferrer"
-                                    className="text-[#0a66c2] hover:underline font-medium">
-                                    LinkedIn ↗
-                                  </a>
-                                </>
+                                <a href={lead.contact_linkedin_url} target="_blank" rel="noopener noreferrer"
+                                  className="text-[#0a66c2] hover:underline font-medium">
+                                  LinkedIn ↗
+                                </a>
                               )}
                             </span>
                           )}

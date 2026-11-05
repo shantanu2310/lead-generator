@@ -64,7 +64,8 @@ class IntentService:
 
         # Mode decides the source chain in code (never LLM-dependent):
         # company -> Google Places first (graph8 fallback is added by discovery
-        # when Places returns 0); person -> graph8 people first, Places second.
+        # when Places returns 0); person -> strictly graph8 people, no
+        # secondary source so company-only rows can never enter person results.
         update: dict = {
             "category": intent.category,
             "location": intent.location,
@@ -72,7 +73,7 @@ class IntentService:
         }
         if mode == "person":
             update["primary_source"] = "graph8_people"
-            update["secondary_source"] = "google_places"
+            update["secondary_source"] = None
         else:
             update["primary_source"] = "google_places"
         plan = plan.model_copy(update=update)
