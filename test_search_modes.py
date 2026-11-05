@@ -535,6 +535,41 @@ async def test_pipeline_contact_creation():
     return True
 
 
+def test_search_response_contact_field():
+    print("\n=== Test: search response carries person contact ===")
+    from app.api.schemas.responses import ContactResponse, LeadResponse, LeadVerification
+
+    verification = LeadVerification(
+        business_active=True,
+        website_identity_verified=False,
+        email_verified=False,
+        phone_cross_verified=False,
+        location_match=True,
+    )
+    lead = LeadResponse(
+        business_name="Sesami NL",
+        confidence_score=55,
+        verification=verification,
+        contact=ContactResponse(
+            id="c1",
+            name="Cor Van Mer",
+            job_title="HR Manager",
+            linkedin_url="https://linkedin.com/in/cor-van-mer",
+            is_primary=True,
+        ),
+    )
+    assert lead.contact is not None
+    assert lead.contact.linkedin_url.startswith("https://")
+
+    # Company-mode lead: no contact stays None (nullable field).
+    plain = LeadResponse(
+        business_name="X", confidence_score=80, verification=verification
+    )
+    assert plain.contact is None
+    print("  PASS")
+    return True
+
+
 async def main():
     print("=" * 60)
     print("SEARCH MODES TESTS")
@@ -545,6 +580,7 @@ async def main():
 
     for name, fn in [
         ("mode_schema_default", test_mode_schema_default),
+        ("search_response_contact", test_search_response_contact_field),
         ("places_canonical_query", test_places_canonical_query_and_category),
         ("graph8_company_provider", test_graph8_company_provider),
         ("graph8_people_provider", test_graph8_people_provider),

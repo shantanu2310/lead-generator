@@ -11,6 +11,16 @@ class LeadVerification(BaseModel):
     location_match: bool
 
 
+class ContactResponse(BaseModel):
+    id: str
+    name: str
+    job_title: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    linkedin_url: str | None = None
+    is_primary: bool = False
+
+
 class LeadResponse(BaseModel):
     business_name: str
     website: str | None = None
@@ -22,6 +32,7 @@ class LeadResponse(BaseModel):
     confidence_score: int = Field(..., ge=0, le=100)
     relevance_reason: str | None = None
     verification: LeadVerification
+    contact: ContactResponse | None = None
 
 
 class LeadSearchResponse(BaseModel):
@@ -31,16 +42,6 @@ class LeadSearchResponse(BaseModel):
     qualified_leads_found: int
     requested_max_leads: int
     leads: list[LeadResponse]
-
-
-class ContactResponse(BaseModel):
-    id: str
-    name: str
-    job_title: str | None = None
-    email: str | None = None
-    phone: str | None = None
-    linkedin_url: str | None = None
-    is_primary: bool = False
 
 
 class PersonEnrichResponse(BaseModel):

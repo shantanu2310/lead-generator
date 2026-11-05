@@ -130,8 +130,19 @@ async def search_leads(
         mode=request.mode,
     )
 
+    contacts_by_lead: dict[str, Contact] = {}
+    if saved_leads:
+        contact_rows = await db.execute(
+            select(Contact)
+            .where(Contact.lead_id.in_([lead.id for lead in saved_leads]))
+            .order_by(Contact.is_primary.desc(), Contact.created_at.asc())
+        )
+        for contact in contact_rows.scalars().all():
+            contacts_by_lead.setdefault(contact.lead_id, contact)
+
     leads = []
     for lead in saved_leads:
+        contact = contacts_by_lead.get(lead.id)
         leads.append(LeadResponse(
             business_name=lead.business_name,
             website=lead.website,
@@ -149,6 +160,15 @@ async def search_leads(
                 phone_cross_verified=lead.phone_cross_verified,
                 location_match=lead.location_match,
             ),
+            contact=ContactResponse(
+                id=contact.id,
+                name=contact.name,
+                job_title=contact.job_title,
+                email=contact.email,
+                phone=contact.phone,
+                linkedin_url=contact.linkedin_url,
+                is_primary=contact.is_primary,
+            ) if contact else None,
         ))
 
     return LeadSearchResponse(
