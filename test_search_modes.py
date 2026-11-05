@@ -285,7 +285,7 @@ async def test_graph8_people_provider():
     # Locked fields must not leak into the Contact row.
     assert sesami.contact.email is None
     assert sesami.contact.city is None
-    assert sesami.contact.linkedin_url == "linkedin.com/in/cor-van-mer"
+    assert sesami.contact.linkedin_url == "https://linkedin.com/in/cor-van-mer"
     assert sesami.category == "HR Manager"
     assert sesami.business_status == "active"
     assert sesami.source == "graph8_people"

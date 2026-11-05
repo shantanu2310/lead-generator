@@ -115,6 +115,8 @@ class LeadListItemResponse(BaseModel):
     search_id: str | None = None
     business_name: str
     contact_name: str | None = None
+    contact_job_title: str | None = None
+    contact_linkedin_url: str | None = None
     website: str | None = None
     email: str | None = None
     phone: str | None = None

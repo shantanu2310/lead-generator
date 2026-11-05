@@ -26,6 +26,8 @@ type GeneratedLead = {
   id: string
   business_name: string
   contact_name: string | null
+  contact_job_title: string | null
+  contact_linkedin_url: string | null
   email: string | null
   phone: string | null
   website: string | null
@@ -229,6 +231,22 @@ export default function LeadGeneratorPage() {
                             <span>Status: {STAGE_LABELS[lead.pipeline_stage] || lead.pipeline_stage}</span><span aria-hidden="true">·</span>
                             <span>Website: {lead.website ? lead.website.replace(/^https?:\/\//, "") : "—"}</span>
                           </span>
+                          {lead.contact_name && (
+                            <span className="mt-1 flex items-center gap-2 overflow-x-auto whitespace-nowrap text-xs text-slate-700">
+                              <span className="font-medium">Contact: {lead.contact_name}</span>
+                              {lead.contact_job_title && <span aria-hidden="true">·</span>}
+                              {lead.contact_job_title && <span>{lead.contact_job_title}</span>}
+                              {lead.contact_linkedin_url && (
+                                <>
+                                  <span aria-hidden="true">·</span>
+                                  <a href={lead.contact_linkedin_url} target="_blank" rel="noopener noreferrer"
+                                    className="text-[#0a66c2] hover:underline font-medium">
+                                    LinkedIn ↗
+                                  </a>
+                                </>
+                              )}
+                            </span>
+                          )}
                         </span>
                       </Link>
                     </li>

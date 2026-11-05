@@ -236,15 +236,15 @@ async def list_leads(
     dept_names = await _department_names(
         db, user.company_id, [lead.department_id or "" for lead in leads]
     )
-    contact_names: dict[str, str] = {}
+    contact_names: dict[str, tuple[str | None, str | None, str | None]] = {}
     if leads:
         contact_rows = await db.execute(
-            select(Contact.lead_id, Contact.name)
+            select(Contact.lead_id, Contact.name, Contact.job_title, Contact.linkedin_url)
             .where(Contact.company_id == user.company_id, Contact.lead_id.in_([lead.id for lead in leads]))
             .order_by(Contact.is_primary.desc(), Contact.created_at.asc())
         )
-        for lead_id, name in contact_rows:
-            contact_names.setdefault(lead_id, name)
+        for lead_id, name, job_title, linkedin_url in contact_rows:
+            contact_names.setdefault(lead_id, (name, job_title, linkedin_url))
 
     return PaginatedResponse(
         items=[
@@ -252,7 +252,9 @@ async def list_leads(
                 id=lead.id,
                 search_id=lead.search_id,
                 business_name=lead.business_name,
-                contact_name=contact_names.get(lead.id),
+                contact_name=contact_names.get(lead.id, (None, None, None))[0],
+                contact_job_title=contact_names.get(lead.id, (None, None, None))[1],
+                contact_linkedin_url=contact_names.get(lead.id, (None, None, None))[2],
                 website=lead.website,
                 email=lead.email,
                 phone=lead.phone,

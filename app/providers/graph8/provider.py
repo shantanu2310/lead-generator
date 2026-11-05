@@ -16,6 +16,13 @@ logger = get_logger()
 DEFAULT_BASE_URL = "https://be.graph8.com/api/v1"
 
 
+def _linkedin(value: str | None) -> str | None:
+    # graph8 returns bare "linkedin.com/in/..." — a relative href would 404.
+    if value and not value.startswith(("http://", "https://")):
+        return f"https://{value.lstrip('/')}"
+    return value
+
+
 class Graph8Client:
     """Thin async client for the graph8 REST API (be.graph8.com/api/v1)."""
 
@@ -124,7 +131,7 @@ class Graph8Provider(ContactDiscoveryProvider):
             full_name=f"{first} {last}".strip(),
             job_title=row.get("job_title"),
             email=row.get("work_email"),
-            linkedin_url=row.get("linkedin_url"),
+            linkedin_url=_linkedin(row.get("linkedin_url")),
             confidence=float(data.get("confidence") or 0.0),
         )
 
@@ -192,7 +199,7 @@ class Graph8Provider(ContactDiscoveryProvider):
             job_title=row.get("job_title"),
             email=row.get("work_email"),
             phone=row.get("direct_phone") or row.get("mobile_phone"),
-            linkedin_url=row.get("linkedin_url"),
+            linkedin_url=_linkedin(row.get("linkedin_url")),
             seniority=row.get("seniority_level"),
             department=row.get("job_department"),
             city=row.get("city"),
