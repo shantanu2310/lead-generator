@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Archive, Building2, Globe, Inbox, Loader2, Mail, MapPin, Phone, RotateCcw, Search } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { LeadSearchForm } from "@/components/pipeline/lead-search-form"
 import { api } from "@/lib/api"
 import { STAGE_LABELS } from "@/lib/constants"
@@ -68,11 +69,11 @@ export default function LeadGeneratorPage() {
   const [leadPage, setLeadPage] = useState(1)
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([])
   const [enriching, setEnriching] = useState(false)
-  const [enrichResult, setEnrichResult] = useState<string | null>(null)
-  const [leadRefresh, setLeadRefresh] = useState(0)
+  const [enrichError, setEnrichError] = useState<string | null>(null)
   const requestId = useRef(0)
+  const router = useRouter()
   const selectedId = selected?.id
-  const leadKey = selected ? `${selected.id}:${selected.status}:${selected.lead_count}:${leadPage}:${leadRefresh}` : ""
+  const leadKey = selected ? `${selected.id}:${selected.status}:${selected.lead_count}:${leadPage}` : ""
   const leads = leadState?.key === leadKey ? leadState.leads : []
   const leadPages = leadState?.key === leadKey ? leadState.pages : 1
   const leadError = leadState?.key === leadKey ? leadState.error : null
@@ -128,7 +129,7 @@ export default function LeadGeneratorPage() {
     setSelected(item)
     setLeadPage(1)
     setSelectedLeadIds([])
-    setEnrichResult(null)
+    setEnrichError(null)
   }
 
   function toggleLead(id: string) {
@@ -139,21 +140,15 @@ export default function LeadGeneratorPage() {
 
   async function enrichSelected() {
     if (selectedLeadIds.length === 0 || enriching) return
+    const firstLeadId = selectedLeadIds[0]
     setEnriching(true)
-    setEnrichResult(null)
+    setEnrichError(null)
     try {
-      const result = await api.enrichLeadsBatch(selectedLeadIds)
-      const items: any[] = result?.items ?? []
-      const contacts = items.reduce((sum, i) => sum + (i.contacts_created || 0), 0)
-      const emails = items.reduce((sum, i) => sum + (i.emails_added || 0), 0)
-      const problem = items.map((i) => i.message).find((m) => m && /fail|missing|not set|rejected|skipped/i.test(m))
-      setEnrichResult(
-        `Enriched ${items.length} lead(s): ${contacts} contact(s), ${emails} email(s) added.${problem ? ` ${problem}` : ""}`
-      )
-      setSelectedLeadIds([])
-      setLeadRefresh((v) => v + 1)
+      await api.enrichLeadsBatch(selectedLeadIds)
+      // Open the first selected lead so the fresh data is immediately visible.
+      router.push(`/pipeline/leads/${firstLeadId}`)
     } catch (err) {
-      setEnrichResult(err instanceof Error ? err.message : "Enrichment failed.")
+      setEnrichError(err instanceof Error ? err.message : "Enrichment failed.")
     } finally {
       setEnriching(false)
     }
@@ -272,7 +267,7 @@ export default function LeadGeneratorPage() {
                 <ModePill mode={selected?.mode ?? null} />
               </div>
               <p className="truncate text-sm text-slate-500 mt-1" title={selected ? `${selected.query} · ${selected.department_name || "Unassigned product"}` : undefined}>{selected ? `${selected.query} · ${selected.department_name || "Unassigned product"}` : "Choose a search from the history to view its leads."}</p>
-              {enrichResult && <p role="status" className="mt-1 text-xs text-[#41808B]">{enrichResult}</p>}
+              {enrichError && <p role="alert" className="mt-1 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{enrichError}</p>}
             </div>
             {selected && selected.lead_count > 0 && (
               <div className="flex shrink-0 items-center gap-3">
