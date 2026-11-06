@@ -57,6 +57,8 @@ class PersonEnrichmentResult:
     contacts_skipped: int = 0
     company_enriched: bool = False
     company_fields_filled: list[str] = field(default_factory=list)
+    emails_revealed: int = 0
+    phones_revealed: int = 0
     contacts: list[Contact] = field(default_factory=list)
     message: str = ""
 
@@ -192,10 +194,15 @@ class PersonEnrichmentService:
         # 5. Enrich the lead's company fields (only ones still empty).
         company, filled_fields = await self._enrich_company(lead, domain, company_name)
 
+        # 6. Reveal emails/phones — search masks them, person lookup doesn't.
+        revealed_emails, revealed_phones = await self._reveal_contact_details(
+            lead, list(existing) + created
+        )
+
         await db.flush()
 
         matches = len(ranked)
-        if created or filled_fields:
+        if created or filled_fields or revealed_emails or revealed_phones:
             description_parts = []
             if created:
                 with_linkedin = sum(1 for c in created if c.linkedin_url)
@@ -206,6 +213,10 @@ class PersonEnrichmentService:
             if filled_fields:
                 description_parts.append(
                     "company fields filled: " + ", ".join(filled_fields)
+                )
+            if revealed_emails or revealed_phones:
+                description_parts.append(
+                    f"revealed {revealed_emails} email(s) and {revealed_phones} phone(s)"
                 )
             db.add(
                 TimelineEvent(
@@ -218,12 +229,19 @@ class PersonEnrichmentService:
                         "matches_found": matches,
                         "contacts_created": len(created),
                         "company_fields": filled_fields,
+                        "emails_revealed": revealed_emails,
+                        "phones_revealed": revealed_phones,
                     },
                 )
             )
             await db.flush()
 
         message = self._build_message(matches, len(created), skipped, filled_fields)
+        if revealed_emails or revealed_phones:
+            message += (
+                f" {revealed_emails} email(s) and {revealed_phones} phone(s)"
+                " revealed via graph8 lookup."
+            )
         logger.info(
             "graph8_lead_enriched",
             lead_id=lead.id,
@@ -231,6 +249,8 @@ class PersonEnrichmentService:
             created=len(created),
             skipped=skipped,
             company_fields=filled_fields,
+            emails_revealed=revealed_emails,
+            phones_revealed=revealed_phones,
         )
 
         return PersonEnrichmentResult(
@@ -239,9 +259,58 @@ class PersonEnrichmentService:
             contacts_skipped=skipped,
             company_enriched=company is not None,
             company_fields_filled=filled_fields,
+            emails_revealed=revealed_emails,
+            phones_revealed=revealed_phones,
             contacts=created,
             message=message,
         )
+
+    async def _reveal_contact_details(
+        self, lead: Lead, contacts: list[Contact]
+    ) -> tuple[int, int]:
+        """Graph8 search masks emails/phones; person lookup returns them raw.
+        Fills missing contact.email / contact.phone, capped per lead."""
+        emails = phones = lookups = 0
+        for contact in contacts:
+            if contact.email and contact.phone:
+                continue
+            if lookups >= settings.graph8_max_contacts:
+                break
+            lookups += 1
+            record: PersonRecord | None = None
+            try:
+                if contact.linkedin_url:
+                    record = await self.provider.lookup_person_by_linkedin(
+                        contact.linkedin_url
+                    )
+                elif contact.email:
+                    # Lookup by email also returns the full profile (phones).
+                    record = await self.provider.lookup_person_by_email(contact.email)
+            except Exception as e:
+                logger.warning(
+                    "graph8_person_lookup_failed",
+                    lead_id=lead.id,
+                    contact_id=contact.id,
+                    error=str(e),
+                )
+                continue
+            if not record:
+                continue
+            if not contact.email and record.email:
+                contact.email = record.email
+                emails += 1
+            if not contact.phone and record.phone:
+                contact.phone = record.phone
+                phones += 1
+        if emails or phones:
+            logger.info(
+                "graph8_contact_details_revealed",
+                lead_id=lead.id,
+                emails=emails,
+                phones=phones,
+                lookups=lookups,
+            )
+        return emails, phones
 
     async def _enrich_company(
         self,

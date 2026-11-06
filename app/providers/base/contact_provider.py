@@ -57,6 +57,10 @@ class ContactDiscoveryProvider(ABC):
         ...
 
     @abstractmethod
+    async def lookup_person_by_linkedin(self, linkedin_url: str) -> PersonRecord | None:
+        ...
+
+    @abstractmethod
     async def search_company(
         self,
         domain: str | None = None,

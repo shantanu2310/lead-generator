@@ -84,6 +84,25 @@ async def _load_lead_for_user(
     return lead
 
 
+async def _apply_hunter_emails(
+    db: AsyncSession, lead: Lead, email_service
+) -> tuple[int, str]:
+    """Hunter domain-search → fill lead/contact emails. Returns (added, note)."""
+    domain = lead.normalized_domain or domain_from_url(lead.website)
+    if not settings.hunter_api_key:
+        return 0, "HUNTER_API_KEY not set - emails skipped."
+    if not domain:
+        return 0, "No website - Hunter email search skipped."
+    try:
+        results, _ = await email_service.discover_emails(domain)
+        added = await apply_email_results(db, lead, results)
+        if added:
+            return added, f"Hunter: {added} new email(s)."
+        return added, "Hunter: no new emails found."
+    except Exception as error:
+        return 0, f"Hunter enrichment failed: {error}"
+
+
 async def _department_names(
     db: AsyncSession, company_id: str, department_ids: list[str]
 ) -> dict[str, str]:
@@ -1179,11 +1198,13 @@ async def enrich_lead_persons(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
     enrichment_service=Depends(get_person_enrichment_service),
+    email_service=Depends(get_email_enrichment_service),
 ) -> PersonEnrichResponse:
     """Find LinkedIn profiles / person contacts for this lead via graph8."""
     try:
         lead = await _load_lead_for_user(db, lead_id, user)
         result = await enrichment_service.enrich_lead(db, lead)
+        _, hunter_msg = await _apply_hunter_emails(db, lead, email_service)
     except ProviderAuthenticationError:
         raise HTTPException(
             status_code=400,
@@ -1191,6 +1212,7 @@ async def enrich_lead_persons(
         )
     finally:
         await enrichment_service.close()
+        await email_service.close()
 
     return PersonEnrichResponse(
         matches_found=result.matches_found,
@@ -1198,7 +1220,7 @@ async def enrich_lead_persons(
         contacts_skipped=result.contacts_skipped,
         company_enriched=result.company_enriched,
         company_fields_filled=result.company_fields_filled,
-        message=result.message,
+        message=f"{result.message} {hunter_msg}".strip(),
         contacts=[
             _contact_response(c)
             for c in result.contacts
@@ -1244,22 +1266,8 @@ async def enrich_leads_batch(
             except Exception as error:
                 parts.append(f"Graph8 enrichment failed: {error}")
 
-            domain = lead.normalized_domain or domain_from_url(lead.website)
-            if not settings.hunter_api_key:
-                parts.append("HUNTER_API_KEY not set - emails skipped.")
-            elif not domain:
-                parts.append("No website - Hunter email search skipped.")
-            else:
-                try:
-                    results, _ = await email_service.discover_emails(domain)
-                    emails_added = await apply_email_results(db, lead, results)
-                    parts.append(
-                        f"Hunter: {emails_added} new email(s)."
-                        if emails_added
-                        else "Hunter: no new emails found."
-                    )
-                except Exception as error:
-                    parts.append(f"Hunter enrichment failed: {error}")
+            emails_added, hunter_msg = await _apply_hunter_emails(db, lead, email_service)
+            parts.append(hunter_msg)
 
             items.append(
                 LeadEnrichBatchItem(

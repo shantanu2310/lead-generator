@@ -26,10 +26,11 @@ from app.services.person_enrichment_service import (
 
 
 class FakeGraph8Provider(ContactDiscoveryProvider):
-    def __init__(self, people=None, company=None, email_lookup=None):
+    def __init__(self, people=None, company=None, email_lookup=None, linkedin_lookup=None):
         self.people = people or []
         self.company = company
         self.email_lookup = email_lookup
+        self.linkedin_lookup = linkedin_lookup or {}
         self.calls = []
 
     async def search_people_by_company(self, domain=None, company_name=None, limit=25):
@@ -39,6 +40,10 @@ class FakeGraph8Provider(ContactDiscoveryProvider):
     async def lookup_person_by_email(self, email):
         self.calls.append(("email", email))
         return self.email_lookup
+
+    async def lookup_person_by_linkedin(self, linkedin_url):
+        self.calls.append(("linkedin", linkedin_url))
+        return self.linkedin_lookup.get(linkedin_url)
 
     async def search_company(self, domain=None, name=None):
         self.calls.append(("company", domain, name))
@@ -300,6 +305,18 @@ async def test_person_parsing():
     assert domain_from_url("acme.com") == "acme.com"
     assert domain_from_url(None) is None
     assert domain_from_url("") is None
+
+    # Masked search-tier values must never be stored as data.
+    masked = Graph8Provider._to_person({
+        "first_name": "Masked",
+        "last_name": "Person",
+        "work_email": "***",
+        "direct_phone": "***",
+        "linkedin_url": "linkedin.com/in/maskedperson",
+    })
+    assert masked.email is None, f"masked email must be None, got {masked.email!r}"
+    assert masked.phone is None, f"masked phone must be None, got {masked.phone!r}"
+    assert masked.linkedin_url == "https://linkedin.com/in/maskedperson"
     print("  PASS")
     return True
 
@@ -513,6 +530,76 @@ async def test_apply_email_results():
         await engine.dispose()
 
 
+async def test_reveal_contact_details():
+    print("\n=== Test: reveal fills masked emails/phones via person lookup ===")
+    engine, factory = await _make_db()
+    try:
+        # Search returns people with masked (empty) contact data.
+        masked_people = [
+            PersonRecord(
+                first_name="Jane",
+                last_name="Doe",
+                full_name="Jane Doe",
+                job_title="Owner",
+                email=None,
+                phone=None,
+                linkedin_url="https://linkedin.com/in/janedoe",
+                confidence=0.95,
+            ),
+            PersonRecord(
+                first_name="Sam",
+                last_name="Stewart",
+                full_name="Sam Stewart",
+                job_title="Receptionist",
+                email=None,
+                phone=None,
+                linkedin_url="https://linkedin.com/in/samstewart",
+                confidence=0.9,
+            ),
+        ]
+        provider = FakeGraph8Provider(
+            people=masked_people,
+            company=SAMPLE_COMPANY,
+            linkedin_lookup={
+                "https://linkedin.com/in/janedoe": PersonRecord(
+                    full_name="Jane Doe",
+                    email="jane@acme.com",
+                    phone="+1-555-0100",
+                    linkedin_url="https://linkedin.com/in/janedoe",
+                ),
+                # Sam: lookup misses -> stays empty, no crash.
+            },
+        )
+        service = PersonEnrichmentService(provider=provider)
+
+        async with factory() as db:
+            lead = make_lead()
+            db.add(lead)
+            await db.flush()
+
+            result = await service.enrich_lead(db, lead)
+            assert result.contacts_created == 2, result.contacts_created
+            assert result.emails_revealed == 1, result.emails_revealed
+            assert result.phones_revealed == 1, result.phones_revealed
+            by_name = {c.name: c for c in result.contacts}
+            assert by_name["Jane Doe"].email == "jane@acme.com"
+            assert by_name["Jane Doe"].phone == "+1-555-0100"
+            assert by_name["Sam Stewart"].email is None
+            assert "1 email(s) and 1 phone(s) revealed via graph8 lookup" in result.message, result.message
+
+            # Re-run: Jane already has both -> only Sam is looked up again.
+            provider.calls.clear()
+            result2 = await service.enrich_lead(db, lead)
+            assert result2.contacts_created == 0, result2.contacts_created
+            lookups = [c for c in provider.calls if c[0] == "linkedin"]
+            assert len(lookups) == 1, f"expected 1 lookup on re-run, got {lookups}"
+
+        print("  PASS")
+        return True
+    finally:
+        await engine.dispose()
+
+
 def test_enrich_batch_http():
     """End-to-end HTTP test of POST /leads/enrich-batch (sync, temp file DB)."""
     print("\n=== Test: HTTP endpoint /leads/enrich-batch ===")
@@ -696,6 +783,7 @@ async def main():
         ("auth_error", test_no_key_raises_auth_error),
         ("parsing", test_person_parsing),
         ("apply_email_results", test_apply_email_results),
+        ("reveal_contact_details", test_reveal_contact_details),
         ("http_endpoint", test_http_endpoint),
         ("batch_http_endpoint", test_enrich_batch_http),
     ]:

@@ -24,6 +24,16 @@ def _linkedin(value: str | None) -> str | None:
     return value
 
 
+def _unmask(value: str | None) -> str | None:
+    # search-tier contact data comes back masked as "***" — treat as empty.
+    if not value:
+        return None
+    value = value.strip()
+    if not value or set(value) <= {"*"}:
+        return None
+    return value
+
+
 class Graph8Client:
     """Thin async client for the graph8 REST API (be.graph8.com/api/v1)."""
 
@@ -119,7 +129,13 @@ class Graph8Provider(ContactDiscoveryProvider):
         return []
 
     async def lookup_person_by_email(self, email: str) -> PersonRecord | None:
-        data = await self.client.post("/enrichment/lookup/person", {"email": email})
+        return await self._lookup_person({"email": email})
+
+    async def lookup_person_by_linkedin(self, linkedin_url: str) -> PersonRecord | None:
+        return await self._lookup_person({"linkedin_url": linkedin_url})
+
+    async def _lookup_person(self, body: dict) -> PersonRecord | None:
+        data = await self.client.post("/enrichment/lookup/person", body)
         if not data or not data.get("found"):
             return None
 
@@ -131,7 +147,8 @@ class Graph8Provider(ContactDiscoveryProvider):
             last_name=last or None,
             full_name=f"{first} {last}".strip(),
             job_title=row.get("job_title"),
-            email=row.get("work_email"),
+            email=_unmask(row.get("work_email")),
+            phone=_unmask(row.get("direct_phone")) or _unmask(row.get("mobile_phone")),
             linkedin_url=_linkedin(row.get("linkedin_url")),
             confidence=float(data.get("confidence") or 0.0),
         )
@@ -206,8 +223,8 @@ class Graph8Provider(ContactDiscoveryProvider):
             last_name=last or None,
             full_name=full_name,
             job_title=row.get("job_title"),
-            email=row.get("work_email"),
-            phone=row.get("direct_phone") or row.get("mobile_phone"),
+            email=_unmask(row.get("work_email")),
+            phone=_unmask(row.get("direct_phone")) or _unmask(row.get("mobile_phone")),
             linkedin_url=_linkedin(row.get("linkedin_url")),
             headline=row.get("linkedin_headline"),
             seniority=row.get("seniority_level"),
