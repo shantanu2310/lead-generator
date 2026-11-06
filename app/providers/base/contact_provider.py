@@ -13,6 +13,7 @@ class PersonRecord(BaseModel):
     email: str | None = None
     phone: str | None = None
     linkedin_url: str | None = None
+    headline: str | None = None
     seniority: str | None = None
     department: str | None = None
     city: str | None = None

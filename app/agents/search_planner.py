@@ -35,6 +35,14 @@ class SearchPlan(BaseModel):
     category: str | None = None
     location: str | None = None
     job_title: str | None = None
+    job_title_variants: list[str] = Field(
+        default_factory=list,
+        description="Alternate titles for the same role (any_of match)",
+    )
+    seniority_levels: list[str] = Field(
+        default_factory=list,
+        description="Derived seniority filter values (empty = no filter)",
+    )
 
 
 SEARCH_PLANNING_PROMPT = """\

@@ -92,6 +92,9 @@ CONTACT_ROWS = [
         "direct_phone": None,
         "job_title": "HR Manager",
         "linkedin_url": "linkedin.com/in/cor-van-mer",
+        "linkedin_headline": "HR Manager at Sesami NL",
+        "seniority_level": "Experienced Manager",
+        "job_department": "Human Resources",
         "city": "***",
         "state": "North Holland",
         "country": "Netherlands",
@@ -106,6 +109,9 @@ CONTACT_ROWS = [
         "direct_phone": None,
         "job_title": "Human Resources Manager",
         "linkedin_url": "linkedin.com/in/julia-frericks",
+        "linkedin_headline": "Human Resources Manager at KCP",
+        "seniority_level": "Experienced Manager",
+        "job_department": "Human Resources",
         "city": "***",
         "state": "North Holland",
         "country": "Netherlands",
@@ -113,14 +119,17 @@ CONTACT_ROWS = [
         "company_domain": "kcp.example",
         "company_employee_count": "",
     },
-    # Same company as the first row, weaker title (not a decision maker)
-    # -> must lose the per-company contest.
+    # Same company as the first row — must NOT be collapsed away: person
+    # mode returns every matched person, not one per company.
     {
         "first_name": "Zoe",
         "last_name": "Assistant",
         "work_email": "***",
         "job_title": "HR Coordinator",
         "linkedin_url": "linkedin.com/in/zoe-assistant",
+        "linkedin_headline": "HR Coordinator at Sesami NL",
+        "seniority_level": "Experienced Professional",
+        "job_department": "Human Resources",
         "state": "North Holland",
         "country": "Netherlands",
         "company_name": "Sesami NL",
@@ -246,7 +255,7 @@ async def test_graph8_company_provider():
 
 
 async def test_graph8_people_provider():
-    print("\n=== Test: graph8 people provider (geo chain, dedupe, contact) ===")
+    print("\n=== Test: graph8 people provider (variants, exclusions, no collapse) ===")
     from app.providers.graph8.discovery import Graph8PeopleProvider
 
     class ChainClient:
@@ -258,12 +267,16 @@ async def test_graph8_people_provider():
             self.calls.append((path, payload["filters"]))
             return self.payloads.pop(0) if self.payloads else None
 
+    def geo_field(filters):
+        return next(f for f in filters if f["field"] in ("city", "state", "country"))
+
     provider = Graph8PeopleProvider()
     provider.client = ChainClient([None, CONTACT_ROWS])  # city -> empty, state -> rows
     plan = SearchPlan(
         primary_source="graph8_people",
-        secondary_source="google_places",
+        secondary_source=None,
         job_title="HR Manager",
+        job_title_variants=["Human Resource Manager", "Head of HR"],
         location="Amsterdam",
         candidate_target=50,
     )
@@ -271,36 +284,73 @@ async def test_graph8_people_provider():
 
     # Chain stopped at the second (state) filter.
     assert len(provider.client.calls) == 2, provider.client.calls
-    assert provider.client.calls[0][1][1]["field"] == "city"
-    assert provider.client.calls[1][1][1]["field"] == "state"
+    assert geo_field(provider.client.calls[0][1])["field"] == "city"
+    assert geo_field(provider.client.calls[1][1])["field"] == "state"
 
-    # One candidate per company.
-    assert len(candidates) == 2, [c.name for c in candidates]
-    by_company = {c.name: c for c in candidates}
+    title_filters = provider.client.calls[0][1]
+    # Primary title + LLM variants all go into a single any_of match.
+    assert title_filters[0]["operator"] == "any_of"
+    assert title_filters[0]["value"] == [
+        "HR Manager", "Human Resource Manager", "Head of HR"
+    ], title_filters[0]["value"]
+    # Interns/students/trainees are always excluded.
+    assert {
+        "field": "job_title", "operator": "none_of",
+        "value": ["intern", "student", "trainee"],
+    } in title_filters
 
-    sesami = by_company["Sesami NL"]
-    # Best-ranked person per company (HR Manager beats HR Coordinator).
-    assert sesami.contact is not None
-    assert sesami.contact.full_name == "Cor Van Mer"
+    # No per-company collapse: every matched person becomes a candidate.
+    assert len(candidates) == 3, [c.name for c in candidates]
+    by_person = {c.name: c for c in candidates}
+    assert set(by_person) == {"Cor Van Mer", "Julia Frericks", "Zoe Assistant"}
+
+    cor = by_person["Cor Van Mer"]
+    # The person is the lead; the company survives as the website domain.
+    assert cor.website == "gunnebo.com"
+    assert cor.source_id == "https://linkedin.com/in/cor-van-mer"
+    assert cor.source_url == "https://linkedin.com/in/cor-van-mer"
+    assert cor.contact is not None
+    assert cor.contact.full_name == "Cor Van Mer"
     # Locked fields must not leak into the Contact row.
-    assert sesami.contact.email is None
-    assert sesami.contact.city is None
-    assert sesami.contact.linkedin_url == "https://linkedin.com/in/cor-van-mer"
-    assert sesami.category == "HR Manager"
-    assert sesami.business_status == "active"
-    assert sesami.source == "graph8_people"
-    assert sesami.website == "gunnebo.com"
+    assert cor.contact.email is None
+    assert cor.contact.city is None
+    # LinkedIn-grade fields carried through to the contact.
+    assert cor.contact.headline == "HR Manager at Sesami NL"
+    assert cor.contact.seniority == "Experienced Manager"
+    assert cor.contact.department == "Human Resources"
+    assert cor.category == "HR Manager"
+    assert cor.business_status == "active"
+    assert cor.source == "graph8_people"
 
-    kcp = by_company["KCP"]
-    assert kcp.contact.full_name == "Julia Frericks"
+    kcp = by_person["Julia Frericks"]
     assert kcp.contact.email == "julia@kcp.example"
-    # LinkedIn profile present on the row -> active.
+    assert kcp.contact.linkedin_url == "https://linkedin.com/in/julia-frericks"
     assert kcp.business_status == "active"
 
-    # No job title -> zero calls (falls back to secondary source).
+    # No job title -> zero calls (no fallback source in person mode).
     provider.client = ChainClient([])
     got = await provider.search(SearchPlan(primary_source="graph8_people"))
     assert got == [] and provider.client.calls == []
+
+    # graph8 returns [] (not an error) for a seniority value it does not know:
+    # the provider must retry without the filter instead of returning 0 leads.
+    provider.client = ChainClient([None, None, None, CONTACT_ROWS])
+    plan2 = SearchPlan(
+        primary_source="graph8_people",
+        job_title="HR Manager",
+        location="Amsterdam",
+        seniority_levels=["Manager"],
+        candidate_target=50,
+    )
+    got2 = await provider.search(plan2)
+    assert len(got2) == 3, [c.name for c in got2]
+    # 3 geo calls with the seniority filter (all empty), then the retry's
+    # city call hits rows and stops.
+    assert len(provider.client.calls) == 4, provider.client.calls
+    assert any(f["field"] == "seniority_level" for f in provider.client.calls[0][1])
+    assert not any(
+        f["field"] == "seniority_level" for f in provider.client.calls[3][1]
+    )
     print("  PASS")
     return True
 
@@ -369,6 +419,7 @@ async def test_plan_search_mode_forcing():
         entity_type=EntityType.PERSON,
         category="recruitment agency",
         job_title="HR Manager",
+        job_title_variants=["Human Resource Manager", "Head of HR"],
         location="Amsterdam",
         location_mode=LocationMode.EXPLICIT,
     )
@@ -388,6 +439,19 @@ async def test_plan_search_mode_forcing():
     assert person_plan.primary_source == "graph8_people"
     # Strict person mode: no secondary source, Places can never mix in.
     assert person_plan.secondary_source is None
+    # Title variants flow intent -> plan (any_of match downstream).
+    assert person_plan.job_title_variants == [
+        "Human Resource Manager", "Head of HR"
+    ]
+    # Senior words in the query -> graph8 seniority filter value.
+    assert person_plan.seniority_levels == ["Manager"]
+
+    from app.services.intent_service import derive_seniority_levels
+
+    assert derive_seniority_levels("Sales Director") == ["Director"]
+    assert derive_seniority_levels("Head of Engineering") == ["Manager"]
+    # Unknown tiers must map to no filter (graph8 enum is not verifiable).
+    assert derive_seniority_levels("CTO") == []
 
     # Structured intent copied onto the plan for the providers.
     for plan in (company_plan, person_plan):
@@ -466,6 +530,9 @@ async def test_pipeline_contact_creation():
         full_name="Cor Van Mer",
         job_title="HR Manager",
         linkedin_url="linkedin.com/in/cor-van-mer",
+        headline="HR Manager at Sesami NL",
+        seniority="Experienced Manager",
+        department="Human Resources",
         email=None,
     )
     selected = SelectedLead(
@@ -525,6 +592,9 @@ async def test_pipeline_contact_creation():
             assert c.name == "Cor Van Mer"
             assert c.job_title == "HR Manager"
             assert c.linkedin_url == "linkedin.com/in/cor-van-mer"
+            assert c.linkedin_headline == "HR Manager at Sesami NL"
+            assert c.seniority == "Experienced Manager"
+            assert c.department == "Human Resources"
             assert c.is_primary is True
             assert c.email is None
 
@@ -558,11 +628,15 @@ def test_search_response_contact_field():
             name="Cor Van Mer",
             job_title="HR Manager",
             linkedin_url="https://linkedin.com/in/cor-van-mer",
+            linkedin_headline="HR Manager at Sesami NL",
+            seniority="Experienced Manager",
             is_primary=True,
         ),
     )
     assert lead.contact is not None
     assert lead.contact.linkedin_url.startswith("https://")
+    assert lead.contact.linkedin_headline == "HR Manager at Sesami NL"
+    assert lead.contact.seniority == "Experienced Manager"
 
     # Company-mode lead: no contact stays None (nullable field).
     plain = LeadResponse(

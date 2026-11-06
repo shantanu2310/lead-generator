@@ -9,6 +9,21 @@ from app.providers.base.llm_provider import LLMClient
 logger = get_logger()
 
 
+def derive_seniority_levels(*titles: str | None) -> list[str]:
+    """Senior words in the query -> graph8 seniority_level filter values.
+
+    Only values verified live against graph8 are used; an unrecognized value
+    makes graph8 silently return 0 rows, so unknown tiers (VP, chief) map to
+    no filter at all.
+    """
+    text = " ".join(t for t in titles if t).lower()
+    if "director" in text:
+        return ["Director"]
+    if any(w in text for w in ("manager", "head", "lead")):
+        return ["Manager"]
+    return []
+
+
 class IntentService:
     def __init__(self, llm_client: LLMClient) -> None:
         self.llm = llm_client
@@ -70,6 +85,10 @@ class IntentService:
             "category": intent.category,
             "location": intent.location,
             "job_title": intent.job_title,
+            "job_title_variants": intent.job_title_variants,
+            "seniority_levels": derive_seniority_levels(
+                intent.job_title, *intent.job_title_variants
+            ),
         }
         if mode == "person":
             update["primary_source"] = "graph8_people"

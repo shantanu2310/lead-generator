@@ -172,6 +172,9 @@ class PersonEnrichmentService:
                 email=person.email,
                 phone=person.phone,
                 linkedin_url=person.linkedin_url,
+                linkedin_headline=person.headline,
+                seniority=person.seniority,
+                department=person.department,
                 is_primary=not has_primary,
             )
             if contact.is_primary:

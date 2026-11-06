@@ -28,6 +28,8 @@ type GeneratedLead = {
   contact_name: string | null
   contact_job_title: string | null
   contact_linkedin_url: string | null
+  contact_headline: string | null
+  contact_seniority: string | null
   email: string | null
   phone: string | null
   website: string | null
@@ -236,7 +238,10 @@ export default function LeadGeneratorPage() {
                               {lead.contact_name !== lead.business_name && (
                                 <span className="font-medium">Contact: {lead.contact_name}</span>
                               )}
-                              {lead.contact_job_title && <span>{lead.contact_job_title}</span>}
+                              {(lead.contact_headline || lead.contact_job_title) && (
+                                <span>{lead.contact_headline || lead.contact_job_title}</span>
+                              )}
+                              {lead.contact_seniority && <span className="text-slate-500">{lead.contact_seniority}</span>}
                               {lead.contact_linkedin_url && (
                                 <a href={lead.contact_linkedin_url} target="_blank" rel="noopener noreferrer"
                                   className="text-[#0a66c2] hover:underline font-medium">

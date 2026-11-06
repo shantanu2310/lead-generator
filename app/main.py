@@ -179,6 +179,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         "ALTER TABLE leads ADD COLUMN department_id VARCHAR(36)",
         "ALTER TABLE searches ADD COLUMN department_id VARCHAR(36)",
         "ALTER TABLE leads ADD COLUMN notes TEXT",
+        "ALTER TABLE contacts ADD COLUMN linkedin_headline TEXT",
+        "ALTER TABLE contacts ADD COLUMN seniority VARCHAR(100)",
+        "ALTER TABLE contacts ADD COLUMN department VARCHAR(100)",
         """
         CREATE TABLE IF NOT EXISTS password_reset_tokens (
             id VARCHAR(36) PRIMARY KEY,

@@ -135,6 +135,9 @@ class PipelineManager:
                     email=person.email,
                     phone=person.phone,
                     linkedin_url=person.linkedin_url,
+                    linkedin_headline=person.headline,
+                    seniority=person.seniority,
+                    department=person.department,
                     is_primary=True,
                 ))
                 await self._create_timeline_event(

@@ -41,6 +41,13 @@ class SearchIntent(BaseModel):
             "(e.g. 'HR Manager' for 'HR managers')"
         ),
     )
+    job_title_variants: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Alternate titles the same role is listed under "
+            "(e.g. 'Human Resource Manager', 'Head of HR')"
+        ),
+    )
     target_count: int = Field(
         default=15, ge=1, le=15, description="Number of leads requested"
     )
@@ -61,6 +68,10 @@ Rules:
   set entity_type to "person", extract the singular role into job_title
   (e.g. "HR Manager"), and set category to the business service those people
   belong to or are hired through - for HR roles use "recruitment agency".
+- job_title_variants: for person queries, list 3-6 alternate titles the same
+  role is listed under (e.g. "HR Manager" -> "Human Resource Manager",
+  "HR Business Partner", "Head of HR", "Talent Acquisition Manager"); empty
+  list for non-person queries.
 - location: explicit location name if mentioned, otherwise null
 - location_mode: "explicit" if location is in query,
   "user_location" if "near me" or similar, "none" if no location
@@ -88,6 +99,7 @@ Query: "marketing agencies in London with email"
 
 Query: "HR managers in Amsterdam"
 → entity_type: "person", job_title: "HR Manager",
-  category: "recruitment agency", location: "Amsterdam",
+  job_title_variants: ["Human Resource Manager", "HR Business Partner",
+  "Head of HR"], category: "recruitment agency", location: "Amsterdam",
   location_mode: "explicit"
 """

@@ -99,6 +99,21 @@ async def _lead_department_name(db: AsyncSession, lead: Lead) -> str | None:
     return names.get(lead.department_id)
 
 
+def _contact_response(c: Contact) -> ContactResponse:
+    return ContactResponse(
+        id=c.id,
+        name=c.name,
+        job_title=c.job_title,
+        email=c.email,
+        phone=c.phone,
+        linkedin_url=c.linkedin_url,
+        linkedin_headline=c.linkedin_headline,
+        seniority=c.seniority,
+        department=c.department,
+        is_primary=c.is_primary,
+    )
+
+
 @router.post(
     "/leads/search",
     response_model=LeadSearchResponse,
@@ -160,15 +175,7 @@ async def search_leads(
                 phone_cross_verified=lead.phone_cross_verified,
                 location_match=lead.location_match,
             ),
-            contact=ContactResponse(
-                id=contact.id,
-                name=contact.name,
-                job_title=contact.job_title,
-                email=contact.email,
-                phone=contact.phone,
-                linkedin_url=contact.linkedin_url,
-                is_primary=contact.is_primary,
-            ) if contact else None,
+            contact=_contact_response(contact) if contact else None,
         ))
 
     return LeadSearchResponse(
@@ -256,50 +263,54 @@ async def list_leads(
     dept_names = await _department_names(
         db, user.company_id, [lead.department_id or "" for lead in leads]
     )
-    contact_names: dict[str, tuple[str | None, str | None, str | None]] = {}
+    contact_map: dict[str, Contact] = {}
     if leads:
         contact_rows = await db.execute(
-            select(Contact.lead_id, Contact.name, Contact.job_title, Contact.linkedin_url)
+            select(Contact)
             .where(Contact.company_id == user.company_id, Contact.lead_id.in_([lead.id for lead in leads]))
             .order_by(Contact.is_primary.desc(), Contact.created_at.asc())
         )
-        for lead_id, name, job_title, linkedin_url in contact_rows:
-            contact_names.setdefault(lead_id, (name, job_title, linkedin_url))
+        for c in contact_rows.scalars().all():
+            contact_map.setdefault(c.lead_id, c)
+
+    items = []
+    for lead in leads:
+        c = contact_map.get(lead.id)
+        items.append(LeadListItemResponse(
+            id=lead.id,
+            search_id=lead.search_id,
+            business_name=lead.business_name,
+            contact_name=c.name if c else None,
+            contact_job_title=c.job_title if c else None,
+            contact_linkedin_url=c.linkedin_url if c else None,
+            contact_headline=c.linkedin_headline if c else None,
+            contact_seniority=c.seniority if c else None,
+            website=lead.website,
+            email=lead.email,
+            phone=lead.phone,
+            pipeline_stage=lead.pipeline_stage,
+            lead_score=lead.lead_score,
+            ai_confidence=lead.ai_confidence,
+            priority=lead.priority,
+            industry=lead.industry,
+            country=lead.country,
+            city=lead.city,
+            employee_count=lead.employee_count,
+            deal_value=lead.deal_value,
+            email_status=lead.email_status,
+            meeting_status=lead.meeting_status,
+            next_followup_date=lead.next_followup_date,
+            last_activity_at=lead.last_activity_at,
+            assigned_user_id=lead.assigned_user_id,
+            assigned_user_name=user_names.get(lead.assigned_user_id) if lead.assigned_user_id else None,
+            department_id=lead.department_id,
+            department_name=dept_names.get(lead.department_id) if lead.department_id else None,
+            badges=lead.badges,
+            created_at=lead.created_at,
+        ))
 
     return PaginatedResponse(
-        items=[
-            LeadListItemResponse(
-                id=lead.id,
-                search_id=lead.search_id,
-                business_name=lead.business_name,
-                contact_name=contact_names.get(lead.id, (None, None, None))[0],
-                contact_job_title=contact_names.get(lead.id, (None, None, None))[1],
-                contact_linkedin_url=contact_names.get(lead.id, (None, None, None))[2],
-                website=lead.website,
-                email=lead.email,
-                phone=lead.phone,
-                pipeline_stage=lead.pipeline_stage,
-                lead_score=lead.lead_score,
-                ai_confidence=lead.ai_confidence,
-                priority=lead.priority,
-                industry=lead.industry,
-                country=lead.country,
-                city=lead.city,
-                employee_count=lead.employee_count,
-                deal_value=lead.deal_value,
-                email_status=lead.email_status,
-                meeting_status=lead.meeting_status,
-                next_followup_date=lead.next_followup_date,
-                last_activity_at=lead.last_activity_at,
-                assigned_user_id=lead.assigned_user_id,
-                assigned_user_name=user_names.get(lead.assigned_user_id) if lead.assigned_user_id else None,
-                department_id=lead.department_id,
-                department_name=dept_names.get(lead.department_id) if lead.department_id else None,
-                badges=lead.badges,
-                created_at=lead.created_at,
-            )
-            for lead in leads
-        ],
+        items=items,
         total=total,
         page=page,
         page_size=page_size,
@@ -552,15 +563,7 @@ async def get_lead(
         created_at=lead.created_at,
         updated_at=lead.updated_at,
         contacts=[
-            ContactResponse(
-                id=c.id,
-                name=c.name,
-                job_title=c.job_title,
-                email=c.email,
-                phone=c.phone,
-                linkedin_url=c.linkedin_url,
-                is_primary=c.is_primary,
-            )
+            _contact_response(c)
             for c in lead.contacts
         ],
     )
@@ -680,15 +683,7 @@ async def assign_lead(
         created_at=lead.created_at,
         updated_at=lead.updated_at,
         contacts=[
-            ContactResponse(
-                id=c.id,
-                name=c.name,
-                job_title=c.job_title,
-                email=c.email,
-                phone=c.phone,
-                linkedin_url=c.linkedin_url,
-                is_primary=c.is_primary,
-            )
+            _contact_response(c)
             for c in lead.contacts
         ],
     )
@@ -1042,15 +1037,7 @@ async def update_lead(
         created_at=lead.created_at,
         updated_at=lead.updated_at,
         contacts=[
-            ContactResponse(
-                id=c.id,
-                name=c.name,
-                job_title=c.job_title,
-                email=c.email,
-                phone=c.phone,
-                linkedin_url=c.linkedin_url,
-                is_primary=c.is_primary,
-            )
+            _contact_response(c)
             for c in lead.contacts
         ],
     )
@@ -1125,18 +1112,7 @@ async def get_lead_contacts(
     )
     contacts = contacts_result.scalars().all()
 
-    return [
-        ContactResponse(
-            id=c.id,
-            name=c.name,
-            job_title=c.job_title,
-            email=c.email,
-            phone=c.phone,
-            linkedin_url=c.linkedin_url,
-            is_primary=c.is_primary,
-        )
-        for c in contacts
-    ]
+    return [_contact_response(c) for c in contacts]
 
 
 @router.post("/leads/{lead_id}/contacts", response_model=ContactResponse)
@@ -1161,15 +1137,7 @@ async def create_lead_contact(
     db.add(contact)
     await db.flush()
 
-    return ContactResponse(
-        id=contact.id,
-        name=contact.name,
-        job_title=contact.job_title,
-        email=contact.email,
-        phone=contact.phone,
-        linkedin_url=contact.linkedin_url,
-        is_primary=contact.is_primary,
-    )
+    return _contact_response(contact)
 
 
 @router.post(
@@ -1202,15 +1170,7 @@ async def enrich_lead_persons(
         company_fields_filled=result.company_fields_filled,
         message=result.message,
         contacts=[
-            ContactResponse(
-                id=c.id,
-                name=c.name,
-                job_title=c.job_title,
-                email=c.email,
-                phone=c.phone,
-                linkedin_url=c.linkedin_url,
-                is_primary=c.is_primary,
-            )
+            _contact_response(c)
             for c in result.contacts
         ],
     )

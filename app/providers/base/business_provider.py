@@ -41,6 +41,8 @@ class SearchPlan(BaseModel):
     category: str | None = None
     location: str | None = None
     job_title: str | None = None
+    job_title_variants: list[str] = Field(default_factory=list)
+    seniority_levels: list[str] = Field(default_factory=list)
 
 
 class BusinessDiscoveryProvider(ABC):

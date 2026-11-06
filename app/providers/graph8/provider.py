@@ -200,6 +200,7 @@ class Graph8Provider(ContactDiscoveryProvider):
             email=row.get("work_email"),
             phone=row.get("direct_phone") or row.get("mobile_phone"),
             linkedin_url=_linkedin(row.get("linkedin_url")),
+            headline=row.get("linkedin_headline"),
             seniority=row.get("seniority_level"),
             department=row.get("job_department"),
             city=row.get("city"),

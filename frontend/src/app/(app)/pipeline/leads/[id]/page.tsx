@@ -760,7 +760,10 @@ export default function LeadDetailPage() {
                         {contact.name}
                         {contact.is_primary && <span className="text-xs text-[#41808B] ml-2">Primary</span>}
                       </p>
-                      {contact.job_title && <p className="text-xs text-slate-500">{contact.job_title}</p>}
+                      {(contact.linkedin_headline || contact.job_title) && (
+                        <p className="text-xs text-slate-500">{contact.linkedin_headline || contact.job_title}</p>
+                      )}
+                      {contact.seniority && <p className="text-xs text-slate-400">{contact.seniority}</p>}
                     </div>
                     <div className="flex items-center gap-3 text-right">
                       <div className="text-xs text-slate-500">

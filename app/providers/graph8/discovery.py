@@ -5,19 +5,8 @@ from app.providers.base.business_provider import (
     SearchPlan,
 )
 from app.providers.graph8.provider import Graph8Client, Graph8Provider
-from app.services.person_enrichment_service import DECISION_MAKER_TITLES
 
 logger = get_logger()
-
-
-def _title_rank(title: str | None) -> int:
-    lowered = (title or "").lower()
-    if not lowered:
-        return len(DECISION_MAKER_TITLES) + 1
-    for index, keyword in enumerate(DECISION_MAKER_TITLES):
-        if keyword in lowered:
-            return index
-    return len(DECISION_MAKER_TITLES)
 
 
 def _clean(value: str | None) -> str | None:
@@ -141,17 +130,45 @@ class Graph8PeopleProvider(BusinessDiscoveryProvider):
         await self.client.close()
 
     @staticmethod
-    def _filter_sets(job_title: str, location: str | None) -> list[list[dict]]:
-        title_filter = [
-            {"field": "job_title", "operator": "any_of", "value": [job_title]}
+    def _filter_sets(
+        job_title: str,
+        variants: list[str],
+        location: str | None,
+        seniority: list[str],
+    ) -> list[list[dict]]:
+        titles = list(dict.fromkeys([job_title, *variants]))
+        base: list[dict] = [
+            {"field": "job_title", "operator": "any_of", "value": titles},
+            # Only working professionals — never interns/students.
+            {
+                "field": "job_title",
+                "operator": "none_of",
+                "value": ["intern", "student", "trainee"],
+            },
         ]
+        if seniority:
+            base.append(
+                {"field": "seniority_level", "operator": "any_of", "value": seniority}
+            )
         if not location:
-            return [title_filter]
+            return [base]
         return [
-            title_filter
-            + [{"field": field, "operator": "contains", "value": [location]}]
+            base + [{"field": field, "operator": "contains", "value": [location]}]
             for field in ("city", "state", "country")
         ]
+
+    async def _query(self, filter_sets: list[list[dict]], limit: int) -> list[dict]:
+        """Most specific geo filter set that returns rows wins."""
+        for filters in filter_sets:
+            data = await self.client.post(
+                "/search/contacts",
+                {"filters": filters, "page": 1, "limit": limit},
+            )
+            if data and isinstance(data, list):
+                rows = [r for r in data if isinstance(r, dict)]
+                if rows:
+                    return rows
+        return []
 
     async def search(
         self,
@@ -164,60 +181,56 @@ class Graph8PeopleProvider(BusinessDiscoveryProvider):
             return []
 
         limit = max(1, min(plan.candidate_target, 100))
-        filter_sets = self._filter_sets(job_title, plan.location)
+        variants = [v.strip() for v in plan.job_title_variants if v and v.strip()]
+        seniority = list(plan.seniority_levels)
 
-        rows: list[dict] = []
-        for filters in filter_sets:
-            data = await self.client.post(
-                "/search/contacts",
-                {"filters": filters, "page": 1, "limit": limit},
+        rows = await self._query(
+            self._filter_sets(job_title, variants, plan.location, seniority), limit
+        )
+        # graph8 returns [] (not an error) for an unrecognized seniority value,
+        # so a bad enum must never zero out the whole person search.
+        if not rows and seniority:
+            rows = await self._query(
+                self._filter_sets(job_title, variants, plan.location, []), limit
             )
-            if data and isinstance(data, list):
-                rows = [r for r in data if isinstance(r, dict)]
-            if rows:
-                break
 
-        # One candidate per company; keep the best-ranked person (decision
-        # makers first) as that company's contact.
-        best: dict[str, tuple[int, dict, object]] = {}
+        candidates: list[CandidateLead] = []
+        seen: set[str] = set()
         for row in rows:
-            domain = (row.get("company_domain") or "").strip().lower()
-            company = (row.get("company_name") or "").strip()
-            key = domain or company.lower()
             person = Graph8Provider._to_person(row)
             person.email = _clean(person.email)
             person.phone = _clean(person.phone)
-            if person.city == "***":
-                person.city = None
-            if not key or not company or not person.full_name:
+            person.headline = _clean(person.headline)
+            person.city = _clean(person.city)
+            # Every person-mode lead must be a visitable profile: no LinkedIn
+            # or no name means no lead (graph8's "***" locks clean to None).
+            if not person.full_name or not _clean(row.get("linkedin_url")):
                 continue
-            rank = _title_rank(person.job_title)
-            if key not in best or rank < best[key][0]:
-                best[key] = (rank, row, person)
+            linkedin = person.linkedin_url  # https-normalized
+            if not linkedin or linkedin in seen:
+                continue
+            seen.add(linkedin)
 
-        candidates: list[CandidateLead] = []
-        for key, (_rank, row, person) in best.items():
-            company = (row.get("company_name") or "").strip()
             employee_count = str(row.get("company_employee_count") or "").strip()
-            active = bool(employee_count or row.get("linkedin_url"))
             candidates.append(
                 CandidateLead(
-                    name=company,
+                    # The person is the lead; the company survives as website.
+                    name=person.full_name,
                     source="graph8_people",
-                    source_id=key,
-                    source_url=_clean(row.get("linkedin_url")),
+                    source_id=linkedin,
+                    source_url=linkedin,
                     website=_clean(row.get("company_domain")),
                     country=_clean(row.get("country")),
                     category=job_title,
-                    business_status="active" if active else "unknown",
+                    business_status="active" if (employee_count or linkedin) else "unknown",
                     contact=person,
                 )
             )
 
         logger.info(
             "graph8_people_search_complete",
-            companies=len(candidates),
-            people_matched=len(rows),
+            people_matched=len(candidates),
+            rows_returned=len(rows),
         )
         return candidates
 

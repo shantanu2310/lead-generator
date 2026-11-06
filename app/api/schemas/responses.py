@@ -18,6 +18,9 @@ class ContactResponse(BaseModel):
     email: str | None = None
     phone: str | None = None
     linkedin_url: str | None = None
+    linkedin_headline: str | None = None
+    seniority: str | None = None
+    department: str | None = None
     is_primary: bool = False
 
 
@@ -118,6 +121,8 @@ class LeadListItemResponse(BaseModel):
     contact_name: str | None = None
     contact_job_title: str | None = None
     contact_linkedin_url: str | None = None
+    contact_headline: str | None = None
+    contact_seniority: str | None = None
     website: str | None = None
     email: str | None = None
     phone: str | None = None
