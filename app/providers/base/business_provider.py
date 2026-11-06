@@ -22,6 +22,7 @@ class CandidateLead(BaseModel):
     latitude: float | None = None
     longitude: float | None = None
     country: str | None = None
+    organization: str | None = None
     category: str | None = None
     business_status: str = "unknown"
     contact: PersonRecord | None = None

@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Archive, Inbox, Loader2, RotateCcw, Search } from "lucide-react"
+import { Archive, Building2, Globe, Inbox, Loader2, Mail, MapPin, Phone, RotateCcw, Search } from "lucide-react"
 import Link from "next/link"
 import { LeadSearchForm } from "@/components/pipeline/lead-search-form"
 import { api } from "@/lib/api"
@@ -14,6 +14,7 @@ type SearchItem = {
   id: string
   query: string
   status: string
+  mode: string | null
   department_id: string | null
   department_name: string | null
   max_leads: number
@@ -33,8 +34,20 @@ type GeneratedLead = {
   email: string | null
   phone: string | null
   website: string | null
+  address: string | null
+  organization: string | null
   department_name: string | null
   pipeline_stage: string
+}
+
+function ModePill({ mode }: { mode: string | null }) {
+  if (!mode) return null
+  const person = mode === "person"
+  return (
+    <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium ${person ? "bg-orange-50 text-[#F46036]" : "bg-[#57A3AF]/10 text-[#41808B]"}`}>
+      {person ? "Person" : "Company"}
+    </span>
+  )
 }
 
 export default function LeadGeneratorPage() {
@@ -131,7 +144,12 @@ export default function LeadGeneratorPage() {
     setRerunning(item.id)
     setMessage(null)
     try {
-      const result = await api.searchLeads({ query: item.query, max_leads: item.max_leads, department_id: item.department_id })
+      const result = await api.searchLeads({
+        query: item.query,
+        max_leads: item.max_leads,
+        department_id: item.department_id,
+        mode: item.mode === "person" || item.mode === "company" ? item.mode : undefined,
+      })
       showNewSearch(result.search_id)
     } catch (err: unknown) {
       setMessage(err instanceof Error ? err.message : "Re-run failed.")
@@ -184,7 +202,10 @@ export default function LeadGeneratorPage() {
                 <button onClick={() => selectSearch(item)} className="flex-1 min-w-0 text-left">
                   <div className="flex items-start justify-between gap-3">
                     <span className="font-semibold text-sm text-slate-900 break-words">{item.query}</span>
-                    {item.status !== "completed" && <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs capitalize ${item.status === "failed" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"}`}>{item.status}</span>}
+                    <span className="flex shrink-0 items-center gap-1.5">
+                      <ModePill mode={item.mode} />
+                      {item.status !== "completed" && <span className={`rounded-full px-2 py-0.5 text-xs capitalize ${item.status === "failed" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"}`}>{item.status}</span>}
+                    </span>
                   </div>
                   <p className="text-xs text-slate-600 mt-1.5">{item.department_name || "Unassigned product"} · {item.max_leads} requested · {item.leads_returned} generated</p>
                   <p className="text-xs text-slate-400 mt-1">{new Date(item.created_at).toLocaleString()}</p>
@@ -211,8 +232,13 @@ export default function LeadGeneratorPage() {
 
         <div className="flex flex-col min-h-0 min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
           <div className="shrink-0 p-5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
-            <div className="min-w-0"><h2 className="font-semibold text-slate-900">Generated Leads</h2>
-            <p className="truncate text-sm text-slate-500 mt-1" title={selected ? `${selected.query} · ${selected.department_name || "Unassigned product"}` : undefined}>{selected ? `${selected.query} · ${selected.department_name || "Unassigned product"}` : "Choose a search from the history to view its leads."}</p></div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h2 className="font-semibold text-slate-900">Generated Leads</h2>
+                <ModePill mode={selected?.mode ?? null} />
+              </div>
+              <p className="truncate text-sm text-slate-500 mt-1" title={selected ? `${selected.query} · ${selected.department_name || "Unassigned product"}` : undefined}>{selected ? `${selected.query} · ${selected.department_name || "Unassigned product"}` : "Choose a search from the history to view its leads."}</p>
+            </div>
             {selected && selected.lead_count > 0 && <Link className="text-sm text-[#41808B] hover:text-[#F46036]" href={`/pipeline?search_id=${encodeURIComponent(selected.id)}&q=${encodeURIComponent(selected.query)}`}>View in Pipeline</Link>}
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
@@ -227,11 +253,40 @@ export default function LeadGeneratorPage() {
                         <span className="w-7 shrink-0 pt-0.5 text-sm font-semibold tabular-nums text-slate-500">{(leadPage - 1) * LEADS_PAGE_SIZE + index + 1}.</span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-semibold text-slate-900 group-hover:text-[#F46036]" title={lead.business_name}>{lead.business_name}</span>
-                          <span className="mt-1 flex items-center gap-2 overflow-x-auto whitespace-nowrap text-xs text-slate-600">
-                            <span>Email: {lead.email || "—"}</span><span aria-hidden="true">·</span>
-                            <span>Phone: {lead.phone || "—"}</span><span aria-hidden="true">·</span>
-                            <span>Status: {STAGE_LABELS[lead.pipeline_stage] || lead.pipeline_stage}</span><span aria-hidden="true">·</span>
-                            <span>Website: {lead.website ? lead.website.replace(/^https?:\/\//, "") : "—"}</span>
+                          <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600">
+                            {lead.website && (
+                              <span className="inline-flex items-center gap-1">
+                                <Globe className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
+                                <span>{lead.website.replace(/^https?:\/\//, "")}</span>
+                              </span>
+                            )}
+                            {lead.address && (
+                              <span className="inline-flex items-center gap-1" title={lead.address}>
+                                <MapPin className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
+                                <span>{lead.address}</span>
+                              </span>
+                            )}
+                            {lead.organization && (
+                              <span className="inline-flex items-center gap-1">
+                                <Building2 className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
+                                <span>{lead.organization}</span>
+                              </span>
+                            )}
+                            {lead.email && (
+                              <span className="inline-flex items-center gap-1">
+                                <Mail className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
+                                <span>{lead.email}</span>
+                              </span>
+                            )}
+                            {lead.phone && (
+                              <span className="inline-flex items-center gap-1">
+                                <Phone className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
+                                <span>{lead.phone}</span>
+                              </span>
+                            )}
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                              {STAGE_LABELS[lead.pipeline_stage] || lead.pipeline_stage}
+                            </span>
                           </span>
                           {lead.contact_name && (
                             <span className="mt-1 flex items-center gap-2 overflow-x-auto whitespace-nowrap text-xs text-slate-700">

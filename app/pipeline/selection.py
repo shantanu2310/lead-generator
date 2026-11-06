@@ -18,6 +18,7 @@ class SelectedLead(BaseModel):
     address: str | None = None
     latitude: float | None = None
     longitude: float | None = None
+    organization: str | None = None
     confidence_score: int = Field(ge=0, le=100)
     relevance_reason: str | None = None
     verification: dict = Field(default_factory=dict)
@@ -93,6 +94,7 @@ class SelectionService:
             address=address_evidence.value if address_evidence else candidate.address,
             latitude=candidate.latitude,
             longitude=candidate.longitude,
+            organization=candidate.organization,
             confidence_score=score.total_score,
             relevance_reason=reason,
             verification={

@@ -307,6 +307,12 @@ async def test_graph8_people_provider():
     cor = by_person["Cor Van Mer"]
     # The person is the lead; the company survives as the website domain.
     assert cor.website == "gunnebo.com"
+    # Address = cleaned geo parts (city locked -> state + country only);
+    # organization = the company they work for.
+    assert cor.address == "North Holland, Netherlands", cor.address
+    assert cor.organization == "Sesami NL", cor.organization
+    assert by_person["Julia Frericks"].organization == "KCP"
+    assert by_person["Zoe Assistant"].address == "North Holland, Netherlands"
     assert cor.source_id == "https://linkedin.com/in/cor-van-mer"
     assert cor.source_url == "https://linkedin.com/in/cor-van-mer"
     assert cor.contact is not None
@@ -536,8 +542,10 @@ async def test_pipeline_contact_creation():
         email=None,
     )
     selected = SelectedLead(
-        business_name="Sesami NL",
+        business_name="Cor Van Mer",
         website="gunnebo.com",
+        address="North Holland, Netherlands",
+        organization="Sesami NL",
         confidence_score=55,
         relevance_reason="HR Manager",
         verification={"business_active": True},
@@ -583,6 +591,8 @@ async def test_pipeline_contact_creation():
             assert len(leads) == 1
             # Person mode: headline is the person, not the company.
             assert leads[0].business_name == "Cor Van Mer"
+            assert leads[0].address == "North Holland, Netherlands"
+            assert leads[0].organization == "Sesami NL"
             await db.commit()
 
         async with factory() as db:
@@ -602,6 +612,52 @@ async def test_pipeline_contact_creation():
             contact_events = [e for e in events if e.event_type == "contact_found"]
             assert len(contact_events) == 1
             assert (contact_events[0].event_metadata or {}).get("source") == "graph8_people"
+    finally:
+        await engine.dispose()
+    print("  PASS")
+    return True
+
+
+async def test_search_mode_persisted():
+    print("\n=== Test: run_search persists mode + Lead.organization ===")
+    from app.pipeline.pipeline_manager import PipelineManager
+    from app.pipeline.selection import SelectedLead, SelectionResult
+
+    result = SelectionResult(
+        query="HR managers in Amsterdam",
+        candidates_checked=3,
+        qualified_leads_found=1,
+        requested_max_leads=5,
+        leads=[SelectedLead(
+            business_name="Cor Van Mer",
+            address="North Holland, Netherlands",
+            organization="Sesami NL",
+            confidence_score=55,
+            verification={"business_active": True},
+        )],
+    )
+
+    class FakeOrchestrator:
+        async def run(self, **kwargs):
+            return result
+
+    manager = PipelineManager(orchestrator=FakeOrchestrator())
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        factory = async_sessionmaker(engine, expire_on_commit=False)
+        async with factory() as db:
+            search, leads = await manager.run_search(
+                db, company_id="co-1", query="HR managers in Amsterdam",
+                max_leads=5, mode="person",
+            )
+            assert search.mode == "person", f"mode not persisted: {search.mode}"
+            assert leads[0].organization == "Sesami NL"
+            assert leads[0].address == "North Holland, Netherlands"
+        async with factory() as db:
+            got = (await db.execute(select(Search))).scalars().one()
+            assert got.mode == "person"
     finally:
         await engine.dispose()
     print("  PASS")
@@ -643,6 +699,21 @@ def test_search_response_contact_field():
         business_name="X", confidence_score=80, verification=verification
     )
     assert plain.contact is None
+
+    # Search history response carries the mode tag (None = legacy, no pill).
+    from datetime import datetime
+
+    from app.api.schemas.responses import SearchResponse
+
+    tagged = SearchResponse(
+        id="s1", query="HR managers in pune", status="completed",
+        mode="person", created_at=datetime.utcnow(),
+    )
+    assert tagged.mode == "person"
+    legacy = SearchResponse(
+        id="s2", query="old", status="completed", created_at=datetime.utcnow(),
+    )
+    assert legacy.mode is None
     print("  PASS")
     return True
 
@@ -665,6 +736,7 @@ async def main():
         ("plan_search_mode_forcing", test_plan_search_mode_forcing),
         ("selection_carries_contact", test_selection_carries_contact),
         ("pipeline_contact_creation", test_pipeline_contact_creation),
+        ("search_mode_persisted", test_search_mode_persisted),
     ]:
         try:
             out = fn()

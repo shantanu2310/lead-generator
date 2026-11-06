@@ -60,6 +60,7 @@ class Lead(Base):
     address: Mapped[str | None] = mapped_column(Text, nullable=True)
     latitude: Mapped[float | None] = mapped_column(nullable=True)
     longitude: Mapped[float | None] = mapped_column(nullable=True)
+    organization: Mapped[str | None] = mapped_column(String(500), nullable=True)
     category: Mapped[str | None] = mapped_column(String(200), nullable=True)
     business_status: Mapped[str] = mapped_column(
         String(50), default=BusinessStatus.ACTIVE.value

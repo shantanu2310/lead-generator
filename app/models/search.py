@@ -17,6 +17,7 @@ class Search(Base):
     longitude: Mapped[float | None] = mapped_column(nullable=True)
     max_leads: Mapped[int] = mapped_column(Integer, default=15)
     status: Mapped[str] = mapped_column(String(50), default="pending")
+    mode: Mapped[str | None] = mapped_column(String(20), nullable=True)
     candidates_discovered: Mapped[int] = mapped_column(Integer, default=0)
     candidates_after_dedup: Mapped[int] = mapped_column(Integer, default=0)
     leads_qualified: Mapped[int] = mapped_column(Integer, default=0)

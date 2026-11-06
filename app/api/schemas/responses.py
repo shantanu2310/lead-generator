@@ -32,6 +32,7 @@ class LeadResponse(BaseModel):
     address: str | None = None
     latitude: float | None = None
     longitude: float | None = None
+    organization: str | None = None
     confidence_score: int = Field(..., ge=0, le=100)
     relevance_reason: str | None = None
     verification: LeadVerification
@@ -75,6 +76,7 @@ class LeadDetailResponse(BaseModel):
     address: str | None = None
     latitude: float | None = None
     longitude: float | None = None
+    organization: str | None = None
     category: str | None = None
     business_status: str
     relevance_score: float = 0.0
@@ -126,6 +128,8 @@ class LeadListItemResponse(BaseModel):
     website: str | None = None
     email: str | None = None
     phone: str | None = None
+    address: str | None = None
+    organization: str | None = None
     pipeline_stage: str
     lead_score: int = 0
     ai_confidence: float = 0.0
@@ -172,6 +176,7 @@ class SearchResponse(BaseModel):
     id: str
     query: str
     status: str
+    mode: str | None = None
     candidates_discovered: int = 0
     candidates_after_dedup: int = 0
     leads_qualified: int = 0

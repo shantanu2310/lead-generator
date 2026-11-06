@@ -63,6 +63,8 @@ def _lead_item(lead: Lead, user_names: dict[str, str]) -> LeadListItemResponse:
         website=lead.website,
         email=lead.email,
         phone=lead.phone,
+        address=lead.address,
+        organization=lead.organization,
         pipeline_stage=lead.pipeline_stage,
         lead_score=lead.lead_score,
         ai_confidence=lead.ai_confidence,

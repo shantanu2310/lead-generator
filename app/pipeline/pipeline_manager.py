@@ -32,6 +32,7 @@ class PipelineManager:
         search = Search(
             company_id=company_id, query=query, latitude=latitude, longitude=longitude,
             max_leads=max_leads, department_id=department_id, status="running",
+            mode=mode,
         )
         db.add(search)
         # Persist before discovery so failed and in-progress requests appear in history.
@@ -97,6 +98,7 @@ class PipelineManager:
                 address=lead_data.address,
                 latitude=lead_data.latitude,
                 longitude=lead_data.longitude,
+                organization=lead_data.organization,
                 confidence_score=float(lead_data.confidence_score),
                 relevance_score=float(lead_data.confidence_score),
                 relevance_reason=lead_data.relevance_reason,

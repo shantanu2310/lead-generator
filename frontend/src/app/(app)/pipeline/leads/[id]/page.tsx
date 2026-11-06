@@ -409,6 +409,7 @@ export default function LeadDetailPage() {
 
       <Card>
         <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-1">
+          <InfoLine label="Organization" value={lead.organization} />
           <InfoLine label="Industry" value={lead.industry} />
           <InfoLine label="Location" value={lead.address || [lead.city, lead.state, lead.country].filter(Boolean).join(", ")} />
           <InfoLine label="Employees" value={lead.employee_count ? formatNumber(lead.employee_count) : null} />

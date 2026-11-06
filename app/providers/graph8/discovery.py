@@ -212,6 +212,17 @@ class Graph8PeopleProvider(BusinessDiscoveryProvider):
             seen.add(linkedin)
 
             employee_count = str(row.get("company_employee_count") or "").strip()
+            # Address = best available geo (graph8 masks city on many rows;
+            # street-level doesn't exist on contact rows).
+            address = ", ".join(
+                p
+                for p in (
+                    _clean(row.get("city")),
+                    _clean(row.get("state")),
+                    _clean(row.get("country")),
+                )
+                if p
+            ) or None
             candidates.append(
                 CandidateLead(
                     # The person is the lead; the company survives as website.
@@ -220,6 +231,8 @@ class Graph8PeopleProvider(BusinessDiscoveryProvider):
                     source_id=linkedin,
                     source_url=linkedin,
                     website=_clean(row.get("company_domain")),
+                    address=address,
+                    organization=_clean(row.get("company_name")),
                     country=_clean(row.get("country")),
                     category=job_title,
                     business_status="active" if (employee_count or linkedin) else "unknown",

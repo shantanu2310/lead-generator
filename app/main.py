@@ -182,6 +182,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         "ALTER TABLE contacts ADD COLUMN linkedin_headline TEXT",
         "ALTER TABLE contacts ADD COLUMN seniority VARCHAR(100)",
         "ALTER TABLE contacts ADD COLUMN department VARCHAR(100)",
+        "ALTER TABLE searches ADD COLUMN mode VARCHAR(20)",
+        "ALTER TABLE leads ADD COLUMN organization VARCHAR(500)",
+        # Backfill: person-mode leads are the only ones named after the
+        # contact, so that join identifies old person searches.
+        """
+        UPDATE searches SET mode='person' WHERE mode IS NULL AND id IN (
+            SELECT l.search_id FROM leads l
+            JOIN contacts c ON c.lead_id = l.id
+            WHERE l.business_name = c.name
+        )
+        """,
         """
         CREATE TABLE IF NOT EXISTS password_reset_tokens (
             id VARCHAR(36) PRIMARY KEY,
