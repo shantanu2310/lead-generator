@@ -17,6 +17,8 @@ from app.providers.base.contact_provider import (
     ContactDiscoveryProvider,
     PersonRecord,
 )
+from app.providers.base.email_provider import EmailDiscoveryProvider, EmailResult
+from app.services.enrichment_service import EmailEnrichmentService, apply_email_results
 from app.services.person_enrichment_service import (
     PersonEnrichmentService,
     domain_from_url,
@@ -99,6 +101,22 @@ SAMPLE_COMPANY = CompanyRecord(
     city="Austin",
     logo_url="https://logo.clearbit.com/acme.com",
 )
+
+
+class FakeEmailProvider(EmailDiscoveryProvider):
+    def __init__(self, results=None):
+        self.results = results or []
+        self.calls = []
+
+    async def discover_emails(self, domain):
+        self.calls.append(domain)
+        return list(self.results)
+
+    async def verify_email(self, email):
+        return EmailResult(email=email, status="unknown", confidence=0.0, source="fake")
+
+    async def close(self):
+        pass
 
 
 def make_lead(**overrides) -> Lead:
@@ -411,6 +429,259 @@ def test_http_endpoint():
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
+async def test_apply_email_results():
+    print("\n=== Test: apply_email_results fills lead/contact emails + creates new ===")
+    engine, factory = await _make_db()
+    try:
+        async with factory() as db:
+            lead = make_lead(email=None)  # empty -> best-confidence email fills it
+            db.add(lead)
+            await db.flush()
+            db.add(Contact(lead_id=lead.id, company_id=lead.company_id, name="Jane Doe"))
+            db.add(
+                Contact(
+                    lead_id=lead.id,
+                    company_id=lead.company_id,
+                    name="Bob Ray",
+                    email="taken@old.com",
+                )
+            )
+            await db.flush()
+
+            results = [
+                # Highest confidence -> becomes lead.email.
+                EmailResult(
+                    email="info@acme.com",
+                    confidence=0.95,
+                    source="hunter",
+                    first_name="Info",
+                    last_name="Dept",
+                ),
+                # Case-insensitive name match -> fills the email-less contact.
+                EmailResult(
+                    email="jane@acme.com",
+                    confidence=0.9,
+                    source="hunter",
+                    first_name="jane",
+                    last_name="DOE",
+                ),
+                # Known person already has an email -> dropped, never duplicated.
+                EmailResult(
+                    email="bob2@acme.com",
+                    confidence=0.8,
+                    source="hunter",
+                    first_name="Bob",
+                    last_name="Ray",
+                ),
+                # Unknown person -> new contact.
+                EmailResult(
+                    email="sara@acme.com",
+                    confidence=0.7,
+                    source="hunter",
+                    first_name="Sara",
+                    last_name="Lane",
+                    position="CEO",
+                ),
+                # No name -> cannot become a contact.
+                EmailResult(email="anon@acme.com", confidence=0.5, source="hunter"),
+            ]
+
+            added = await apply_email_results(db, lead, results)
+
+            assert lead.email == "info@acme.com", lead.email
+            assert added == 3, f"expected 3 emails stored, got {added}"
+            contacts = (
+                (await db.execute(select(Contact).where(Contact.lead_id == lead.id)))
+                .scalars()
+                .all()
+            )
+            by_name = {c.name: c for c in contacts}
+            assert set(by_name) == {"Jane Doe", "Bob Ray", "Sara Lane"}, by_name.keys()
+            assert by_name["Jane Doe"].email == "jane@acme.com"
+            assert by_name["Bob Ray"].email == "taken@old.com", "existing email untouched"
+            assert by_name["Sara Lane"].email == "sara@acme.com"
+            assert by_name["Sara Lane"].job_title == "CEO"
+            assert by_name["Sara Lane"].is_primary is True
+
+            # Idempotent: running again stores nothing new.
+            again = await apply_email_results(db, lead, results)
+            assert again == 0, f"expected 0 on re-run, got {again}"
+
+        print("  PASS")
+        return True
+    finally:
+        await engine.dispose()
+
+
+def test_enrich_batch_http():
+    """End-to-end HTTP test of POST /leads/enrich-batch (sync, temp file DB)."""
+    print("\n=== Test: HTTP endpoint /leads/enrich-batch ===")
+    import tempfile
+    from pathlib import Path
+
+    from fastapi.testclient import TestClient
+    from sqlalchemy import create_engine as create_sync_engine
+    from sqlalchemy.orm import Session
+
+    from app.config import settings as app_settings
+    from app.core.security import create_access_token, hash_password
+    from app.database.base import Base as SyncBase
+    from app.dependencies import (
+        get_db,
+        get_email_enrichment_service,
+        get_person_enrichment_service,
+    )
+    from app.main import app
+    from app.models.user import User
+
+    tmp_dir = Path(tempfile.mkdtemp(prefix="batch_test_"))
+    db_path = tmp_dir / "test.db"
+    sync_url = f"sqlite:///{db_path}"
+
+    sync_engine = create_sync_engine(sync_url)
+    SyncBase.metadata.create_all(sync_engine)
+    with Session(sync_engine) as session:
+        user = User(
+            company_id="co-batch-1",
+            email="batch-test@example.com",
+            password_hash=hash_password("x"),
+            name="Batch Tester",
+            is_admin=True,
+        )
+        lead1 = make_lead(company_id="co-batch-1")
+        lead2 = make_lead(
+            company_id="co-batch-1",
+            business_name="Beta Roofing",
+            normalized_name="beta roofing",
+            website="https://beta.com",
+            normalized_domain="beta.com",
+            email=None,
+        )
+        session.add_all([user, lead1, lead2])
+        session.commit()
+        user_id, lead1_id, lead2_id = user.id, lead1.id, lead2.id
+    sync_engine.dispose()
+
+    async def override_get_db():
+        from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+        engine = create_async_engine(
+            f"sqlite+aiosqlite:///{db_path}", connect_args={"check_same_thread": False}
+        )
+        factory = async_sessionmaker(engine, expire_on_commit=False)
+        async with factory() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+        await engine.dispose()
+
+    hunter_results = [
+        EmailResult(
+            email="sara@acme.com",
+            confidence=0.9,
+            source="hunter",
+            first_name="Sara",
+            last_name="Lane",
+            position="CEO",
+        ),
+        EmailResult(
+            email="tom@acme.com",
+            confidence=0.8,
+            source="hunter",
+            first_name="Tom",
+            last_name="Pool",
+        ),
+    ]
+    email_service = EmailEnrichmentService([FakeEmailProvider(results=hunter_results)])
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_person_enrichment_service] = (
+        lambda: PersonEnrichmentService(
+            provider=FakeGraph8Provider(people=SAMPLE_PEOPLE, company=SAMPLE_COMPANY)
+        )
+    )
+    app.dependency_overrides[get_email_enrichment_service] = lambda: email_service
+
+    original_hunter_key = app_settings.hunter_api_key
+    app_settings.hunter_api_key = "test-key"
+    token = create_access_token(user_id)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    try:
+        client = TestClient(app)
+
+        # 1) No auth -> 401.
+        r0 = client.post("/api/v1/leads/enrich-batch", json={"lead_ids": [lead1_id]})
+        assert r0.status_code == 401, f"expected 401, got {r0.status_code}"
+
+        # 2) Two real leads + one bogus id -> 200, one item per id.
+        r = client.post(
+            "/api/v1/leads/enrich-batch",
+            json={"lead_ids": [lead1_id, lead2_id, "does-not-exist"]},
+            headers=headers,
+        )
+        assert r.status_code == 200, f"expected 200, got {r.status_code}: {r.text}"
+        items = {i["lead_id"]: i for i in r.json()["items"]}
+        assert len(items) == 3, items.keys()
+        assert "not found" in items["does-not-exist"]["message"].lower()
+        for lid in (lead1_id, lead2_id):
+            assert items[lid]["contacts_created"] == 3, items[lid]
+            assert items[lid]["emails_added"] == 2, items[lid]
+        # lead1 already had an email; lead2's empty email got filled.
+        assert items[lead2_id]["company_fields_filled"], items[lead2_id]
+        print(
+            f"  batch -> 200: contacts=3+3, emails=2+2, bogus skipped "
+            f"({items['does-not-exist']['message']})"
+        )
+
+        # 3) Lead detail reflects graph8 contacts + hunter-created contacts.
+        #    sara@acme.com (best confidence) filled lead2.email instead of
+        #    becoming a contact; tom@acme.com becomes the 4th contact.
+        r2 = client.get(f"/api/v1/leads/{lead2_id}", headers=headers)
+        assert r2.status_code == 200, r2.text
+        detail = r2.json()
+        assert detail["email"] == "sara@acme.com", detail["email"]
+        assert len(detail["contacts"]) == 4, f"3 graph8 + 1 hunter, got {len(detail['contacts'])}"
+        names = {c["name"] for c in detail["contacts"]}
+        assert "Tom Pool" in names, names
+        print(f"  lead2 detail -> email={detail['email']}, contacts={len(detail['contacts'])}")
+
+        # 4) Empty selection -> 422 (validation), no Hunter key -> per-lead skip note.
+        r3 = client.post(
+            "/api/v1/leads/enrich-batch", json={"lead_ids": []}, headers=headers
+        )
+        assert r3.status_code == 422, f"expected 422, got {r3.status_code}"
+
+        app_settings.hunter_api_key = ""
+        r4 = client.post(
+            "/api/v1/leads/enrich-batch",
+            json={"lead_ids": [lead2_id]},
+            headers=headers,
+        )
+        assert r4.status_code == 200, r4.text
+        msg = r4.json()["items"][0]["message"]
+        assert "HUNTER_API_KEY not set" in msg, msg
+        assert r4.json()["items"][0]["emails_added"] == 0
+        print(f"  missing hunter key -> message: {msg}")
+
+        print("  PASS")
+        return True
+    finally:
+        app_settings.hunter_api_key = original_hunter_key
+        app.dependency_overrides.clear()
+        try:
+            sync_engine = create_sync_engine(sync_url)
+            sync_engine.dispose()
+        except Exception:
+            pass
+        import shutil
+
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
 async def main():
     print("=" * 60)
     print("GRAPH8 ENRICHMENT TESTS")
@@ -424,7 +695,9 @@ async def main():
         ("email_fallback", test_email_lookup_fallback),
         ("auth_error", test_no_key_raises_auth_error),
         ("parsing", test_person_parsing),
+        ("apply_email_results", test_apply_email_results),
         ("http_endpoint", test_http_endpoint),
+        ("batch_http_endpoint", test_enrich_batch_http),
     ]:
         try:
             out = fn()

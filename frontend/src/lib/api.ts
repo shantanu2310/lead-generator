@@ -197,6 +197,9 @@ export const api = {
   enrichLeadPersons: (id: string) =>
     request<any>("POST", `/leads/${id}/enrich-persons`),
 
+  enrichLeadsBatch: (lead_ids: string[]) =>
+    request<any>("POST", "/leads/enrich-batch", { lead_ids }),
+
   getPipelineStages: () => request<any[]>("GET", "/pipeline/stages"),
 
   getPipelineAnalytics: (searchId?: string) =>

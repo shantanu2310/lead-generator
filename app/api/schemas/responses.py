@@ -58,6 +58,19 @@ class PersonEnrichResponse(BaseModel):
     contacts: list[ContactResponse] = []
 
 
+class LeadEnrichBatchItem(BaseModel):
+    lead_id: str
+    business_name: str | None = None
+    contacts_created: int = 0
+    emails_added: int = 0
+    company_fields_filled: list[str] = []
+    message: str = ""
+
+
+class LeadEnrichBatchResponse(BaseModel):
+    items: list[LeadEnrichBatchItem]
+
+
 class TimelineEventResponse(BaseModel):
     id: str
     event_type: str

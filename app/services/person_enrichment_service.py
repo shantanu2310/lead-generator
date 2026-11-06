@@ -102,7 +102,8 @@ class PersonEnrichmentService:
 
     async def enrich_lead(self, db: AsyncSession, lead: Lead) -> PersonEnrichmentResult:
         domain = lead.normalized_domain or domain_from_url(lead.website)
-        company_name = lead.business_name
+        # Person leads keep a person's name in business_name; their company is organization.
+        company_name = lead.organization or lead.business_name
 
         # 1. Find people at the company (domain first, name fallback).
         people = await self.provider.search_people_by_company(

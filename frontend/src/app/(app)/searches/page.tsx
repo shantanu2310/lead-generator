@@ -66,9 +66,13 @@ export default function LeadGeneratorPage() {
   const [revision, setRevision] = useState(0)
   const [leadState, setLeadState] = useState<{ key: string; leads: GeneratedLead[]; pages: number; error: string | null } | null>(null)
   const [leadPage, setLeadPage] = useState(1)
+  const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([])
+  const [enriching, setEnriching] = useState(false)
+  const [enrichResult, setEnrichResult] = useState<string | null>(null)
+  const [leadRefresh, setLeadRefresh] = useState(0)
   const requestId = useRef(0)
   const selectedId = selected?.id
-  const leadKey = selected ? `${selected.id}:${selected.status}:${selected.lead_count}:${leadPage}` : ""
+  const leadKey = selected ? `${selected.id}:${selected.status}:${selected.lead_count}:${leadPage}:${leadRefresh}` : ""
   const leads = leadState?.key === leadKey ? leadState.leads : []
   const leadPages = leadState?.key === leadKey ? leadState.pages : 1
   const leadError = leadState?.key === leadKey ? leadState.error : null
@@ -123,6 +127,36 @@ export default function LeadGeneratorPage() {
   function selectSearch(item: SearchItem) {
     setSelected(item)
     setLeadPage(1)
+    setSelectedLeadIds([])
+    setEnrichResult(null)
+  }
+
+  function toggleLead(id: string) {
+    setSelectedLeadIds((current) =>
+      current.includes(id) ? current.filter((x) => x !== id) : [...current, id]
+    )
+  }
+
+  async function enrichSelected() {
+    if (selectedLeadIds.length === 0 || enriching) return
+    setEnriching(true)
+    setEnrichResult(null)
+    try {
+      const result = await api.enrichLeadsBatch(selectedLeadIds)
+      const items: any[] = result?.items ?? []
+      const contacts = items.reduce((sum, i) => sum + (i.contacts_created || 0), 0)
+      const emails = items.reduce((sum, i) => sum + (i.emails_added || 0), 0)
+      const problem = items.map((i) => i.message).find((m) => m && /fail|missing|not set|rejected|skipped/i.test(m))
+      setEnrichResult(
+        `Enriched ${items.length} lead(s): ${contacts} contact(s), ${emails} email(s) added.${problem ? ` ${problem}` : ""}`
+      )
+      setSelectedLeadIds([])
+      setLeadRefresh((v) => v + 1)
+    } catch (err) {
+      setEnrichResult(err instanceof Error ? err.message : "Enrichment failed.")
+    } finally {
+      setEnriching(false)
+    }
   }
 
   function showNewSearch(id: string | null) {
@@ -238,8 +272,22 @@ export default function LeadGeneratorPage() {
                 <ModePill mode={selected?.mode ?? null} />
               </div>
               <p className="truncate text-sm text-slate-500 mt-1" title={selected ? `${selected.query} · ${selected.department_name || "Unassigned product"}` : undefined}>{selected ? `${selected.query} · ${selected.department_name || "Unassigned product"}` : "Choose a search from the history to view its leads."}</p>
+              {enrichResult && <p role="status" className="mt-1 text-xs text-[#41808B]">{enrichResult}</p>}
             </div>
-            {selected && selected.lead_count > 0 && <Link className="text-sm text-[#41808B] hover:text-[#F46036]" href={`/pipeline?search_id=${encodeURIComponent(selected.id)}&q=${encodeURIComponent(selected.query)}`}>View in Pipeline</Link>}
+            {selected && selected.lead_count > 0 && (
+              <div className="flex shrink-0 items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => void enrichSelected()}
+                  disabled={selectedLeadIds.length === 0 || enriching}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#F46036] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#d94e2a] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {enriching && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                  Enrich selected{selectedLeadIds.length > 0 ? ` (${selectedLeadIds.length})` : ""}
+                </button>
+                <Link className="text-sm text-[#41808B] hover:text-[#F46036]" href={`/pipeline?search_id=${encodeURIComponent(selected.id)}&q=${encodeURIComponent(selected.query)}`}>View in Pipeline</Link>
+              </div>
+            )}
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             {!selected ? <div className="p-12 text-center text-sm text-slate-500"><Search className="w-9 h-9 mx-auto mb-3 text-slate-300" />No search selected.</div> :
@@ -248,8 +296,17 @@ export default function LeadGeneratorPage() {
               leads.length === 0 ? <p className="p-8 text-sm text-slate-500">{selected.status === "running" || selected.status === "pending" ? "Generation is in progress. Leads will appear when it finishes." : "No saved leads for this search."}</p> : (
                 <ol start={(leadPage - 1) * LEADS_PAGE_SIZE + 1} className="divide-y divide-slate-100">
                   {leads.map((lead, index) => (
-                    <li key={lead.id}>
-                      <Link href={`/pipeline/leads/${lead.id}`} className="group flex items-start gap-4 px-5 py-3 hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#41808B]">
+                    <li key={lead.id} className="flex items-start gap-3 px-5 py-3 hover:bg-slate-50">
+                      <label className="flex shrink-0 items-center pt-0.5">
+                        <input
+                          type="checkbox"
+                          checked={selectedLeadIds.includes(lead.id)}
+                          onChange={() => toggleLead(lead.id)}
+                          aria-label={`Select ${lead.business_name}`}
+                          className="h-4 w-4 accent-[#F46036]"
+                        />
+                      </label>
+                      <Link href={`/pipeline/leads/${lead.id}`} className="group flex min-w-0 flex-1 items-start gap-4 focus-visible:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#41808B]">
                         <span className="w-7 shrink-0 pt-0.5 text-sm font-semibold tabular-nums text-slate-500">{(leadPage - 1) * LEADS_PAGE_SIZE + index + 1}.</span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-semibold text-slate-900 group-hover:text-[#F46036]" title={lead.business_name}>{lead.business_name}</span>

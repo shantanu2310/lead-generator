@@ -16,6 +16,7 @@ from app.api.schemas.requests import (
     ContactCreateRequest,
     ErrorResponse,
     LeadAssignRequest,
+    LeadEnrichBatchRequest,
     LeadSearchRequest,
     LeadUpdateRequest,
     StageMoveRequest,
@@ -26,6 +27,8 @@ from app.api.schemas.responses import (
     ContactActivityResponse,
     ContactResponse,
     LeadDetailResponse,
+    LeadEnrichBatchItem,
+    LeadEnrichBatchResponse,
     LeadListItemResponse,
     LeadResponse,
     LeadSearchResponse,
@@ -35,12 +38,14 @@ from app.api.schemas.responses import (
     StageMoveResponse,
     TimelineEventResponse,
 )
+from app.config import settings
 from app.core.constants import OUTCOME_TO_STAGE, NotificationType, TimelineEventType
 from app.core.exceptions import ProviderAuthenticationError
 from app.dependencies import (
     get_current_admin,
     get_current_user,
     get_db,
+    get_email_enrichment_service,
     get_person_enrichment_service,
     get_pipeline_manager,
 )
@@ -50,6 +55,8 @@ from app.models.lead import Contact, Lead
 from app.models.pipeline import Notification, TimelineEvent
 from app.models.user import User
 from app.pipeline.pipeline_manager import PipelineManager
+from app.services.enrichment_service import apply_email_results
+from app.services.person_enrichment_service import domain_from_url
 from app.websocket.manager import manager as ws_manager
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -1182,3 +1189,75 @@ async def enrich_lead_persons(
             for c in result.contacts
         ],
     )
+
+
+@router.post("/leads/enrich-batch", response_model=LeadEnrichBatchResponse)
+async def enrich_leads_batch(
+    payload: LeadEnrichBatchRequest,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    person_service=Depends(get_person_enrichment_service),
+    email_service=Depends(get_email_enrichment_service),
+) -> LeadEnrichBatchResponse:
+    """Fetch more data for many leads: graph8 team/company + Hunter emails."""
+    items: list[LeadEnrichBatchItem] = []
+    try:
+        for lead_id in payload.lead_ids:
+            try:
+                lead = await _load_lead_for_user(db, lead_id, user)
+            except HTTPException:
+                items.append(
+                    LeadEnrichBatchItem(
+                        lead_id=lead_id, message="Lead not found or not yours."
+                    )
+                )
+                continue
+
+            parts: list[str] = []
+            contacts_created = 0
+            company_fields: list[str] = []
+            emails_added = 0
+
+            try:
+                result = await person_service.enrich_lead(db, lead)
+                contacts_created = result.contacts_created
+                company_fields = result.company_fields_filled
+                if result.message:
+                    parts.append(result.message)
+            except ProviderAuthenticationError:
+                parts.append("Graph8 API key missing - company/team data skipped.")
+            except Exception as error:
+                parts.append(f"Graph8 enrichment failed: {error}")
+
+            domain = lead.normalized_domain or domain_from_url(lead.website)
+            if not settings.hunter_api_key:
+                parts.append("HUNTER_API_KEY not set - emails skipped.")
+            elif not domain:
+                parts.append("No website - Hunter email search skipped.")
+            else:
+                try:
+                    results, _ = await email_service.discover_emails(domain)
+                    emails_added = await apply_email_results(db, lead, results)
+                    parts.append(
+                        f"Hunter: {emails_added} new email(s)."
+                        if emails_added
+                        else "Hunter: no new emails found."
+                    )
+                except Exception as error:
+                    parts.append(f"Hunter enrichment failed: {error}")
+
+            items.append(
+                LeadEnrichBatchItem(
+                    lead_id=lead_id,
+                    business_name=lead.business_name,
+                    contacts_created=contacts_created,
+                    emails_added=emails_added,
+                    company_fields_filled=company_fields,
+                    message=" ".join(parts),
+                )
+            )
+    finally:
+        await person_service.close()
+        await email_service.close()
+
+    return LeadEnrichBatchResponse(items=items)

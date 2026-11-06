@@ -138,3 +138,7 @@ class ContactActivityCreateRequest(BaseModel):
     outcome: str = Field(default="no_answer", min_length=1, max_length=50)
     summary: str | None = Field(default=None, max_length=5000)
     next_followup_at: datetime | None = None
+
+
+class LeadEnrichBatchRequest(BaseModel):
+    lead_ids: list[str] = Field(min_length=1, max_length=10)

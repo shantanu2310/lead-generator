@@ -122,3 +122,10 @@ def get_person_enrichment_service():
     from app.services.person_enrichment_service import PersonEnrichmentService
 
     return PersonEnrichmentService(provider=Graph8Provider())
+
+
+def get_email_enrichment_service():
+    from app.providers.hunter.provider import HunterProvider
+    from app.services.enrichment_service import EmailEnrichmentService
+
+    return EmailEnrichmentService([HunterProvider()])
