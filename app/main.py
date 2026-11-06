@@ -184,6 +184,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         "ALTER TABLE contacts ADD COLUMN department VARCHAR(100)",
         "ALTER TABLE searches ADD COLUMN mode VARCHAR(20)",
         "ALTER TABLE leads ADD COLUMN organization VARCHAR(500)",
+        "ALTER TABLE leads ADD COLUMN company_size VARCHAR(100)",
+        "ALTER TABLE leads ADD COLUMN company_description TEXT",
+        "ALTER TABLE leads ADD COLUMN company_linkedin_url TEXT",
+        "ALTER TABLE leads ADD COLUMN company_twitter_url TEXT",
+        "ALTER TABLE leads ADD COLUMN company_facebook_url TEXT",
         # Backfill: person-mode leads are the only ones named after the
         # contact, so that join identifies old person searches.
         """

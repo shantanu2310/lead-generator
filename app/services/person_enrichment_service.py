@@ -37,11 +37,16 @@ DECISION_MAKER_TITLES: tuple[str, ...] = (
 COMPANY_FIELD_MAP: dict[str, str] = {
     "industry": "industry",
     "employee_count": "employee_count",
+    "company_size": "company_size",
     "revenue": "revenue",
     "country": "country",
     "state": "state",
     "city": "city",
     "logo_url": "company_logo_url",
+    "description": "company_description",
+    "linkedin_url": "company_linkedin_url",
+    "twitter_url": "company_twitter_url",
+    "facebook_url": "company_facebook_url",
 }
 
 

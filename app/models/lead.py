@@ -93,11 +93,16 @@ class Lead(Base):
     # Company info
     industry: Mapped[str | None] = mapped_column(String(200), nullable=True)
     employee_count: Mapped[int | None] = mapped_column(nullable=True)
+    company_size: Mapped[str | None] = mapped_column(String(100), nullable=True)
     revenue: Mapped[str | None] = mapped_column(String(100), nullable=True)
     country: Mapped[str | None] = mapped_column(String(100), nullable=True)
     state: Mapped[str | None] = mapped_column(String(100), nullable=True)
     city: Mapped[str | None] = mapped_column(String(200), nullable=True)
     company_logo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    company_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    company_linkedin_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    company_twitter_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    company_facebook_url: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Enrichment
     funding_info: Mapped[dict | None] = mapped_column(JSON, nullable=True)

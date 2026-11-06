@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, MapPin, Map, Building2, UserCheck, UserPlus, UserX, Loader2, PhoneCall, CalendarClock, Pencil, Trash2, Plus, StickyNote, X } from "lucide-react"
+import { ArrowLeft, MapPin, Map as MapIcon, Building2, UserCheck, UserPlus, UserX, Loader2, PhoneCall, CalendarClock, Pencil, Trash2, Plus, StickyNote, X, Crown, ShieldCheck, Globe, ChevronDown, ChevronUp } from "lucide-react"
 import { api } from "@/lib/api"
 import { getUser } from "@/lib/auth"
 import { CONTACT_CHANNELS, CONTACT_OUTCOMES, outcomeStyle, outcomeTargetStage, PIPELINE_STAGES, STAGE_LABELS, CALL_ATTEMPT_OUTCOMES } from "@/lib/constants"
@@ -94,6 +94,10 @@ export default function LeadDetailPage() {
   const [addingContact, setAddingContact] = useState(false)
   const [deletingContactId, setDeletingContactId] = useState<string | null>(null)
   const [enriching, setEnriching] = useState(false)
+  const [activeTab, setActiveTab] = useState<"people" | "decisionMakers" | "company">("people")
+  const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
+  const [companyCollapsed, setCompanyCollapsed] = useState(false)
+  const [descExpanded, setDescExpanded] = useState(false)
   const [notes, setNotes] = useState("")
   const notesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const notesSavingRef = useRef(false)
@@ -345,6 +349,17 @@ export default function LeadDetailPage() {
     )
   }
 
+  const contacts: any[] = lead.contacts || []
+  const decisionMakers = contacts.filter(isDecisionMaker)
+  const groupMap = new Map<string, any[]>()
+  for (const c of contacts) {
+    const key = c.department || "Other"
+    const list = groupMap.get(key)
+    if (list) list.push(c)
+    else groupMap.set(key, [c])
+  }
+  const groups = Array.from(groupMap.entries()).sort((a, b) => b[1].length - a[1].length)
+
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-6">
       <button
@@ -407,35 +422,247 @@ export default function LeadDetailPage() {
         </div>
       </div>
 
-      <Card>
-        <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-1">
-          <InfoLine label="Organization" value={lead.organization} />
-          <InfoLine label="Industry" value={lead.industry} />
-          <InfoLine label="Location" value={lead.address || [lead.city, lead.state, lead.country].filter(Boolean).join(", ")} />
-          <InfoLine label="Employees" value={lead.employee_count ? formatNumber(lead.employee_count) : null} />
-          <InfoLine label="Revenue" value={lead.revenue} />
-          <InfoLine
-            label="Email"
-            value={lead.email}
-            href={lead.email ? `mailto:${lead.email}` : undefined}
-            badge={lead.email ? (lead.email_verified ? "Verified" : "Pending") : undefined}
-            badgeTone={lead.email_verified ? "green" : "yellow"}
-          />
-          <InfoLine
-            label="Phone"
-            value={lead.phone}
-            href={lead.phone ? `tel:${lead.phone}` : undefined}
-          />
-          <InfoLine
-            label="Website"
-            value={lead.website ? lead.website.replace("https://", "").replace("http://", "") : null}
-            href={lead.website || undefined}
-            external
-          />
-          <InfoLine label="Deal value" value={lead.deal_value ? `$${formatNumber(lead.deal_value)}` : null} />
-          <InfoLine label="Priority" value={lead.priority} />
-        </dl>
-      </Card>
+      {/* Enriched data tabs: People / Decision makers / Company */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1">
+          <TabPill active={activeTab === "people"} onClick={() => setActiveTab("people")}>
+            People · {contacts.length}
+          </TabPill>
+          <TabPill active={activeTab === "decisionMakers"} onClick={() => setActiveTab("decisionMakers")}>
+            Decision makers · {decisionMakers.length}
+          </TabPill>
+          <TabPill active={activeTab === "company"} onClick={() => setActiveTab("company")}>
+            Company
+          </TabPill>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleEnrichPersons}
+            disabled={enriching}
+            title="Find LinkedIn profiles and person contacts via Graph8"
+            className="flex items-center gap-1.5 text-xs font-semibold text-white bg-[#F46036] hover:bg-[#D94A22] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+          >
+            {enriching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LinkedInIcon className="w-3.5 h-3.5" />}
+            {enriching ? "Searching…" : "Find contacts"}
+          </button>
+          <button
+            onClick={() => setShowAddContact((s) => !s)}
+            className="flex items-center gap-1.5 text-xs text-[#41808B] hover:text-[#F46036] transition-colors"
+          >
+            {showAddContact ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+            {showAddContact ? "Cancel" : "Add contact"}
+          </button>
+        </div>
+      </div>
+
+      {activeTab === "people" && (
+        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+          {showAddContact && (
+            <form onSubmit={handleAddContact} className="border-b border-slate-200 bg-slate-50 p-4 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input
+                  value={contactForm.name}
+                  onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                  placeholder="Name *"
+                  required
+                  className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
+                />
+                <input
+                  value={contactForm.job_title}
+                  onChange={(e) => setContactForm({ ...contactForm, job_title: e.target.value })}
+                  placeholder="Job title"
+                  className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
+                />
+                <input
+                  value={contactForm.email}
+                  onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                  placeholder="Email"
+                  type="email"
+                  className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
+                />
+                <input
+                  value={contactForm.phone}
+                  onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
+                  placeholder="Phone"
+                  className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
+                />
+                <input
+                  value={contactForm.linkedin_url}
+                  onChange={(e) => setContactForm({ ...contactForm, linkedin_url: e.target.value })}
+                  placeholder="LinkedIn URL"
+                  className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
+                />
+                <label className="flex items-center gap-2 text-xs text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={contactForm.is_primary}
+                    onChange={(e) => setContactForm({ ...contactForm, is_primary: e.target.checked })}
+                    className="accent-[#F46036]"
+                  />
+                  Primary contact
+                </label>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={addingContact}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#F46036] text-white text-sm font-semibold hover:bg-[#D94A22] transition-colors disabled:opacity-50"
+                >
+                  {addingContact && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Save contact
+                </button>
+              </div>
+            </form>
+          )}
+
+          {contacts.length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-10">
+              No contacts yet — click <span className="font-medium text-[#F46036]">Find contacts</span> to pull LinkedIn profiles from Graph8
+            </p>
+          ) : (
+            groups.map(([dept, list]) => {
+              const collapsed = collapsedGroups.includes(dept)
+              return (
+                <div key={dept}>
+                  <button
+                    onClick={() =>
+                      setCollapsedGroups((cur) =>
+                        cur.includes(dept) ? cur.filter((d) => d !== dept) : [...cur, dept]
+                      )
+                    }
+                    className="w-full flex items-center gap-2 px-5 py-3 border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                  >
+                    {collapsed ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronUp className="w-4 h-4 text-slate-400" />}
+                    <span className="text-sm font-semibold text-slate-900">{dept}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">{list.length}</span>
+                  </button>
+                  {!collapsed &&
+                    list.map((c) => (
+                      <PersonRow
+                        key={c.id}
+                        contact={c}
+                        deleting={deletingContactId === c.id}
+                        onDelete={() => handleDeleteContact(c.id)}
+                      />
+                    ))}
+                </div>
+              )
+            })
+          )}
+        </div>
+      )}
+
+      {activeTab === "decisionMakers" && (
+        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+          {decisionMakers.length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-10">
+              No decision makers found yet — run <span className="font-medium text-[#F46036]">Find contacts</span> first.
+            </p>
+          ) : (
+            decisionMakers.map((c) => (
+              <PersonRow
+                key={c.id}
+                contact={c}
+                deleting={deletingContactId === c.id}
+                onDelete={() => handleDeleteContact(c.id)}
+              />
+            ))
+          )}
+        </div>
+      )}
+
+      {activeTab === "company" && (
+        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+          <button
+            onClick={() => setCompanyCollapsed(!companyCollapsed)}
+            className="w-full flex items-center justify-between px-5 py-4"
+          >
+            <span className="font-semibold text-slate-900">Company</span>
+            {companyCollapsed ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronUp className="w-5 h-5 text-slate-400" />}
+          </button>
+          {!companyCollapsed && (
+            <div className="px-5 pb-5 space-y-4">
+              <div className="flex items-center gap-3">
+                {lead.company_logo_url && (
+                  <img src={lead.company_logo_url} alt="" className="w-9 h-9 rounded-lg border border-slate-200 object-contain bg-white" />
+                )}
+                <span className="text-lg font-semibold text-slate-900">{lead.organization || lead.business_name}</span>
+              </div>
+              {lead.company_description && (
+                <div>
+                  <p className={`text-sm text-slate-600 leading-relaxed ${descExpanded ? "" : "line-clamp-3"}`}>
+                    {lead.company_description}
+                  </p>
+                  {lead.company_description.length > 180 && (
+                    <button
+                      onClick={() => setDescExpanded(!descExpanded)}
+                      className="text-xs font-medium text-[#41808B] hover:text-[#F46036] mt-1"
+                    >
+                      {descExpanded ? "less" : "more"}
+                    </button>
+                  )}
+                </div>
+              )}
+              <div className="flex items-center gap-4 text-slate-400">
+                {lead.website && (
+                  <a href={lead.website} target="_blank" rel="noopener noreferrer" title="Website" className="hover:text-[#F46036] transition-colors">
+                    <Globe className="w-5 h-5" />
+                  </a>
+                )}
+                {lead.company_linkedin_url && (
+                  <a href={lead.company_linkedin_url} target="_blank" rel="noopener noreferrer" title="LinkedIn" className="hover:opacity-70 transition-opacity">
+                    <LinkedInIcon className="w-5 h-5 text-[#0A66C2]" />
+                  </a>
+                )}
+                {lead.company_twitter_url && (
+                  <a href={lead.company_twitter_url} target="_blank" rel="noopener noreferrer" title="X" className="hover:text-slate-600 transition-colors">
+                    <XIcon className="w-5 h-5" />
+                  </a>
+                )}
+                {lead.company_facebook_url && (
+                  <a href={lead.company_facebook_url} target="_blank" rel="noopener noreferrer" title="Facebook" className="hover:text-slate-600 transition-colors">
+                    <FacebookIcon className="w-5 h-5" />
+                  </a>
+                )}
+              </div>
+              <div className="border-t border-slate-100 pt-4">
+                <dl className="space-y-1">
+                  <InfoLine label="Industry" value={lead.industry} />
+                  <InfoLine
+                    label="Company size"
+                    value={lead.company_size || (lead.employee_count ? formatNumber(lead.employee_count) : null)}
+                  />
+                  <InfoLine label="Revenue" value={lead.revenue} />
+                  <InfoLine
+                    label="Address"
+                    value={lead.address || [lead.city, lead.state, lead.country].filter(Boolean).join(", ")}
+                  />
+                  <InfoLine
+                    label="Website"
+                    value={lead.website ? lead.website.replace("https://", "").replace("http://", "") : null}
+                    href={lead.website || undefined}
+                    external
+                  />
+                  <InfoLine
+                    label="Email"
+                    value={lead.email}
+                    href={lead.email ? `mailto:${lead.email}` : undefined}
+                    badge={lead.email ? (lead.email_verified ? "Verified" : "Pending") : undefined}
+                    badgeTone={lead.email_verified ? "green" : "yellow"}
+                  />
+                  <InfoLine
+                    label="Phone"
+                    value={lead.phone}
+                    href={lead.phone ? `tel:${lead.phone}` : undefined}
+                  />
+                  <InfoLine label="Deal value" value={lead.deal_value ? `$${formatNumber(lead.deal_value)}` : null} />
+                  <InfoLine label="Priority" value={lead.priority} />
+                </dl>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <Card>
         <div className="flex items-center justify-between mb-4">
@@ -667,143 +894,6 @@ export default function LeadDetailPage() {
             </div>
           </Card>
 
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-slate-900">Contacts ({lead.contacts?.length || 0})</h3>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleEnrichPersons}
-                  disabled={enriching}
-                  title="Find LinkedIn profiles and person contacts via Graph8"
-                  className="flex items-center gap-1.5 text-xs font-semibold text-white bg-[#F46036] hover:bg-[#D94A22] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {enriching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LinkedInIcon className="w-3.5 h-3.5" />}
-                  {enriching ? "Searching…" : "Find contacts"}
-                </button>
-                <button
-                  onClick={() => setShowAddContact((s) => !s)}
-                  className="flex items-center gap-1.5 text-xs text-[#41808B] hover:text-[#F46036] transition-colors"
-                >
-                  {showAddContact ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                  {showAddContact ? "Cancel" : "Add contact"}
-                </button>
-              </div>
-            </div>
-
-            {showAddContact && (
-              <form onSubmit={handleAddContact} className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3 mb-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input
-                    value={contactForm.name}
-                    onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                    placeholder="Name *"
-                    required
-                    className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
-                  />
-                  <input
-                    value={contactForm.job_title}
-                    onChange={(e) => setContactForm({ ...contactForm, job_title: e.target.value })}
-                    placeholder="Job title"
-                    className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
-                  />
-                  <input
-                    value={contactForm.email}
-                    onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                    placeholder="Email"
-                    type="email"
-                    className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
-                  />
-                  <input
-                    value={contactForm.phone}
-                    onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
-                    placeholder="Phone"
-                    className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
-                  />
-                  <input
-                    value={contactForm.linkedin_url}
-                    onChange={(e) => setContactForm({ ...contactForm, linkedin_url: e.target.value })}
-                    placeholder="LinkedIn URL"
-                    className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F46036]"
-                  />
-                  <label className="flex items-center gap-2 text-xs text-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={contactForm.is_primary}
-                      onChange={(e) => setContactForm({ ...contactForm, is_primary: e.target.checked })}
-                      className="accent-[#F46036]"
-                    />
-                    Primary contact
-                  </label>
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={addingContact}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#F46036] text-white text-sm font-semibold hover:bg-[#D94A22] transition-colors disabled:opacity-50"
-                  >
-                    {addingContact && <Loader2 className="w-4 h-4 animate-spin" />}
-                    Save contact
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {(lead.contacts || []).length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-6">
-                No contacts yet — click <span className="font-medium text-[#F46036]">Find contacts</span> to pull LinkedIn profiles from Graph8
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {lead.contacts.map((contact: any) => (
-                  <div key={contact.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">
-                        {contact.name}
-                        {contact.is_primary && <span className="text-xs text-[#41808B] ml-2">Primary</span>}
-                      </p>
-                      {(contact.linkedin_headline || contact.job_title) && (
-                        <p className="text-xs text-slate-500">{contact.linkedin_headline || contact.job_title}</p>
-                      )}
-                      {contact.seniority && <p className="text-xs text-slate-400">{contact.seniority}</p>}
-                    </div>
-                    <div className="flex items-center gap-3 text-right">
-                      <div className="text-xs text-slate-500">
-                        {contact.email && <p>{contact.email}</p>}
-                        {contact.phone && (
-                          <a href={`tel:${contact.phone}`} className="text-slate-900 hover:text-[#F46036] transition-colors">
-                            {contact.phone}
-                          </a>
-                        )}
-                      </div>
-                      {contact.linkedin_url && (
-                        <a
-                          href={contact.linkedin_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="Open LinkedIn profile"
-                          className="text-[#0A66C2] hover:opacity-70 transition-opacity"
-                        >
-                          <LinkedInIcon className="w-4 h-4" />
-                        </a>
-                      )}
-                      <button
-                        onClick={() => handleDeleteContact(contact.id)}
-                        disabled={deletingContactId === contact.id}
-                        className="text-red-600 hover:text-red-700 transition-colors disabled:opacity-40"
-                        title="Remove contact"
-                      >
-                        {deletingContactId === contact.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-3.5 h-3.5" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
         </div>
 
         <div>
@@ -989,7 +1079,7 @@ function LocationMap({ lead }: { lead: any }) {
     return (
       <Card>
         <div className="flex items-center gap-2 mb-4">
-          <Map className="w-5 h-5 text-[#41808B]" />
+          <MapIcon className="w-5 h-5 text-[#41808B]" />
           <h3 className="font-semibold text-slate-900">Location</h3>
         </div>
         <p className="text-sm text-slate-500 text-center py-8">Location not available</p>
@@ -1004,7 +1094,7 @@ function LocationMap({ lead }: { lead: any }) {
     <Card>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Map className="w-5 h-5 text-[#41808B]" />
+          <MapIcon className="w-5 h-5 text-[#41808B]" />
           <h3 className="font-semibold text-slate-900">Location</h3>
         </div>
         <a
@@ -1030,5 +1120,137 @@ function LocationMap({ lead }: { lead: any }) {
         />
       </div>
     </Card>
+  )
+}
+
+const DECISION_MAKER_KEYWORDS = [
+  "owner",
+  "founder",
+  "ceo",
+  "chief",
+  "president",
+  "partner",
+  "managing director",
+  "general manager",
+  "director",
+  "head",
+  "manager",
+]
+const DECISION_MAKER_SENIORITY = [
+  "c-suite",
+  "vp",
+  "vice president",
+  "director",
+  "head",
+  "manager",
+  "owner",
+  "founder",
+  "partner",
+]
+
+function isDecisionMaker(contact: any): boolean {
+  const title = `${contact.job_title || ""} ${contact.linkedin_headline || ""}`.toLowerCase()
+  if (DECISION_MAKER_KEYWORDS.some((k) => title.includes(k))) return true
+  const seniority = (contact.seniority || "").toLowerCase()
+  return DECISION_MAKER_SENIORITY.some((k) => seniority.includes(k))
+}
+
+function abbreviateName(name: string): string {
+  const parts = (name || "").trim().split(/\s+/)
+  if (parts.length <= 1) return parts[0] || ""
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`
+}
+
+function TabPill({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+        active ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
+function PersonRow({
+  contact,
+  deleting,
+  onDelete,
+}: {
+  contact: any
+  deleting: boolean
+  onDelete: () => void
+}) {
+  return (
+    <div className="flex items-start gap-3 px-5 py-3.5 border-b border-slate-100 last:border-b-0">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-sm font-semibold text-slate-900">{abbreviateName(contact.name)}</span>
+          {isDecisionMaker(contact) && <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-label="Decision maker" />}
+          <span className="text-slate-300">|</span>
+          <span className="text-sm text-slate-600 truncate">{contact.job_title || contact.linkedin_headline || "—"}</span>
+        </div>
+        <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
+          {contact.email ? (
+            <span className="flex items-center gap-1.5 min-w-0">
+              <span className="truncate">{contact.email}</span>
+              <ShieldCheck className="w-4 h-4 text-green-600 shrink-0" aria-label="Email found" />
+            </span>
+          ) : (
+            <span className="text-slate-300">No email</span>
+          )}
+          {contact.phone && (
+            <a href={`tel:${contact.phone}`} className="hover:text-[#F46036] transition-colors shrink-0">
+              {contact.phone}
+            </a>
+          )}
+          {contact.linkedin_url && (
+            <a
+              href={contact.linkedin_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open LinkedIn profile"
+              className="text-[#0A66C2] hover:opacity-70 transition-opacity shrink-0"
+            >
+              <LinkedInIcon className="w-4 h-4" />
+            </a>
+          )}
+        </div>
+      </div>
+      <button
+        onClick={onDelete}
+        disabled={deleting}
+        className="text-red-600 hover:text-red-700 transition-colors disabled:opacity-40 shrink-0"
+        title="Remove contact"
+      >
+        {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+      </button>
+    </div>
+  )
+}
+
+function XIcon({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
+    </svg>
+  )
+}
+
+function FacebookIcon({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+    </svg>
   )
 }

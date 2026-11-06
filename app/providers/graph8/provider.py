@@ -1,4 +1,5 @@
 import asyncio
+import re
 
 import httpx
 
@@ -155,18 +156,26 @@ class Graph8Provider(ContactDiscoveryProvider):
 
         row = data[0]
         raw_count = str(row.get("employee_count") or "").strip()
-        employee_count = int(raw_count) if raw_count.isdigit() else None
+        # graph8 returns ranges like "1,001-5,000" as often as plain numbers —
+        # keep the raw string for display, take the upper bound for math.
+        digits = [int(s.replace(",", "")) for s in re.findall(r"[\d,]+", raw_count)]
+        employee_count = max(digits) if digits else None
 
         return CompanyRecord(
             name=row.get("name"),
             domain=row.get("domain"),
             industry=row.get("industry"),
             employee_count=employee_count,
+            company_size=raw_count or None,
             revenue=row.get("revenue"),
+            description=row.get("description"),
             country=row.get("country"),
             state=row.get("state"),
             city=row.get("city"),
             logo_url=row.get("logo_url"),
+            linkedin_url=_linkedin(row.get("linkedin_url")),
+            twitter_url=_linkedin(row.get("twitter_url")),
+            facebook_url=_linkedin(row.get("facebook_url")),
         )
 
     async def _search_contacts(self, filters: list[dict], limit: int) -> list[PersonRecord]:

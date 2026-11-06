@@ -27,11 +27,16 @@ class CompanyRecord(BaseModel):
     domain: str | None = None
     industry: str | None = None
     employee_count: int | None = None
+    company_size: str | None = None
     revenue: str | None = None
+    description: str | None = None
     country: str | None = None
     state: str | None = None
     city: str | None = None
     logo_url: str | None = None
+    linkedin_url: str | None = None
+    twitter_url: str | None = None
+    facebook_url: str | None = None
     confidence: float = 0.0
 
 

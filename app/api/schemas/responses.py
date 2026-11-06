@@ -118,6 +118,11 @@ class LeadDetailResponse(BaseModel):
     state: str | None = None
     city: str | None = None
     company_logo_url: str | None = None
+    company_description: str | None = None
+    company_size: str | None = None
+    company_linkedin_url: str | None = None
+    company_twitter_url: str | None = None
+    company_facebook_url: str | None = None
     funding_info: dict | None = None
     technology_stack: list | None = None
     badges: list | None = None
