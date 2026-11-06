@@ -129,6 +129,7 @@ class LeadDetailResponse(BaseModel):
     email_status: str = "pending"
     meeting_status: str = "none"
     notes: str | None = None
+    enriched_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
     contacts: list[ContactResponse] = []
@@ -166,6 +167,7 @@ class LeadListItemResponse(BaseModel):
     department_id: str | None = None
     department_name: str | None = None
     badges: list | None = None
+    enriched_at: datetime | None = None
     created_at: datetime
 
 

@@ -372,7 +372,17 @@ export default function LeadDetailPage() {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{lead.business_name}</h1>
+          <h1 className="flex items-center gap-2.5 text-2xl font-bold text-slate-900">
+            {lead.business_name}
+            {lead.enriched_at && (
+              <span
+                className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700"
+                title={`Enriched ${new Date(lead.enriched_at).toLocaleString()}`}
+              >
+                Enriched
+              </span>
+            )}
+          </h1>
           <div className="flex items-center gap-2 mt-1">
             {lead.department_name && (
               <span className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700">

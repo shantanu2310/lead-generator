@@ -37,6 +37,7 @@ type GeneratedLead = {
   website: string | null
   address: string | null
   organization: string | null
+  enriched_at: string | null
   department_name: string | null
   pipeline_stage: string
 }
@@ -297,14 +298,26 @@ export default function LeadGeneratorPage() {
                           type="checkbox"
                           checked={selectedLeadIds.includes(lead.id)}
                           onChange={() => toggleLead(lead.id)}
+                          disabled={!!lead.enriched_at}
+                          title={lead.enriched_at ? "Already enriched" : `Select ${lead.business_name}`}
                           aria-label={`Select ${lead.business_name}`}
-                          className="h-4 w-4 accent-[#F46036]"
+                          className="h-4 w-4 accent-[#F46036] disabled:opacity-40 disabled:cursor-not-allowed"
                         />
                       </label>
                       <Link href={`/pipeline/leads/${lead.id}`} className="group flex min-w-0 flex-1 items-start gap-4 focus-visible:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#41808B]">
                         <span className="w-7 shrink-0 pt-0.5 text-sm font-semibold tabular-nums text-slate-500">{(leadPage - 1) * LEADS_PAGE_SIZE + index + 1}.</span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-semibold text-slate-900 group-hover:text-[#F46036]" title={lead.business_name}>{lead.business_name}</span>
+                          <span className="flex items-center gap-2 min-w-0">
+                            <span className="truncate text-sm font-semibold text-slate-900 group-hover:text-[#F46036]" title={lead.business_name}>{lead.business_name}</span>
+                            {lead.enriched_at && (
+                              <span
+                                className="shrink-0 rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700"
+                                title={`Enriched ${new Date(lead.enriched_at).toLocaleString()}`}
+                              >
+                                Enriched
+                              </span>
+                            )}
+                          </span>
                           <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600">
                             {lead.website && (
                               <span className="inline-flex items-center gap-1">

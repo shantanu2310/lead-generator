@@ -41,6 +41,7 @@ from app.api.schemas.responses import (
 from app.config import settings
 from app.core.constants import OUTCOME_TO_STAGE, NotificationType, TimelineEventType
 from app.core.exceptions import ProviderAuthenticationError
+from app.database.base import utcnow
 from app.dependencies import (
     get_current_admin,
     get_current_user,
@@ -336,6 +337,7 @@ async def list_leads(
             department_name=dept_names.get(lead.department_id) if lead.department_id else None,
             badges=lead.badges,
             created_at=lead.created_at,
+            enriched_at=lead.enriched_at,
         ))
 
     return PaginatedResponse(
@@ -520,6 +522,7 @@ async def get_due_followups(
             department_name=dept_names.get(lead.department_id) if lead.department_id else None,
             badges=lead.badges,
             created_at=lead.created_at,
+            enriched_at=lead.enriched_at,
         )
         for lead in leads
     ]
@@ -599,6 +602,7 @@ async def get_lead(
         notes=lead.notes,
         created_at=lead.created_at,
         updated_at=lead.updated_at,
+        enriched_at=lead.enriched_at,
         contacts=[
             _contact_response(c)
             for c in lead.contacts
@@ -725,6 +729,7 @@ async def assign_lead(
         meeting_status=lead.meeting_status,
         created_at=lead.created_at,
         updated_at=lead.updated_at,
+        enriched_at=lead.enriched_at,
         contacts=[
             _contact_response(c)
             for c in lead.contacts
@@ -1085,6 +1090,7 @@ async def update_lead(
         notes=lead.notes,
         created_at=lead.created_at,
         updated_at=lead.updated_at,
+        enriched_at=lead.enriched_at,
         contacts=[
             _contact_response(c)
             for c in lead.contacts
@@ -1204,6 +1210,7 @@ async def enrich_lead_persons(
     try:
         lead = await _load_lead_for_user(db, lead_id, user)
         result = await enrichment_service.enrich_lead(db, lead)
+        lead.enriched_at = utcnow()
         _, hunter_msg = await _apply_hunter_emails(db, lead, email_service)
     except ProviderAuthenticationError:
         raise HTTPException(
@@ -1257,6 +1264,7 @@ async def enrich_leads_batch(
 
             try:
                 result = await person_service.enrich_lead(db, lead)
+                lead.enriched_at = utcnow()
                 contacts_created = result.contacts_created
                 company_fields = result.company_fields_filled
                 if result.message:

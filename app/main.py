@@ -189,6 +189,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         "ALTER TABLE leads ADD COLUMN company_linkedin_url TEXT",
         "ALTER TABLE leads ADD COLUMN company_twitter_url TEXT",
         "ALTER TABLE leads ADD COLUMN company_facebook_url TEXT",
+        "ALTER TABLE leads ADD COLUMN enriched_at TIMESTAMP",
         # Backfill: person-mode leads are the only ones named after the
         # contact, so that join identifies old person searches.
         """

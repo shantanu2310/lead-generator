@@ -404,6 +404,7 @@ def test_http_endpoint():
         contacts = r2.json()["contacts"]
         assert len(contacts) == 3, f"expected 3 contacts in detail, got {len(contacts)}"
         assert all(c["linkedin_url"] for c in contacts)
+        assert r2.json()["enriched_at"] is not None, "lead must be marked enriched"
         print(f"  GET lead detail -> {len(contacts)} contacts, all with LinkedIn URLs")
 
         # 3) No auth -> 401.
@@ -731,10 +732,18 @@ def test_enrich_batch_http():
         assert r2.status_code == 200, r2.text
         detail = r2.json()
         assert detail["email"] == "sara@acme.com", detail["email"]
+        assert detail["enriched_at"] is not None, "lead must be marked enriched"
         assert len(detail["contacts"]) == 4, f"3 graph8 + 1 hunter, got {len(detail['contacts'])}"
         names = {c["name"] for c in detail["contacts"]}
         assert "Tom Pool" in names, names
         print(f"  lead2 detail -> email={detail['email']}, contacts={len(detail['contacts'])}")
+
+        # List endpoint must expose enriched_at for the checkbox/tag.
+        rl = client.get("/api/v1/leads", headers=headers)
+        assert rl.status_code == 200, rl.text
+        list_by_id = {i["id"]: i for i in rl.json()["items"]}
+        assert list_by_id[lead1_id]["enriched_at"] is not None, "list must show enriched_at"
+        assert list_by_id[lead2_id]["enriched_at"] is not None, "list must show enriched_at"
 
         # 4) Empty selection -> 422 (validation), no Hunter key -> per-lead skip note.
         r3 = client.post(
